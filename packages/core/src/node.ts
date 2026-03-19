@@ -346,9 +346,73 @@ export class UINode extends EventEmitter {
     return lx >= 0 && lx <= this.width && ly >= 0 && ly <= this.height;
   }
 
-  // ── 测试辅助 ────────────────────────────────
+  // ── AI 调试 ──────────────────────────────────
 
   get $text(): string | undefined { return undefined; }
   get $highlighted(): boolean | undefined { return undefined; }
   get $disabled(): boolean | undefined { return undefined; }
+
+  /**
+   * 输出结构化文本描述，供 AI 读取。
+   * @param depth 递归深度，默认无限。0 = 仅自身。
+   */
+  $inspect(depth?: number): string {
+    return this._inspectLine(0, depth ?? Infinity);
+  }
+
+  private _inspectLine(indent: number, depthLeft: number): string {
+    const pad = '  '.repeat(indent);
+    const parts: string[] = [];
+
+    // 类名#id
+    const className = this.constructor.name;
+    parts.push(this.id ? `${className}#${this.id}` : className);
+
+    // 尺寸
+    if (this.width > 0 || this.height > 0) {
+      parts.push(`(${this.width}x${this.height})`);
+    }
+
+    // 位置
+    if (this.x !== 0 || this.y !== 0) {
+      parts.push(`at(${this.x},${this.y})`);
+    }
+
+    // 文字
+    const text = this.$text;
+    if (text !== undefined) {
+      parts.push(`"${text}"`);
+    }
+
+    // 状态
+    if (!this.visible) parts.push('hidden');
+    if (this.$disabled) parts.push('disabled');
+    if (this.$highlighted) parts.push('highlighted');
+
+    let line = pad + parts.join(' ');
+
+    // 子节点
+    if (depthLeft > 0) {
+      for (const child of this._children) {
+        line += '\n' + child._inspectLine(indent + 1, depthLeft - 1);
+      }
+    }
+
+    return line;
+  }
+
+  /**
+   * 获取从根到自身的节点路径。
+   * 输出如 "root > panel > btn"
+   */
+  $path(): string {
+    const chain: string[] = [];
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    let node: UINode | null = this;
+    while (node) {
+      chain.push(node.id || node.constructor.name);
+      node = node.$parent;
+    }
+    return chain.reverse().join(' > ');
+  }
 }
