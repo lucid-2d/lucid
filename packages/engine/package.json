@@ -1,0 +1,24 @@
+{
+  "name": "@lucid/engine",
+  "version": "0.1.0",
+  "description": "Lucid game engine - app lifecycle, scenes, platform adapters",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/",
+    "src/"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@lucid/core": "workspace:*"
+  },
+  "devDependencies": {
+    "jsdom": "^29.0.0",
+    "vitest": "^3.1.0"
+  }
+}
