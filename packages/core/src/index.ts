@@ -1,5 +1,5 @@
 /**
- * @canvas-game-ui/core — AI-first Canvas 2D 游戏 UI 组件库
+ * @lucid/core — AI-first Canvas 2D 游戏 UI 组件库
  */
 
 // 核心

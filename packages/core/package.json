@@ -1,5 +1,5 @@
 {
-  "name": "@canvas-game-ui/core",
+  "name": "@lucid/core",
   "version": "0.1.0",
   "description": "Canvas 2D game UI component library - core",
   "type": "module",

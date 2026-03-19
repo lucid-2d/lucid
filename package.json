@@ -1,5 +1,5 @@
 {
-  "name": "canvas-game-ui",
+  "name": "lucid-engine",
   "private": true,
   "scripts": {
     "test": "pnpm -r test",
