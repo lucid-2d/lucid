@@ -1,0 +1,11 @@
+{
+  "name": "canvas-game-ui",
+  "private": true,
+  "scripts": {
+    "test": "pnpm -r test",
+    "build": "pnpm -r build"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0"
+  }
+}
