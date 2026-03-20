@@ -42,9 +42,16 @@ export class Toggle extends UINode {
   protected draw(ctx: CanvasRenderingContext2D): void {
     const trackW = 48, trackH = 26;
     const r = trackH / 2;
-    const trackX = this.width - trackW;
+    const trackX = this.width - trackW; // track 靠右
     const trackY = (this.height - trackH) / 2;
     const t = this.progress;
+
+    // Label（左侧，space-between 布局）
+    ctx.fillStyle = 'rgba(255,255,255,0.8)';
+    ctx.font = '14px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(this._label, 0, this.height / 2);
 
     // 轨道颜色插值（OFF灰 → ON accent）
     const offR = 255, offG = 255, offB = 255, offA = 0.2;
@@ -81,12 +88,5 @@ export class Toggle extends UINode {
     ctx.arc(knobCx, knobCy, knobR, 0, Math.PI * 2);
     ctx.fillStyle = '#ffffff';
     ctx.fill();
-
-    // Label（左侧）
-    ctx.fillStyle = 'rgba(255,255,255,0.8)';
-    ctx.font = '14px sans-serif';
-    ctx.textAlign = 'right';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(this._label, trackX - 10, this.height / 2);
   }
 }

@@ -49,6 +49,12 @@ export class ResultPanel extends UINode {
     this._score = props.score;
     this._isNewBest = props.isNewBest;
 
+    // Close / back button
+    const closeBtn = new Button({ id: 'close-btn', text: '×', variant: 'ghost', width: 40, height: 40 });
+    closeBtn.x = 4; closeBtn.y = 12;
+    closeBtn.$on('tap', () => this.$emit('action', 'close'));
+    this.addChild(closeBtn);
+
     // Title label
     const titleLabel = new Label({ text: props.title, fontSize: 32, fontWeight: 'bold', color: '#ffd166', align: 'center', width: 390, height: 40 });
     titleLabel.y = 160;
@@ -107,6 +113,15 @@ export class ResultPanel extends UINode {
   }
 
   get $text() { return this._title; }
+
+  protected draw(ctx: CanvasRenderingContext2D): void {
+    // Full screen background
+    const grad = ctx.createLinearGradient(0, 0, 0, this.height);
+    grad.addColorStop(0, '#16213e');
+    grad.addColorStop(1, '#0f3460');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, this.width, this.height);
+  }
 
   $inspect(depth?: number): string {
     let out = super.$inspect(depth);

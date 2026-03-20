@@ -99,12 +99,12 @@ export class GalleryScene extends SceneNode {
     y = this.addSection(c, 'Toggle — 点击切换（有动画）', y);
     const toggleLabels = [
       { label: '音效', value: true },
-      { label: '音乐', value: true },
+      { label: '音乐', value: false },
       { label: '振动', value: false },
     ];
     for (const t of toggleLabels) {
-      const toggle = new Toggle({ label: t.label, value: t.value, width: 180, height: 32 });
-      toggle.x = W / 2 - 60;
+      const toggle = new Toggle({ label: t.label, value: t.value, width: W - 48, height: 32 });
+      toggle.x = 24;
       toggle.y = y;
       toggle.$on('change', (v: boolean) => console.log(`[toggle] ${t.label}: ${v}`));
       c.addChild(toggle);
@@ -154,6 +154,12 @@ export class GalleryScene extends SceneNode {
     modalBtn.x = (W - 180) / 2; modalBtn.y = y;
     modalBtn.$on('tap', () => this.showDemoModal());
     c.addChild(modalBtn);
+    y += 70;
+
+    // Bottom padding
+    const spacer = new UINode({ width: W, height: 40 });
+    spacer.y = y;
+    c.addChild(spacer);
   }
 
   private buildBusinessUI() {
@@ -281,7 +287,7 @@ export class GalleryScene extends SceneNode {
     result.id = 'overlay';
     result.$on('action', (id: string) => {
       console.log(`[结算] action: ${id}`);
-      result.removeFromParent();
+      if (id === 'close' || id === 'retry' || id === 'menu') result.removeFromParent();
     });
     this.addChild(result);
   }

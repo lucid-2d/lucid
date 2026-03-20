@@ -28,12 +28,13 @@ describe('ResultPanel', () => {
     expect(panel.findById('stat-1')).not.toBeNull();
   });
 
-  it('creates buttons', () => {
+  it('creates buttons (+ built-in close button)', () => {
     const panel = new ResultPanel(baseProps);
     const buttons = panel.findByType(Button);
-    expect(buttons).toHaveLength(2);
-    expect(buttons[0].$text).toBe('再来一次');
-    expect(buttons[1].$text).toBe('返回菜单');
+    // close button + 2 action buttons = 3
+    expect(buttons).toHaveLength(3);
+    expect(panel.findById('btn-retry')?.$text).toBe('再来一次');
+    expect(panel.findById('btn-menu')?.$text).toBe('返回菜单');
   });
 
   it('emits action with button id on tap', () => {
@@ -45,13 +46,13 @@ describe('ResultPanel', () => {
     expect(handler).toHaveBeenCalledWith('retry');
   });
 
-  it('addButton inserts at position', () => {
+  it('addButton inserts into button container', () => {
     const panel = new ResultPanel(baseProps);
     panel.addButton({ id: 'revive', label: '复活', variant: 'gold' }, 0);
 
-    const buttons = panel.findByType(Button);
-    expect(buttons[0].$text).toBe('复活');
-    expect(buttons).toHaveLength(3);
+    const reviveBtn = panel.findById('btn-revive');
+    expect(reviveBtn).not.toBeNull();
+    expect(reviveBtn!.$text).toBe('复活');
   });
 
   it('addButton at end by default', () => {
