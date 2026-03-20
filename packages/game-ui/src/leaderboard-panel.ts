@@ -1,5 +1,5 @@
 import { UINode } from '@lucid/core';
-import { Button, TabBar, Label, type TabItem } from '@lucid/ui';
+import { Button, TabBar, Label, UIColors, drawIcon, type TabItem } from '@lucid/ui';
 
 export interface LeaderboardEntry {
   rank: number;
@@ -8,6 +8,8 @@ export interface LeaderboardEntry {
   avatar?: string;
   isMe?: boolean;
 }
+
+const MEDAL_COLORS = ['#ffd166', '#c0c0c0', '#cd7f32']; // gold, silver, bronze
 
 class EntryRow extends UINode {
   constructor(id: string, public entry: LeaderboardEntry) {
@@ -18,7 +20,6 @@ class EntryRow extends UINode {
   get $highlighted() { return this.entry.isMe ?? false; }
 
   protected draw(ctx: CanvasRenderingContext2D): void {
-    // Background for "me" row
     if (this.entry.isMe) {
       ctx.fillStyle = 'rgba(255,209,102,0.12)';
       ctx.beginPath();
@@ -26,19 +27,22 @@ class EntryRow extends UINode {
       ctx.fill();
     }
 
-    // Rank medal
-    const medals = ['🥇', '🥈', '🥉'];
-    const rankStr = this.entry.rank <= 3 ? medals[this.entry.rank - 1] : `${this.entry.rank}`;
-    ctx.fillStyle = this.entry.isMe ? '#ffd166' : 'rgba(255,255,255,0.6)';
-    ctx.font = this.entry.rank <= 3 ? '18px sans-serif' : 'bold 14px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(rankStr, 24, this.height / 2);
+    // Rank — medal icon for top 3, number for others
+    if (this.entry.rank <= 3) {
+      drawIcon(ctx, 'medal', 24, this.height / 2, 22, MEDAL_COLORS[this.entry.rank - 1]);
+    } else {
+      ctx.fillStyle = this.entry.isMe ? UIColors.accent : UIColors.textMuted;
+      ctx.font = 'bold 14px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(`${this.entry.rank}`, 24, this.height / 2);
+    }
 
     // Name
-    ctx.fillStyle = this.entry.isMe ? '#ffd166' : '#ffffff';
+    ctx.fillStyle = this.entry.isMe ? UIColors.accent : UIColors.text;
     ctx.font = `${this.entry.isMe ? 'bold ' : ''}14px sans-serif`;
     ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
     ctx.fillText(this.entry.name, 52, this.height / 2);
 
     // Score
@@ -46,7 +50,7 @@ class EntryRow extends UINode {
     ctx.fillText(String(this.entry.score), this.width - 12, this.height / 2);
 
     // Divider
-    ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+    ctx.strokeStyle = UIColors.divider;
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(12, this.height - 0.5);
@@ -67,21 +71,18 @@ export class LeaderboardPanel extends UINode {
 
   constructor(props: LeaderboardPanelProps) {
     super({ id: 'leaderboard', width: 390, height: 844 });
-    this.interactive = true; // 阻止触摸穿透到下层
+    this.interactive = true;
     this._entries = props.entries;
 
-    // Close button
     const closeBtn = new Button({ id: 'close-btn', text: '← 返回', variant: 'ghost', width: 80, height: 36 });
     closeBtn.x = 4; closeBtn.y = 12;
     closeBtn.$on('tap', () => this.$emit('close'));
     this.addChild(closeBtn);
 
-    // Title
-    const title = new Label({ text: '排行榜', fontSize: 18, fontWeight: 'bold', color: '#ffffff', align: 'center', width: 390, height: 30 });
+    const title = new Label({ text: '排行榜', fontSize: 18, fontWeight: 'bold', color: UIColors.text, align: 'center', width: 390, height: 30 });
     title.y = 16;
     this.addChild(title);
 
-    // Tabs
     if (props.tabs) {
       const tabBar = new TabBar({ id: 'tab-bar', tabs: props.tabs, activeKey: props.tabs[0].key, width: 390, height: 40 });
       tabBar.y = 56;
@@ -89,7 +90,6 @@ export class LeaderboardPanel extends UINode {
       this.addChild(tabBar);
     }
 
-    // Entries
     this._entryContainer = new UINode({ id: 'entries' });
     this._entryContainer.y = props.tabs ? 110 : 60;
     this.addChild(this._entryContainer);
@@ -114,10 +114,9 @@ export class LeaderboardPanel extends UINode {
   }
 
   protected draw(ctx: CanvasRenderingContext2D): void {
-    // Full screen background
     const grad = ctx.createLinearGradient(0, 0, 0, this.height);
-    grad.addColorStop(0, '#16213e');
-    grad.addColorStop(1, '#0f3460');
+    grad.addColorStop(0, UIColors.bgTop);
+    grad.addColorStop(1, UIColors.bgBottom);
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, this.width, this.height);
   }

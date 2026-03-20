@@ -88,16 +88,16 @@ export const Toast = {
       ctx.fillStyle = grad;
     } else {
       const colorMap: Record<string, string> = {
-        success: '#4caf50', error: '#f44336', warning: '#ff9800',
+        success: UIColors.success, error: UIColors.error, warning: UIColors.warning,
       };
-      ctx.fillStyle = colorMap[type] ?? '#4caf50';
+      ctx.fillStyle = colorMap[type] ?? UIColors.success;
       ctx.globalAlpha = alpha * 0.85;
     }
     ctx.fill();
 
     // Text
     ctx.globalAlpha = alpha;
-    ctx.fillStyle = type === 'reward' ? '#1a1a2e' : '#ffffff';
+    ctx.fillStyle = type === 'reward' ? '#1a1a2e' : UIColors.text;
     ctx.font = font;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';

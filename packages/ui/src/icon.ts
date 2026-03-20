@@ -5,6 +5,7 @@
 
 import { UINode, type UINodeOptions } from '@lucid/core';
 import { drawIcon, type IconName, type IconStyle } from './icon-draw.js';
+import { UIColors } from './tokens.js';
 
 export type { IconName, IconStyle } from './icon-draw.js';
 export { drawIcon, ALL_ICON_NAMES, ALL_ICON_STYLES, setIconStyle, getIconStyle } from './icon-draw.js';
@@ -27,7 +28,7 @@ export class Icon extends UINode {
     super({ ...props, width: sz, height: sz });
     this.name = props.name;
     this.iconSize = sz;
-    this.color = props.color ?? '#ffffff';
+    this.color = props.color ?? UIColors.text;
     this.iconStyle = props.style;
   }
 

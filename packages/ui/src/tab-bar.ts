@@ -1,4 +1,5 @@
 import { UINode, type UINodeOptions } from '@lucid/core';
+import { UIColors } from './tokens.js';
 
 export interface TabItem {
   key: string;
@@ -26,7 +27,6 @@ export class TabBar extends UINode {
     this._activeKey = props.activeKey;
     this.interactive = true;
 
-    // 触摸处理：判断点了哪个 tab
     this.$on('touchend', (e: any) => {
       const tabW = this.width / this.tabs.length;
       const idx = Math.floor(e.localX / tabW);
@@ -57,13 +57,11 @@ export class TabBar extends UINode {
     const tabW = this.width / this.tabs.length;
     const idx = this.tabs.findIndex(t => t.key === this._activeKey);
     if (idx < 0) return { x: 0, w: 0 };
-    // 下划线宽度 = tab 宽度的 60%，居中
     const lw = tabW * 0.6;
     const lx = idx * tabW + (tabW - lw) / 2;
     return { x: lx, w: lw };
   }
 
-  /** $inspect 显示 active tab */
   $inspect(depth?: number): string {
     const base = super.$inspect(depth);
     const first = base.split('\n')[0];
@@ -72,7 +70,6 @@ export class TabBar extends UINode {
   }
 
   protected draw(ctx: CanvasRenderingContext2D): void {
-    // 首次渲染：跳过动画，直接跳到目标位置
     if (!this._initialized) {
       const target = this._computeLineTarget();
       this.lineX = target.x;
@@ -92,16 +89,16 @@ export class TabBar extends UINode {
       ctx.font = `${isActive ? 'bold ' : ''}14px sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillStyle = isActive ? '#ffffff' : 'rgba(255,255,255,0.5)';
+      ctx.fillStyle = isActive ? UIColors.text : UIColors.textMuted;
       ctx.fillText(tab.label, cx, h / 2);
     }
 
-    // 下划线（动画位置）
+    // 下划线
     if (this.lineW > 0) {
       ctx.beginPath();
       ctx.moveTo(this.lineX, h - 2);
       ctx.lineTo(this.lineX + this.lineW, h - 2);
-      ctx.strokeStyle = '#ffd166';
+      ctx.strokeStyle = UIColors.accent;
       ctx.lineWidth = 2.5;
       ctx.lineCap = 'round';
       ctx.stroke();

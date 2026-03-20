@@ -27,7 +27,7 @@ export type IconName =
   | 'share' | 'retry' | 'gift' | 'lock' | 'unlock' | 'check' | 'plus'
   // 信息
   | 'trophy' | 'crown' | 'star' | 'coin' | 'diamond' | 'heart'
-  | 'shield' | 'lightning' | 'clock' | 'block' | 'fire'
+  | 'shield' | 'lightning' | 'clock' | 'block' | 'fire' | 'medal'
   // 功能
   | 'sound-on' | 'sound-off' | 'vibrate' | 'ad-video' | 'checkin'
   | 'mission' | 'achievement' | 'battle-pass';
@@ -1195,6 +1195,56 @@ regO('battle-pass', (ctx, cx, cy, s, color) => {
     ctx.lineTo(cx + Math.cos(ia) * bsr * 0.45, cy + Math.sin(ia) * bsr * 0.45);
   }
   ctx.closePath(); ctx.stroke();
+});
+
+// ── 奖牌 ────────────────────────────────────────────────────
+
+reg('medal', (ctx, cx, cy, s) => {
+  // 参考 Lucide Icons medal: 圆形奖牌 + 下方缎带
+  const r = s * 0.28;
+  const ribbonW = s * 0.16;
+  const ribbonH = s * 0.22;
+
+  // 缎带（两条 V 形带子）
+  ctx.beginPath();
+  ctx.moveTo(cx - r * 0.7, cy + r * 0.3);
+  ctx.lineTo(cx - ribbonW - r * 0.1, cy + r + ribbonH);
+  ctx.lineTo(cx - r * 0.1, cy + r * 0.7);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(cx + r * 0.7, cy + r * 0.3);
+  ctx.lineTo(cx + ribbonW + r * 0.1, cy + r + ribbonH);
+  ctx.lineTo(cx + r * 0.1, cy + r * 0.7);
+  ctx.closePath();
+  ctx.fill();
+
+  // 奖牌圆盘
+  ctx.beginPath();
+  ctx.arc(cx, cy - s * 0.06, r, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 内圈（挖空效果）
+  ctx.save();
+  ctx.globalCompositeOperation = 'destination-out';
+  ctx.beginPath();
+  ctx.arc(cx, cy - s * 0.06, r * 0.65, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // 星形中心
+  ctx.beginPath();
+  const sr = r * 0.35;
+  const scy = cy - s * 0.06;
+  for (let i = 0; i < 5; i++) {
+    const oa = (Math.PI * 2 * i) / 5 - Math.PI / 2;
+    const ia = oa + Math.PI / 5;
+    ctx.lineTo(cx + Math.cos(oa) * sr, scy + Math.sin(oa) * sr);
+    ctx.lineTo(cx + Math.cos(ia) * sr * 0.45, scy + Math.sin(ia) * sr * 0.45);
+  }
+  ctx.closePath();
+  ctx.fill();
 });
 
 // ── 导出 ────────────────────────────────────────────────────

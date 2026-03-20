@@ -4,6 +4,7 @@
 
 import { UINode, type UINodeOptions } from '@lucid/core';
 import { drawIcon, type IconName } from './icon-draw.js';
+import { UIColors } from './tokens.js';
 
 export interface IconButtonProps extends UINodeOptions {
   icon: IconName;
@@ -27,8 +28,8 @@ export class IconButton extends UINode {
     super({ ...props, width: sz, height: sz });
     this.icon = props.icon;
     this.iconSize = props.iconSize ?? sz * 0.45;
-    this.color = props.color ?? 'rgba(255,255,255,0.8)';
-    this.bgColor = props.bgColor ?? 'rgba(255,255,255,0.12)';
+    this.color = props.color ?? UIColors.textLight;
+    this.bgColor = props.bgColor ?? UIColors.trackBg;
     this.badge = props.badge;
     this.interactive = true;
 
@@ -53,7 +54,7 @@ export class IconButton extends UINode {
     // Background circle
     ctx.beginPath();
     ctx.arc(cx, cy, sz / 2, 0, Math.PI * 2);
-    ctx.fillStyle = this.pressed ? 'rgba(255,255,255,0.25)' : this.bgColor;
+    ctx.fillStyle = this.pressed ? UIColors.textHint : this.bgColor;
     ctx.fill();
 
     // Icon
@@ -66,9 +67,9 @@ export class IconButton extends UINode {
       const by = badgeR - 2;
       ctx.beginPath();
       ctx.arc(bx, by, badgeR, 0, Math.PI * 2);
-      ctx.fillStyle = '#e94560';
+      ctx.fillStyle = UIColors.primary;
       ctx.fill();
-      ctx.fillStyle = '#ffffff';
+      ctx.fillStyle = UIColors.text;
       ctx.font = 'bold 10px sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';

@@ -1,4 +1,5 @@
 import { UINode, type UINodeOptions } from '@lucid/core';
+import { UIColors } from './tokens.js';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'gold' | 'danger' | 'ghost';
 
@@ -67,11 +68,11 @@ export class Button extends UINode {
     ctx.beginPath();
     ctx.roundRect(0, 0, w, h, r);
 
-    // 按 variant 绘制背景（参照 template 的渐变实现）
+    // 按 variant 绘制背景
     switch (this.variant) {
       case 'primary': {
         const grad = ctx.createLinearGradient(0, 0, 0, h);
-        grad.addColorStop(0, '#e94560');
+        grad.addColorStop(0, UIColors.primary);
         grad.addColorStop(1, '#c73a52');
         ctx.fillStyle = grad;
         ctx.fill();
@@ -86,40 +87,39 @@ export class Button extends UINode {
         break;
       }
       case 'outline': {
-        ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+        ctx.strokeStyle = UIColors.textHint;
         ctx.lineWidth = 1;
         ctx.stroke();
         break;
       }
       case 'gold': {
         const grad = ctx.createLinearGradient(0, 0, 0, h);
-        grad.addColorStop(0, '#f59e0b');
-        grad.addColorStop(1, '#d97706');
+        grad.addColorStop(0, UIColors.goldStart);
+        grad.addColorStop(1, UIColors.goldEnd);
         ctx.fillStyle = grad;
         ctx.fill();
         break;
       }
       case 'danger': {
         const grad = ctx.createLinearGradient(0, 0, 0, h);
-        grad.addColorStop(0, '#e94560');
-        grad.addColorStop(1, '#d32f4f');
+        grad.addColorStop(0, UIColors.dangerStart);
+        grad.addColorStop(1, UIColors.dangerEnd);
         ctx.fillStyle = grad;
         ctx.fill();
         break;
       }
       case 'ghost':
-        // 无背景
         break;
     }
 
     // 文字颜色
     const textColors: Record<ButtonVariant, string> = {
-      primary: '#ffffff',
-      secondary: '#ffffff',
-      outline: 'rgba(255,255,255,0.8)',
+      primary: UIColors.text,
+      secondary: UIColors.text,
+      outline: UIColors.textLight,
       gold: '#1a1a2e',
-      danger: '#ffffff',
-      ghost: 'rgba(255,255,255,0.6)',
+      danger: UIColors.text,
+      ghost: UIColors.textMuted,
     };
 
     ctx.fillStyle = textColors[this.variant];

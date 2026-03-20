@@ -235,8 +235,8 @@ class PlayScene extends SceneNode {
       score: this.score,
       isNewBest: this.score > 300,
       stats: [
-        { icon: '🧱', label: '消除方块', value: String(25 - this.blocks.length) },
-        { icon: '⭐', label: '得分', value: String(this.score) },
+        { icon: 'block', label: '消除方块', value: String(25 - this.blocks.length) },
+        { icon: 'star', label: '得分', value: String(this.score) },
       ],
       buttons: [
         { id: 'retry', label: '再来一次', variant: 'primary' },
@@ -334,6 +334,15 @@ function switchToGallery() {
 app.router.push(new MenuScene({ id: 'menu' }));
 app.start();
 
+// 鼠标滚轮支持（Gallery 滚动）
+canvas.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  const sv = (app.root.findById('base-scroll') ?? app.root.findById('biz-scroll')) as ScrollView | null;
+  if (sv && sv.visible) {
+    sv.scrollTo(sv.scrollY + e.deltaY);
+  }
+}, { passive: false });
+
 console.log('%c[Lucid] Playground started', 'color: #ffd166; font-weight: bold');
 
 // ── Debug Panel 接口 ─────────────────────────
@@ -357,4 +366,23 @@ console.log('%c[Lucid] Playground started', 'color: #ffd166; font-weight: bold')
   };
   update();
   setInterval(update, 500);
+};
+(window as any).replayInteractions = async () => {
+  const records = app.dumpInteractions();
+  if (records.length === 0) {
+    document.getElementById('debug-output')!.textContent = '(无录制数据可回放)';
+    return;
+  }
+  const output = document.getElementById('debug-output')!;
+  output.textContent = `回放中... (${records.length} 步)`;
+  const steps = await app.replay(records);
+  output.textContent = JSON.stringify(steps.map(s => ({
+    step: s.step,
+    t: `${s.t}ms`,
+    dt: `+${s.dt}ms`,
+    type: s.type,
+    path: s.actualPath,
+    match: s.pathMatch,
+    node: s.snapshot,
+  })), null, 2);
 };

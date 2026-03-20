@@ -1,11 +1,9 @@
 /**
  * CoinShopPanel — 金币商店（参照 template coin-shop.ts）
- *
- * 消耗品/增益道具购买，用游戏内金币支付
  */
 
 import { UINode } from '@lucid/core';
-import { Button, Label } from '@lucid/ui';
+import { Button, Label, UIColors, drawIcon } from '@lucid/ui';
 
 export interface CoinShopItem {
   id: string;
@@ -30,31 +28,31 @@ class CoinShopCard extends UINode {
 
     ctx.beginPath();
     ctx.roundRect(0, 0, w, h, 8);
-    ctx.fillStyle = 'rgba(255,255,255,0.06)';
+    ctx.fillStyle = UIColors.cardBg;
     ctx.fill();
 
-    // Icon
+    // Item icon (user content emoji from props)
     ctx.font = '28px sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(this.item.icon, w / 2, 24);
 
-    // Name
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = UIColors.text;
     ctx.font = 'bold 13px sans-serif';
     ctx.fillText(this.item.name, w / 2, 52);
 
-    // Desc
-    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.fillStyle = UIColors.textMuted;
     ctx.font = '10px sans-serif';
     ctx.fillText(this.item.desc, w / 2, 68);
 
-    // Price
-    ctx.fillStyle = '#ffd166';
+    // Price with coin icon
+    drawIcon(ctx, 'coin', w / 2 - 18, 88, 12, UIColors.accent);
+    ctx.fillStyle = UIColors.accent;
     ctx.font = 'bold 12px sans-serif';
-    ctx.fillText(`🪙 ${this.item.cost}`, w / 2, 88);
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`${this.item.cost}`, w / 2 + 4, 88);
 
-    // Owned count
     if (this.item.owned !== undefined && this.item.owned > 0) {
       ctx.fillStyle = 'rgba(76,175,80,0.8)';
       ctx.font = '10px sans-serif';
@@ -79,22 +77,30 @@ export class CoinShopPanel extends UINode {
     this._coins = props.coins;
     this._items = props.items;
 
-    // Close
     const closeBtn = new Button({ id: 'close-btn', text: '← 返回', variant: 'ghost', width: 80, height: 36 });
     closeBtn.x = 4; closeBtn.y = 12;
     closeBtn.$on('tap', () => this.$emit('close'));
     this.addChild(closeBtn);
 
-    // Title + coins
-    const title = new Label({ text: '金币商店', fontSize: 18, fontWeight: 'bold', color: '#ffffff', align: 'center', width: 390, height: 30 });
+    const title = new Label({ text: '金币商店', fontSize: 18, fontWeight: 'bold', color: UIColors.text, align: 'center', width: 390, height: 30 });
     title.y = 16;
     this.addChild(title);
 
-    const coinLabel = new Label({ id: 'coin-balance', text: `🪙 ${props.coins}`, fontSize: 14, fontWeight: 'bold', color: '#ffd166', align: 'right', width: 100, height: 20 });
-    coinLabel.x = 270; coinLabel.y = 20;
+    // Coin balance with icon
+    const coinLabel = new Label({ id: 'coin-balance', text: `${props.coins}`, fontSize: 14, fontWeight: 'bold', color: UIColors.accent, align: 'right', width: 80, height: 20 });
+    coinLabel.x = 290; coinLabel.y = 20;
     this.addChild(coinLabel);
 
-    // Item grid (2 columns)
+    // Coin icon next to balance
+    const coinIcon = new UINode({ id: 'coin-icon', width: 16, height: 16 });
+    coinIcon.x = 272; coinIcon.y = 22;
+    (coinIcon as any)._drawCoin = true;
+    const origDraw = coinIcon['draw'].bind(coinIcon);
+    coinIcon['draw'] = (ctx: CanvasRenderingContext2D) => {
+      drawIcon(ctx, 'coin', 8, 8, 14, UIColors.accent);
+    };
+    this.addChild(coinIcon);
+
     const gap = 10;
     const cardW = 170;
     const startY = 64;
@@ -110,13 +116,13 @@ export class CoinShopPanel extends UINode {
   updateCoins(coins: number): void {
     this._coins = coins;
     const label = this.findById('coin-balance') as Label | null;
-    if (label) label.text = `🪙 ${coins}`;
+    if (label) label.text = `${coins}`;
   }
 
   protected draw(ctx: CanvasRenderingContext2D): void {
     const grad = ctx.createLinearGradient(0, 0, 0, this.height);
-    grad.addColorStop(0, '#16213e');
-    grad.addColorStop(1, '#0f3460');
+    grad.addColorStop(0, UIColors.bgTop);
+    grad.addColorStop(1, UIColors.bgBottom);
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, this.width, this.height);
   }

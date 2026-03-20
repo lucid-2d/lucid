@@ -2,12 +2,16 @@
  * Component Gallery — 全组件展示 + 交互试用
  *
  * Tab: Base UI | Business UI
- * 参照 template ui-gallery.ts 的布局风格
+ * 支持触摸/鼠标滚动
  */
 
 import { SceneNode } from '../packages/engine/src/index';
 import { UINode } from '../packages/core/src/index';
-import { Button, Label, Modal, ProgressBar, Toggle, TabBar, ScrollView, Icon, IconButton, RedDot, Badge, Tag, Toast } from '../packages/ui/src/index';
+import {
+  Button, Label, Modal, ProgressBar, Toggle, TabBar, ScrollView,
+  Icon, IconButton, RedDot, Badge, Tag, Toast,
+  UIColors, ALL_ICON_NAMES, type IconName,
+} from '../packages/ui/src/index';
 import {
   CheckinDialog, SettingsPanel, ResultPanel, ShopPanel, LeaderboardPanel,
   BattlePassPanel, LuckyBoxDialog, CoinShopPanel, PrivacyDialog,
@@ -21,8 +25,8 @@ type GalleryTab = 'base' | 'business';
 export class GalleryScene extends SceneNode {
   private galleryTab: GalleryTab = 'base';
   private topTabBar!: TabBar;
-  private baseContainer!: UINode;
-  private bizContainer!: UINode;
+  private baseScroll!: ScrollView;
+  private bizScroll!: ScrollView;
 
   // demo states
   private demoProgress = 0;
@@ -39,27 +43,28 @@ export class GalleryScene extends SceneNode {
     this.topTabBar.y = 8;
     this.topTabBar.$on('change', (key: string) => {
       this.galleryTab = key as GalleryTab;
-      this.baseContainer.visible = key === 'base';
-      this.bizContainer.visible = key === 'business';
+      this.baseScroll.visible = key === 'base';
+      this.bizScroll.visible = key === 'business';
     });
     this.addChild(this.topTabBar);
 
-    // Base UI container
-    this.baseContainer = new UINode({ id: 'base-ui' });
-    this.baseContainer.y = 50;
-    this.addChild(this.baseContainer);
-    this.buildBaseUI();
+    // Base UI scroll container
+    this.baseScroll = new ScrollView({ id: 'base-scroll', width: W, height: H - 50 });
+    this.baseScroll.y = 50;
+    this.addChild(this.baseScroll);
+    const baseH = this.buildBaseUI(this.baseScroll.content);
+    this.baseScroll.contentHeight = baseH;
 
-    // Business UI container
-    this.bizContainer = new UINode({ id: 'biz-ui' });
-    this.bizContainer.y = 50;
-    this.bizContainer.visible = false;
-    this.addChild(this.bizContainer);
-    this.buildBusinessUI();
+    // Business UI scroll container
+    this.bizScroll = new ScrollView({ id: 'biz-scroll', width: W, height: H - 50 });
+    this.bizScroll.y = 50;
+    this.bizScroll.visible = false;
+    this.addChild(this.bizScroll);
+    const bizH = this.buildBusinessUI(this.bizScroll.content);
+    this.bizScroll.contentHeight = bizH;
   }
 
-  private buildBaseUI() {
-    const c = this.baseContainer;
+  private buildBaseUI(c: UINode): number {
     let y = 0;
 
     // ── Section: Buttons ──
@@ -79,8 +84,7 @@ export class GalleryScene extends SceneNode {
       btn.$on('tap', () => console.log(`[tap] ${item.v}: ${item.label}`));
       c.addChild(btn);
 
-      // variant 标签
-      const tag = new Label({ text: item.v, fontSize: 10, color: 'rgba(255,255,255,0.3)', align: 'left', width: 60, height: 20 });
+      const tag = new Label({ text: item.v, fontSize: 10, color: UIColors.textHint, align: 'left', width: 60, height: 20 });
       tag.x = 16;
       tag.y = y + 12;
       c.addChild(tag);
@@ -142,12 +146,12 @@ export class GalleryScene extends SceneNode {
     y += 22;
 
     const bar2 = new ProgressBar({ width: W - 48, height: 8 });
-    bar2.x = 24; bar2.y = y; bar2.value = 0.65; bar2.color = '#4caf50';
+    bar2.x = 24; bar2.y = y; bar2.value = 0.65; bar2.color = UIColors.success;
     c.addChild(bar2);
     y += 18;
 
     const bar3 = new ProgressBar({ width: W - 48, height: 8 });
-    bar3.x = 24; bar3.y = y; bar3.value = 0.3; bar3.color = '#f44336';
+    bar3.x = 24; bar3.y = y; bar3.value = 0.3; bar3.color = UIColors.error;
     c.addChild(bar3);
     y += 24;
 
@@ -156,7 +160,7 @@ export class GalleryScene extends SceneNode {
     y = this.addSection(c, 'IconButton + Badge + Tag', y);
     const ibIcons = ['pause', 'settings', 'share', 'gift', 'mission', 'star'] as const;
     ibIcons.forEach((name, i) => {
-      const ib = new IconButton({ icon: name as any, size: 40, bgColor: 'rgba(255,255,255,0.12)', badge: i >= 4 ? i : undefined });
+      const ib = new IconButton({ icon: name as any, size: 40, bgColor: UIColors.trackBg, badge: i >= 4 ? i : undefined });
       ib.x = 16 + i * 56;
       ib.y = y;
       ib.$on('tap', () => {
@@ -169,9 +173,9 @@ export class GalleryScene extends SceneNode {
 
     // Tags
     const tags = [
-      { text: '限时', bg: '#e94560' },
-      { text: '新品', bg: '#4caf50' },
-      { text: 'HOT', bg: '#ff9800' },
+      { text: '限时', bg: UIColors.primary },
+      { text: '新品', bg: UIColors.success },
+      { text: 'HOT', bg: UIColors.warning },
     ];
     tags.forEach((t, i) => {
       const tag = new Tag({ text: t.text, bgColor: t.bg });
@@ -180,6 +184,27 @@ export class GalleryScene extends SceneNode {
       c.addChild(tag);
     });
     y += 36;
+
+    // ── Section: Icon Gallery ──
+    y += 10;
+    y = this.addSection(c, `Icon — ${ALL_ICON_NAMES.length} 图标`, y);
+    const iconCols = 7;
+    const iconSize = 24;
+    const iconGap = (W - 32 - iconCols * iconSize) / (iconCols - 1);
+    ALL_ICON_NAMES.forEach((name: IconName, i: number) => {
+      const icon = new Icon({ name, size: iconSize, color: UIColors.textLight });
+      icon.x = 16 + (i % iconCols) * (iconSize + iconGap);
+      icon.y = y + Math.floor(i / iconCols) * (iconSize + 20);
+      c.addChild(icon);
+
+      // Label under icon
+      const lbl = new Label({ text: name, fontSize: 8, color: UIColors.textHint, align: 'center', width: iconSize + 8, height: 12 });
+      lbl.x = icon.x - 4;
+      lbl.y = icon.y + iconSize + 2;
+      c.addChild(lbl);
+    });
+    const iconRows = Math.ceil(ALL_ICON_NAMES.length / iconCols);
+    y += iconRows * (iconSize + 20) + 10;
 
     // ── Section: Toast ──
     y = this.addSection(c, 'Toast — 点击触发', y);
@@ -206,95 +231,41 @@ export class GalleryScene extends SceneNode {
     y += 70;
 
     // Bottom padding
-    const spacer = new UINode({ width: W, height: 40 });
-    spacer.y = y;
-    c.addChild(spacer);
+    y += 40;
+    return y;
   }
 
-  private buildBusinessUI() {
-    const c = this.bizContainer;
+  private buildBusinessUI(c: UINode): number {
     let y = 0;
 
-    // ── Checkin ──
-    y = this.addSection(c, 'CheckinDialog — 签到弹窗', y);
-    const checkinBtn = new Button({ text: '打开签到', variant: 'primary', width: 200, height: 44 });
-    checkinBtn.x = (W - 200) / 2; checkinBtn.y = y;
-    checkinBtn.$on('tap', () => this.showCheckin());
-    c.addChild(checkinBtn);
-    y += 60;
+    const items: Array<{ label: string; btnText: string; variant: any; handler: () => void }> = [
+      { label: 'CheckinDialog — 签到弹窗', btnText: '打开签到', variant: 'primary', handler: () => this.showCheckin() },
+      { label: 'SettingsPanel — 设置面板', btnText: '打开设置', variant: 'secondary', handler: () => this.showSettings() },
+      { label: 'ResultPanel — 结算页', btnText: '打开结算', variant: 'outline', handler: () => this.showResult() },
+      { label: 'ShopPanel — 商店', btnText: '打开商店', variant: 'gold', handler: () => this.showShop() },
+      { label: 'LeaderboardPanel — 排行榜', btnText: '打开排行榜', variant: 'secondary', handler: () => this.showLeaderboard() },
+      { label: 'BattlePassPanel — 战令', btnText: '打开战令', variant: 'gold', handler: () => this.showBattlePass() },
+      { label: 'LuckyBoxDialog — 抽奖', btnText: '打开抽奖', variant: 'danger', handler: () => this.showLuckyBox() },
+      { label: 'CoinShopPanel — 金币商店', btnText: '打开金币商店', variant: 'secondary', handler: () => this.showCoinShop() },
+      { label: 'PrivacyDialog — 隐私合规', btnText: '打开隐私弹窗', variant: 'outline', handler: () => this.showPrivacy() },
+    ];
 
-    // ── Settings ──
-    y = this.addSection(c, 'SettingsPanel — 设置面板', y);
-    const settingsBtn = new Button({ text: '打开设置', variant: 'secondary', width: 200, height: 44 });
-    settingsBtn.x = (W - 200) / 2; settingsBtn.y = y;
-    settingsBtn.$on('tap', () => this.showSettings());
-    c.addChild(settingsBtn);
-    y += 60;
+    for (const item of items) {
+      y = this.addSection(c, item.label, y);
+      const btn = new Button({ text: item.btnText, variant: item.variant, width: 200, height: 44 });
+      btn.x = (W - 200) / 2; btn.y = y;
+      btn.$on('tap', item.handler);
+      c.addChild(btn);
+      y += 60;
+    }
 
-    // ── Result ──
-    y = this.addSection(c, 'ResultPanel — 结算页', y);
-    const resultBtn = new Button({ text: '打开结算', variant: 'outline', width: 200, height: 44 });
-    resultBtn.x = (W - 200) / 2; resultBtn.y = y;
-    resultBtn.$on('tap', () => this.showResult());
-    c.addChild(resultBtn);
+    // Bottom padding
     y += 60;
-
-    // ── Shop ──
-    y = this.addSection(c, 'ShopPanel — 商店', y);
-    const shopBtn = new Button({ text: '打开商店', variant: 'gold', width: 200, height: 44 });
-    shopBtn.x = (W - 200) / 2; shopBtn.y = y;
-    shopBtn.$on('tap', () => this.showShop());
-    c.addChild(shopBtn);
-    y += 60;
-
-    // ── Leaderboard ──
-    y = this.addSection(c, 'LeaderboardPanel — 排行榜', y);
-    const lbBtn = new Button({ text: '打开排行榜', variant: 'secondary', width: 200, height: 44 });
-    lbBtn.x = (W - 200) / 2; lbBtn.y = y;
-    lbBtn.$on('tap', () => this.showLeaderboard());
-    c.addChild(lbBtn);
-    y += 60;
-
-    // ── BattlePass ──
-    y = this.addSection(c, 'BattlePassPanel — 战令', y);
-    const bpBtn = new Button({ text: '打开战令', variant: 'gold', width: 200, height: 44 });
-    bpBtn.x = (W - 200) / 2; bpBtn.y = y;
-    bpBtn.$on('tap', () => this.showBattlePass());
-    c.addChild(bpBtn);
-    y += 60;
-
-    // ── LuckyBox ──
-    y = this.addSection(c, 'LuckyBoxDialog — 抽奖', y);
-    const luckBtn = new Button({ text: '打开抽奖', variant: 'danger', width: 200, height: 44 });
-    luckBtn.x = (W - 200) / 2; luckBtn.y = y;
-    luckBtn.$on('tap', () => this.showLuckyBox());
-    c.addChild(luckBtn);
-    y += 60;
-
-    // ── CoinShop ──
-    y = this.addSection(c, 'CoinShopPanel — 金币商店', y);
-    const csBtn = new Button({ text: '打开金币商店', variant: 'secondary', width: 200, height: 44 });
-    csBtn.x = (W - 200) / 2; csBtn.y = y;
-    csBtn.$on('tap', () => this.showCoinShop());
-    c.addChild(csBtn);
-    y += 60;
-
-    // ── Privacy ──
-    y = this.addSection(c, 'PrivacyDialog — 隐私合规', y);
-    const privBtn = new Button({ text: '打开隐私弹窗', variant: 'outline', width: 200, height: 44 });
-    privBtn.x = (W - 200) / 2; privBtn.y = y;
-    privBtn.$on('tap', () => this.showPrivacy());
-    c.addChild(privBtn);
-    y += 60;
-
-    // Bottom spacer
-    const spacer = new UINode({ width: W, height: 60 });
-    spacer.y = y;
-    c.addChild(spacer);
+    return y;
   }
 
   private addSection(container: UINode, title: string, y: number): number {
-    const label = new Label({ text: title, fontSize: 12, fontWeight: 'bold', color: '#ffd166', align: 'left', width: W, height: 20 });
+    const label = new Label({ text: title, fontSize: 12, fontWeight: 'bold', color: UIColors.accent, align: 'left', width: W, height: 20 });
     label.x = 16; label.y = y;
     container.addChild(label);
     return y + 26;
@@ -309,13 +280,16 @@ export class GalleryScene extends SceneNode {
 
   private showDemoModal() {
     this.removeOverlay();
-    const modal = new Modal({ id: 'overlay', title: '示例弹窗', screenWidth: W, screenHeight: H, width: 280, height: 220 });
-    const desc = new Label({ text: '这是一个 Modal 组件\n支持 open/close 动画', fontSize: 14, color: 'rgba(255,255,255,0.6)', align: 'center', width: 240, height: 40 });
-    desc.x = 20; desc.y = 20;
+    const pw = 280;
+    const modal = new Modal({ id: 'overlay', title: '示例弹窗', screenWidth: W, screenHeight: H, width: pw, height: 220 });
+    const descW = 240;
+    const desc = new Label({ text: '这是一个 Modal 组件\n支持 open/close 动画', fontSize: 14, color: UIColors.textMuted, align: 'center', width: descW, height: 60 });
+    desc.x = (pw - descW) / 2; desc.y = 20;
     modal.content.addChild(desc);
 
-    const confirmBtn = new Button({ text: '知道了', variant: 'primary', width: 180, height: 40 });
-    confirmBtn.x = 50; confirmBtn.y = 80;
+    const btnW = 180;
+    const confirmBtn = new Button({ text: '知道了', variant: 'primary', width: btnW, height: 40 });
+    confirmBtn.x = (pw - btnW) / 2; confirmBtn.y = 90;
     confirmBtn.$on('tap', () => { modal.close(); setTimeout(() => modal.removeFromParent(), 200); });
     modal.content.addChild(confirmBtn);
 
@@ -360,10 +334,10 @@ export class GalleryScene extends SceneNode {
       score: 12800,
       isNewBest: true,
       stats: [
-        { icon: '🛡', label: '关卡', value: '12' },
-        { icon: '🧱', label: '方块', value: '3,456' },
-        { icon: '⚡', label: '连击', value: '8x' },
-        { icon: '⏱', label: '用时', value: '2:34' },
+        { icon: 'shield', label: '关卡', value: '12' },
+        { icon: 'block', label: '方块', value: '3,456' },
+        { icon: 'lightning', label: '连击', value: '8x' },
+        { icon: 'clock', label: '用时', value: '2:34' },
       ],
       buttons: [
         { id: 'retry', label: '再来一次', variant: 'primary' },
@@ -486,7 +460,6 @@ export class GalleryScene extends SceneNode {
     const bar = this.findById('bar-anim') as ProgressBar | null;
     if (bar) bar.value = Math.min(this.demoProgress, 1);
 
-    // Toast update
     Toast.update(0.016);
   }
 
@@ -501,7 +474,6 @@ export class GalleryScene extends SceneNode {
       child.$render(ctx);
     }
 
-    // Toast 绘制在所有 UI 之上
     Toast.draw(ctx, W, H);
 
     ctx.restore();
@@ -509,8 +481,8 @@ export class GalleryScene extends SceneNode {
 
   protected draw(ctx: CanvasRenderingContext2D) {
     const grad = ctx.createLinearGradient(0, 0, 0, H);
-    grad.addColorStop(0, '#16213e');
-    grad.addColorStop(1, '#0f3460');
+    grad.addColorStop(0, UIColors.bgTop);
+    grad.addColorStop(1, UIColors.bgBottom);
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, W, H);
   }

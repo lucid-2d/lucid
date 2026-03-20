@@ -1,4 +1,5 @@
 import { UINode, type UINodeOptions } from '@lucid/core';
+import { UIColors } from './tokens.js';
 
 export interface ToggleProps extends UINodeOptions {
   label: string;
@@ -18,14 +19,13 @@ export class Toggle extends UINode {
     super({ ...props, width: props.width ?? 160, height: props.height ?? 32 });
     this._label = props.label;
     this._value = props.value;
-    this._accentColor = props.accentColor ?? '#4caf50';
+    this._accentColor = props.accentColor ?? UIColors.success;
     this.progress = props.value ? 1 : 0;
     this.interactive = true;
 
     this.$on('touchend', () => {
       this._value = !this._value;
       this.$emit('change', this._value);
-      // 用 $animate 驱动滑块动画
       this.$animate({ progress: this._value ? 1 : 0 }, { duration: 200, easing: 'easeOut' });
     });
   }
@@ -42,12 +42,12 @@ export class Toggle extends UINode {
   protected draw(ctx: CanvasRenderingContext2D): void {
     const trackW = 48, trackH = 26;
     const r = trackH / 2;
-    const trackX = this.width - trackW; // track 靠右
+    const trackX = this.width - trackW;
     const trackY = (this.height - trackH) / 2;
     const t = this.progress;
 
-    // Label（左侧，space-between 布局）
-    ctx.fillStyle = 'rgba(255,255,255,0.8)';
+    // Label
+    ctx.fillStyle = UIColors.textLight;
     ctx.font = '14px sans-serif';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
@@ -86,7 +86,7 @@ export class Toggle extends UINode {
     // 滑块本体
     ctx.beginPath();
     ctx.arc(knobCx, knobCy, knobR, 0, Math.PI * 2);
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = UIColors.text;
     ctx.fill();
   }
 }

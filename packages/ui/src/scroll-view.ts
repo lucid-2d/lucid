@@ -10,10 +10,33 @@ export class ScrollView extends UINode {
   private _scrollY = 0;
   private _contentHeight = 0;
 
+  // 触摸滚动状态
+  private _touchStartY = 0;
+  private _scrollAtStart = 0;
+  private _dragging = false;
+
   constructor(props: ScrollViewProps) {
     super(props);
+    this.interactive = true;
     this.content = new UINode({ id: (props.id ?? '') + '-content' });
     this.addChild(this.content);
+
+    this.$on('touchstart', (e: any) => {
+      this._touchStartY = e.localY;
+      this._scrollAtStart = this._scrollY;
+      this._dragging = true;
+    });
+
+    this.$on('touchmove', (e: any) => {
+      if (!this._dragging) return;
+      const dy = this._touchStartY - e.localY;
+      this._scrollY = this._scrollAtStart + dy;
+      this._clamp();
+    });
+
+    this.$on('touchend', () => {
+      this._dragging = false;
+    });
   }
 
   get scrollY(): number { return this._scrollY; }
@@ -41,7 +64,7 @@ export class ScrollView extends UINode {
   $inspect(depth?: number): string {
     const base = super.$inspect(depth);
     const first = base.split('\n')[0];
-    const scrollInfo = this.maxScrollY > 0 ? ` scroll=${this._scrollY}/${this.maxScrollY}` : '';
+    const scrollInfo = this.maxScrollY > 0 ? ` scroll=${Math.round(this._scrollY)}/${this.maxScrollY}` : '';
     return first + scrollInfo +
       (depth === 0 ? '' : '\n' + base.split('\n').slice(1).join('\n')).replace(/\n$/, '');
   }

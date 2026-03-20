@@ -40,6 +40,17 @@ export class Label extends UINode {
     ctx.textAlign = this.align;
     ctx.textBaseline = 'middle';
     const x = this.align === 'center' ? this.width / 2 : this.align === 'right' ? this.width : 0;
-    ctx.fillText(this._text, x, this.height / 2);
+
+    const lines = this._text.split('\n');
+    if (lines.length === 1) {
+      ctx.fillText(this._text, x, this.height / 2);
+    } else {
+      const lineH = this.fontSize * 1.4;
+      const totalH = lines.length * lineH;
+      const startY = (this.height - totalH) / 2 + lineH / 2;
+      for (let i = 0; i < lines.length; i++) {
+        ctx.fillText(lines[i], x, startY + i * lineH);
+      }
+    }
   }
 }

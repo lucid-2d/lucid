@@ -1,5 +1,6 @@
 import { UINode, type UINodeOptions } from '@lucid/core';
 import { Button } from './button.js';
+import { UIColors } from './tokens.js';
 
 export interface ModalProps extends UINodeOptions {
   title: string;
@@ -41,8 +42,8 @@ export class Modal extends UINode {
       this.addChild(closeBtn);
     }
 
-    // 内容容器
-    this.content = new UINode({ id: (props.id ?? '') + '-content' });
+    // 内容容器（宽度 = 面板宽度，便于子组件居中计算）
+    this.content = new UINode({ id: (props.id ?? '') + '-content', width: pw });
     this.content.y = 50;
     this.addChild(this.content);
   }
@@ -66,8 +67,18 @@ export class Modal extends UINode {
     this.$animate({ animScale: 0.85, animAlpha: 0 }, { duration: 150, easing: 'easeIn' });
   }
 
+  /** 根据 content 子节点自动计算面板高度并居中 */
+  fitContent(bottomPad = 24): void {
+    let maxBottom = 0;
+    for (const child of this.content.$children) {
+      const b = child.y + child.height;
+      if (b > maxBottom) maxBottom = b;
+    }
+    this.height = this.content.y + maxBottom + bottomPad;
+    this.y = (this._screenH - this.height) / 2;
+  }
+
   onBeforeUpdate(): void {
-    // 关闭动画结束检测（animAlpha 趋近 0）
     if (this._closing && this.animAlpha <= 0.01) {
       this.visible = false;
       this._closing = false;
@@ -76,8 +87,27 @@ export class Modal extends UINode {
   }
 
   /**
+   * 重写 hitTest：Modal 可见时拦截全屏触摸（遮罩不可穿透）
+   */
+  hitTest(wx: number, wy: number): UINode | null {
+    if (!this.visible) return null;
+
+    // 转换为本地坐标
+    const lx = wx - this.x;
+    const ly = wy - this.y;
+
+    // 先检查子节点（面板内的按钮等）
+    for (let i = this.$children.length - 1; i >= 0; i--) {
+      const hit = this.$children[i].hitTest(lx, ly);
+      if (hit) return hit;
+    }
+
+    // 即使点击在面板外（遮罩区域），也返回自身，阻止穿透
+    return this;
+  }
+
+  /**
    * 重写 $render：scale 变换需要包裹子节点，不能只在 draw 里做。
-   * 否则面板有缩放动画但内容没有，导致拖影/不同步。
    */
   $render(ctx: CanvasRenderingContext2D): void {
     if (!this.visible) return;
@@ -87,7 +117,7 @@ export class Modal extends UINode {
     ctx.save();
     ctx.translate(this.x, this.y);
 
-    // 1. 全屏遮罩（不受 scale 影响）
+    // 1. 全屏遮罩
     ctx.save();
     ctx.globalAlpha = this.animAlpha * 0.65;
     ctx.fillStyle = '#000000';
@@ -103,30 +133,29 @@ export class Modal extends UINode {
     ctx.translate(-cx, -cy);
 
     // 面板背景
-    ctx.fillStyle = 'rgba(20, 15, 35, 0.97)';
+    ctx.fillStyle = UIColors.panelFill;
     ctx.beginPath();
     ctx.roundRect(0, 0, w, h, 12);
     ctx.fill();
-    ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+    ctx.strokeStyle = UIColors.panelBorder;
     ctx.lineWidth = 1;
     ctx.stroke();
 
     // 标题
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = UIColors.text;
     ctx.font = 'bold 18px sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(this._title, w / 2, 28);
 
-    // 子节点（在 scale 变换内渲染）
+    // 子节点
     for (const child of this.$children) {
       child.$render(ctx);
     }
 
-    ctx.restore(); // scale
-    ctx.restore(); // translate
+    ctx.restore();
+    ctx.restore();
   }
 
-  // draw 留空 — 渲染逻辑全在 $render 中
   protected draw(_ctx: CanvasRenderingContext2D): void {}
 }

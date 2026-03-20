@@ -9,6 +9,27 @@ import { SceneRouter } from './scene.js';
 import { detectPlatform, type PlatformAdapter, type ScreenInfo } from './platform/detect.js';
 import { WebAdapter } from './platform/web.js';
 
+export interface ReplayStep {
+  /** 第几步 */
+  step: number;
+  /** 录制的时间戳(ms) */
+  t: number;
+  /** 距上一步的间隔(ms)——操作节奏 */
+  dt: number;
+  /** 事件类型 */
+  type: string;
+  /** 录制时命中的路径 */
+  recordedPath: string;
+  /** 回放时实际命中的路径（可能因状态不同而不同） */
+  actualPath: string;
+  /** 回放时命中节点的快照 */
+  snapshot: string;
+  /** 路径是否匹配 */
+  pathMatch: boolean;
+  /** 回放后的场景树快照 */
+  treeSnapshot: string;
+}
+
 export interface AppOptions {
   /** 手动指定平台，不指定则自动检测 */
   platform?: 'wx' | 'tt' | 'web';
@@ -40,6 +61,16 @@ export interface App {
   dumpInteractions(): InteractionRecord[];
   /** 清空交互录制 */
   clearInteractions(): void;
+
+  /**
+   * 回放交互录制 — AI 调试核心能力
+   *
+   * 暂停游戏循环 → 按录制时间差逐步回放 → 每步渲染 + 输出快照 → 恢复循环。
+   * 用户可在屏幕上看到操作被"重演"。
+   *
+   * @param speed 回放速度（1 = 真实速度，2 = 两倍速，0.5 = 慢放）
+   */
+  replay(records: InteractionRecord[], speed?: number): Promise<ReplayStep[]>;
 }
 
 export function createApp(options: AppOptions = {}): App {
@@ -72,10 +103,13 @@ export function createApp(options: AppOptions = {}): App {
   const recorder = new InteractionRecorder({ enabled: debugMode });
   let startTime = 0;
 
-  // 触摸桥接
+  // 触摸桥接（capture 模式：touchstart 确定目标，后续 move/end 始终发往同一节点）
+  let capturedNode: UINode | null = null;
+
   adapter.bindTouchEvents({
     onStart: (x, y) => {
       const hit = root.hitTest(x, y);
+      capturedNode = hit;
       if (debugMode && hit) {
         recorder.record({
           t: Date.now() - startTime,
@@ -92,23 +126,28 @@ export function createApp(options: AppOptions = {}): App {
     },
     onMove: (x, y) => {
       if (debugMode) {
-        recorder.record({ t: Date.now() - startTime, type: 'touchmove', x, y, path: '' });
+        recorder.record({ t: Date.now() - startTime, type: 'touchmove', x, y, path: capturedNode?.$path() ?? '' });
+      }
+      if (capturedNode) {
+        const local = capturedNode.worldToLocal(x, y);
+        capturedNode.$emit('touchmove', { localX: local.x, localY: local.y, worldX: x, worldY: y });
       }
     },
     onEnd: (x, y) => {
-      const hit = root.hitTest(x, y);
-      if (debugMode && hit) {
+      const node = capturedNode ?? root.hitTest(x, y);
+      capturedNode = null;
+      if (debugMode && node) {
         recorder.record({
           t: Date.now() - startTime,
           type: 'touchend',
           x, y,
-          path: hit.$path(),
-          snapshot: hit.$inspect(0),
+          path: node.$path(),
+          snapshot: node.$inspect(0),
         });
       }
-      if (hit) {
-        const local = hit.worldToLocal(x, y);
-        hit.$emit('touchend', { localX: local.x, localY: local.y, worldX: x, worldY: y });
+      if (node) {
+        const local = node.worldToLocal(x, y);
+        node.$emit('touchend', { localX: local.x, localY: local.y, worldX: x, worldY: y });
       }
     },
   });
@@ -197,6 +236,65 @@ export function createApp(options: AppOptions = {}): App {
 
     dumpInteractions() { return recorder.dump(); },
     clearInteractions() { recorder.clear(); },
+
+    async replay(records: InteractionRecord[], speed = 1): Promise<ReplayStep[]> {
+      // 暂停游戏循环，由回放接管渲染
+      const wasRunning = rafId !== null;
+      if (wasRunning) app.stop();
+
+      const steps: ReplayStep[] = [];
+      let prevT = 0;
+
+      for (let i = 0; i < records.length; i++) {
+        const rec = records[i];
+
+        // 按真实时间差等待（除以速度倍率）
+        const dt = rec.t - prevT;
+        if (dt > 0) {
+          const waitMs = dt / speed;
+          // 分帧推进游戏时间（保持物理/动画精度）
+          let simulated = 0;
+          while (simulated < dt) {
+            const frameDt = Math.min(16, dt - simulated);
+            tick(frameDt);
+            simulated += frameDt;
+          }
+          // 等待真实时间（让用户看到渲染结果）
+          await new Promise(r => setTimeout(r, waitMs));
+        }
+        prevT = rec.t;
+
+        // 在录制坐标做 hitTest 并触发事件
+        const hit = root.hitTest(rec.x, rec.y);
+        const actualPath = hit?.$path() ?? '(miss)';
+        const snapshot = hit?.$inspect(0) ?? '(miss)';
+
+        if (hit) {
+          const local = hit.worldToLocal(rec.x, rec.y);
+          hit.$emit(rec.type, { localX: local.x, localY: local.y, worldX: rec.x, worldY: rec.y });
+        }
+
+        // 再推一帧让事件效果（弹窗打开、场景切换等）渲染出来
+        tick(16);
+
+        steps.push({
+          step: i + 1,
+          t: rec.t,
+          dt,
+          type: rec.type,
+          recordedPath: rec.path,
+          actualPath,
+          snapshot,
+          pathMatch: rec.path === actualPath,
+          treeSnapshot: root.$inspect(2),
+        });
+      }
+
+      // 恢复游戏循环
+      if (wasRunning) app.start();
+
+      return steps;
+    },
   };
 
   return app;

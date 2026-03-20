@@ -1,4 +1,5 @@
 import { UINode, type UINodeOptions } from '@lucid/core';
+import { UIColors } from './tokens.js';
 
 export interface ProgressBarProps extends UINodeOptions {
   width: number;
@@ -14,7 +15,7 @@ export class ProgressBar extends UINode {
   constructor(props: ProgressBarProps) {
     super(props);
     this._value = Math.max(0, Math.min(1, props.value ?? 0));
-    this.color = props.color ?? '#4caf50';
+    this.color = props.color ?? UIColors.success;
   }
 
   get value(): number { return this._value; }
@@ -36,12 +37,12 @@ export class ProgressBar extends UINode {
     // Track
     ctx.beginPath();
     ctx.roundRect(0, 0, w, h, r);
-    ctx.fillStyle = 'rgba(255,255,255,0.1)';
+    ctx.fillStyle = UIColors.trackBg;
     ctx.fill();
 
     // Fill
     if (this._value > 0) {
-      const fillW = Math.max(h, w * this._value); // min width = height (full capsule)
+      const fillW = Math.max(h, w * this._value);
       ctx.beginPath();
       ctx.roundRect(0, 0, fillW, h, r);
       ctx.fillStyle = this.color;

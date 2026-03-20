@@ -3,6 +3,7 @@
  */
 
 import { UINode, type UINodeOptions } from '@lucid/core';
+import { UIColors } from './tokens.js';
 
 // ── RedDot ──────────────────────────────────
 
@@ -14,7 +15,7 @@ export class RedDot extends UINode {
   protected draw(ctx: CanvasRenderingContext2D): void {
     ctx.beginPath();
     ctx.arc(4, 4, 4, 0, Math.PI * 2);
-    ctx.fillStyle = '#e94560';
+    ctx.fillStyle = UIColors.primary;
     ctx.fill();
   }
 }
@@ -45,10 +46,10 @@ export class Badge extends UINode {
 
     ctx.beginPath();
     ctx.roundRect(-w / 2 + 9, 0, w, h, r);
-    ctx.fillStyle = '#e94560';
+    ctx.fillStyle = UIColors.primary;
     ctx.fill();
 
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = UIColors.text;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(text, 9, h / 2);
@@ -71,8 +72,8 @@ export class Tag extends UINode {
   constructor(props: TagProps) {
     super({ ...props, width: 48, height: 22 });
     this._text = props.text;
-    this.bgColor = props.bgColor ?? '#e94560';
-    this.textColor = props.textColor ?? '#ffffff';
+    this.bgColor = props.bgColor ?? UIColors.primary;
+    this.textColor = props.textColor ?? UIColors.text;
   }
 
   get $text() { return this._text; }

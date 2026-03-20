@@ -70,6 +70,44 @@ describe('createApp', () => {
     expect(app.debug).toBe(false);
   });
 
+  it('replay dispatches events and returns step log', async () => {
+    const canvas = createMockCanvas();
+    const app = createApp({ platform: 'web', canvas, debug: true });
+
+    const btn = new UINode({ id: 'btn', x: 100, y: 100, width: 100, height: 50 });
+    btn.interactive = true;
+    const taps: string[] = [];
+    btn.$on('touchstart', () => taps.push('start'));
+    btn.$on('touchend', () => taps.push('end'));
+    app.root.addChild(btn);
+
+    const records = [
+      { t: 0, type: 'touchstart' as const, x: 150, y: 125, path: 'root > btn', snapshot: '' },
+      { t: 10, type: 'touchend' as const, x: 150, y: 125, path: 'root > btn', snapshot: '' },
+    ];
+
+    const steps = await app.replay(records);
+
+    expect(steps).toHaveLength(2);
+    expect(steps[0].actualPath).toBe('root > btn');
+    expect(steps[0].pathMatch).toBe(true);
+    expect(steps[1].type).toBe('touchend');
+    expect(taps).toEqual(['start', 'end']);
+  });
+
+  it('replay detects path mismatch when UI state differs', async () => {
+    const canvas = createMockCanvas();
+    const app = createApp({ platform: 'web', canvas, debug: true });
+
+    const records = [
+      { t: 0, type: 'touchend' as const, x: 150, y: 125, path: 'root > missing-btn', snapshot: '' },
+    ];
+
+    const steps = await app.replay(records);
+    expect(steps[0].pathMatch).toBe(false);
+    expect(steps[0].actualPath).not.toBe('root > missing-btn');
+  });
+
   it('$inspect shows full game state', () => {
     const canvas = createMockCanvas();
     const app = createApp({ platform: 'web', canvas });

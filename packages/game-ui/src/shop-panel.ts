@@ -1,5 +1,5 @@
 import { UINode } from '@lucid/core';
-import { Button, TabBar, Label, type TabItem } from '@lucid/ui';
+import { Button, TabBar, Label, UIColors, drawIcon, type TabItem } from '@lucid/ui';
 
 export interface ShopItem {
   id: string;
@@ -31,29 +31,34 @@ class ShopCard extends UINode {
 
     ctx.beginPath();
     ctx.roundRect(0, 0, w, h, 8);
-    ctx.fillStyle = isActive ? 'rgba(233,69,96,0.2)' : 'rgba(255,255,255,0.06)';
+    ctx.fillStyle = isActive ? 'rgba(233,69,96,0.2)' : UIColors.cardBg;
     ctx.fill();
     if (isActive) {
-      ctx.strokeStyle = this.selected ? '#ffd166' : '#e94560';
+      ctx.strokeStyle = this.selected ? UIColors.accent : UIColors.primary;
       ctx.lineWidth = 2;
       ctx.stroke();
     }
 
+    // Item icon (user content — emoji from props)
     ctx.font = '26px sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(this.item.icon, w / 2, 28);
 
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = UIColors.text;
     ctx.font = '12px sans-serif';
     ctx.fillText(this.item.name, w / 2, 56);
 
     if (!this.item.owned && this.item.price) {
-      ctx.fillStyle = '#ffd166';
+      // Price with coin icon
+      drawIcon(ctx, 'coin', w / 2 - 18, 76, 12, UIColors.accent);
+      ctx.fillStyle = UIColors.accent;
       ctx.font = '11px sans-serif';
-      ctx.fillText(`💰${this.item.price}`, w / 2, 76);
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(this.item.price, w / 2 + 4, 76);
     } else if (this.item.owned) {
-      ctx.fillStyle = 'rgba(255,255,255,0.3)';
+      ctx.fillStyle = UIColors.textHint;
       ctx.font = '10px sans-serif';
       ctx.fillText(this.item.equipped ? '使用中' : '已拥有', w / 2, 76);
     }
@@ -77,22 +82,19 @@ export class ShopPanel extends UINode {
 
   constructor(props: ShopPanelProps) {
     super({ id: props.id ?? 'shop', width: 390, height: 844 });
-    this.interactive = true; // 阻止穿透
+    this.interactive = true;
     this._items = props.items;
     this._activeTab = props.tabs[0]?.key ?? '';
 
-    // Close button (top left)
     const closeBtn = new Button({ id: 'close-btn', text: '← 返回', variant: 'ghost', width: 80, height: 36 });
     closeBtn.x = 4; closeBtn.y = 12;
     closeBtn.$on('tap', () => this.$emit('close'));
     this.addChild(closeBtn);
 
-    // Title
-    const title = new Label({ text: '商店', fontSize: 18, fontWeight: 'bold', color: '#ffffff', align: 'center', width: 390, height: 30 });
+    const title = new Label({ text: '商店', fontSize: 18, fontWeight: 'bold', color: UIColors.text, align: 'center', width: 390, height: 30 });
     title.y = 16;
     this.addChild(title);
 
-    // Tab bar
     this._tabBar = new TabBar({ id: 'tab-bar', tabs: props.tabs, activeKey: this._activeTab, width: 390, height: 40 });
     this._tabBar.y = 56;
     this._tabBar.$on('change', (key: string) => {
@@ -102,12 +104,10 @@ export class ShopPanel extends UINode {
     });
     this.addChild(this._tabBar);
 
-    // Card container
     this._cardContainer = new UINode({ id: 'cards' });
     this._cardContainer.y = 110;
     this.addChild(this._cardContainer);
 
-    // Action button (bottom)
     this._actionBtn = new Button({ id: 'action-btn', text: '选择物品', variant: 'primary', width: 220, height: 44, disabled: true });
     this._actionBtn.x = 85; this._actionBtn.y = 750;
     this._actionBtn.$on('tap', () => this._handleAction());
@@ -131,7 +131,6 @@ export class ShopPanel extends UINode {
       card.x = padX + (i % cols) * (cardW + gap);
       card.y = Math.floor(i / cols) * (card.height + gap);
       card.$on('tap', () => {
-        // Clear all selected states
         for (const c of this._cardContainer.$children) {
           if (c instanceof ShopCard) c.selected = false;
         }
@@ -181,10 +180,9 @@ export class ShopPanel extends UINode {
   }
 
   protected draw(ctx: CanvasRenderingContext2D): void {
-    // Full screen background (shop replaces entire screen)
     const grad = ctx.createLinearGradient(0, 0, 0, 844);
-    grad.addColorStop(0, '#16213e');
-    grad.addColorStop(1, '#0f3460');
+    grad.addColorStop(0, UIColors.bgTop);
+    grad.addColorStop(1, UIColors.bgBottom);
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, 390, 844);
   }
