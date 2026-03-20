@@ -303,11 +303,38 @@ class PlayScene extends SceneNode {
 
 // ── 启动 ─────────────────────────────────────
 
+import { GalleryScene } from './gallery';
+
+// ── 场景切换 ─────────────────────────────────
+
+let currentMode = 'demo';
+
+function switchToDemo() {
+  app.router.replace(new MenuScene({ id: 'menu' }));
+  currentMode = 'demo';
+}
+
+function switchToGallery() {
+  app.router.replace(new GalleryScene({ id: 'gallery' }));
+  currentMode = 'gallery';
+}
+
+(window as any).switchScene = (mode: string) => {
+  if (mode === 'demo') switchToDemo();
+  else switchToGallery();
+
+  // Update button styles
+  document.querySelectorAll('.scene-switcher button').forEach((btn, i) => {
+    btn.classList.toggle('active', (i === 0 && mode === 'demo') || (i === 1 && mode === 'gallery'));
+  });
+};
+
+// ── 启动 ─────────────────────────────────────
+
 app.router.push(new MenuScene({ id: 'menu' }));
 app.start();
 
 console.log('%c[Lucid] Playground started', 'color: #ffd166; font-weight: bold');
-console.log(app.root.$inspect());
 
 // ── Debug Panel 接口 ─────────────────────────
 
@@ -324,10 +351,10 @@ console.log(app.root.$inspect());
   app.clearInteractions();
   document.getElementById('debug-output')!.textContent = '(已清空)';
 };
-// 实时刷新 inspect
-setInterval(() => {
-  const btn = document.querySelector('.debug-panel button.active');
-  if (btn?.textContent?.includes('inspect')) {
-    document.getElementById('debug-output')!.textContent = app.root.$inspect();
-  }
-}, 500);
+(window as any).showFps = () => {
+  const update = () => {
+    document.getElementById('debug-output')!.textContent = `FPS: ${app.fps}`;
+  };
+  update();
+  setInterval(update, 500);
+};
