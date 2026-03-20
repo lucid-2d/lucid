@@ -1,0 +1,19 @@
+{
+  "name": "@lucid/ui",
+  "version": "0.1.0",
+  "description": "Lucid UI - base components (Button, Modal, Toggle, ScrollView, ...)",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@lucid/core": "workspace:*"
+  },
+  "devDependencies": {
+    "vitest": "^3.1.0"
+  }
+}
