@@ -1,0 +1,17 @@
+{
+  "name": "@lucid/physics",
+  "version": "0.1.0",
+  "description": "Lucid physics - vectors, collision, particles, screen shake",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist/", "src/"],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "vitest": "^3.1.0"
+  }
+}
