@@ -8,3 +8,4 @@ export { detectPlatform, type PlatformName, type PlatformAdapter, type ScreenInf
 export { WebAdapter } from './platform/web.js';
 export { WxAdapter } from './platform/wx.js';
 export { TtAdapter } from './platform/tt.js';
+export { loadImage } from './image-loader.js';

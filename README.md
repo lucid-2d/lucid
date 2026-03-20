@@ -41,10 +41,10 @@ window._app = app; // expose for AI agent
 
 ### @lucid/core
 
-Node tree, events, animation, recording, timers, RNG.
+Node tree, events, animation, recording, timers, RNG, sprites.
 
 ```typescript
-import { UINode, InteractionRecorder, SeededRNG, Timer, CountdownTimer } from '@lucid/core';
+import { UINode, Sprite, SpriteSheet, InteractionRecorder, SeededRNG, Timer, CountdownTimer } from '@lucid/core';
 ```
 
 | Export | Type | Description |
@@ -54,13 +54,15 @@ import { UINode, InteractionRecorder, SeededRNG, Timer, CountdownTimer } from '@
 | `SeededRNG` | class | Mulberry32 deterministic RNG. `next(): number`, `int(min, max)`, `pick(array)`, `shuffle(array)`, `fork(): SeededRNG`. |
 | `Timer` | class | Elapsed time tracker. `elapsed`, `pause()`, `resume()`, `reset()`. |
 | `CountdownTimer` | class | Countdown with callbacks. `remaining`, `progress`, `onTick`, `onComplete`. |
+| `Sprite` | class | Image UINode. Props: `image` (any CanvasImageSource), `sourceRect?: {x,y,w,h}` (sprite sheet cropping), `flipX?`, `flipY?`. Draws via `ctx.drawImage`. |
+| `SpriteSheet` | class | Named regions in a sprite atlas. `new SpriteSheet(image, { idle: {x,y,w,h}, ... })`. Methods: `getRegion(name)`, `createSprite(name, opts?)`, `regionNames`. Static: `fromGrid(image, cols, rows, cellW, cellH, names?)`. |
 
 ### @lucid/engine
 
-App lifecycle, scene routing, platform adapters.
+App lifecycle, scene routing, platform adapters, image loading.
 
 ```typescript
-import { createApp, SceneNode, SceneRouter, WebAdapter, WxAdapter, TtAdapter } from '@lucid/engine';
+import { createApp, SceneNode, SceneRouter, loadImage, WebAdapter, WxAdapter, TtAdapter } from '@lucid/engine';
 ```
 
 | Export | Type | Description |
@@ -71,6 +73,7 @@ import { createApp, SceneNode, SceneRouter, WebAdapter, WxAdapter, TtAdapter } f
 | `WebAdapter` | class | Browser platform. Auto-creates from canvas element. |
 | `WxAdapter` | class | WeChat Mini Game platform. Uses `wx.*` globals. |
 | `TtAdapter` | class | Douyin Mini Game platform. Uses `tt.*` globals. |
+| `loadImage(src, timeout?)` | function | Platform-aware async image loader. Returns Promise. Auto-detects Web/Wx/Tt. Use with `Sprite`. |
 
 ### @lucid/ui
 

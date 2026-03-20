@@ -9,6 +9,9 @@ export { type EasingName, type EasingFn, resolveEasing } from './easing.js';
 export { type Rect, type Point } from './types.js';
 export { computeLayout, type LayoutDirection, type LayoutAlign, type LayoutJustify, type Padding } from './layout.js';
 
+// 精灵
+export { Sprite, SpriteSheet, type SpriteProps, type SourceRect, type SpriteSheetRegions } from './sprite.js';
+
 // 工具
 export { Timer, CountdownTimer, type CountdownOptions } from './timer.js';
 export { SeededRNG } from './rng.js';
