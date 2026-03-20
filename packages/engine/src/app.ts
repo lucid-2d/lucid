@@ -132,6 +132,8 @@ export function createApp(options: AppOptions = {}): App {
       }
     },
     onMove: (x, y) => {
+      // 节点可能在场景切换时被移除，检查 parent 链是否完整
+      if (capturedNode && !capturedNode.$parent) capturedNode = null;
       if (debugMode) {
         recorder.record({ t: Date.now() - startTime, type: 'touchmove', x, y, path: capturedNode?.$path() ?? '' });
       }
