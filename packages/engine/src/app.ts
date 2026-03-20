@@ -85,10 +85,12 @@ export function createApp(options: AppOptions = {}): App {
           snapshot: hit.$inspect(0),
         });
       }
-      if (hit) hit.$emit('touchstart', { localX: 0, localY: 0, worldX: x, worldY: y });
+      if (hit) {
+        const local = hit.worldToLocal(x, y);
+        hit.$emit('touchstart', { localX: local.x, localY: local.y, worldX: x, worldY: y });
+      }
     },
     onMove: (x, y) => {
-      // touchmove 暂不分发到节点（避免性能问题），仅录制
       if (debugMode) {
         recorder.record({ t: Date.now() - startTime, type: 'touchmove', x, y, path: '' });
       }
@@ -104,7 +106,10 @@ export function createApp(options: AppOptions = {}): App {
           snapshot: hit.$inspect(0),
         });
       }
-      if (hit) hit.$emit('touchend', { localX: 0, localY: 0, worldX: x, worldY: y });
+      if (hit) {
+        const local = hit.worldToLocal(x, y);
+        hit.$emit('touchend', { localX: local.x, localY: local.y, worldX: x, worldY: y });
+      }
     },
   });
 

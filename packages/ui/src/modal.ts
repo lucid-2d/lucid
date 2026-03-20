@@ -71,17 +71,26 @@ export class Modal extends UINode {
       });
   }
 
-  protected draw(ctx: CanvasRenderingContext2D): void {
+  /**
+   * 重写 $render：scale 变换需要包裹子节点，不能只在 draw 里做。
+   * 否则面板有缩放动画但内容没有，导致拖影/不同步。
+   */
+  $render(ctx: CanvasRenderingContext2D): void {
+    if (!this.visible) return;
+
     const w = this.width, h = this.height;
 
-    // 全屏遮罩
+    ctx.save();
+    ctx.translate(this.x, this.y);
+
+    // 1. 全屏遮罩（不受 scale 影响）
     ctx.save();
     ctx.globalAlpha = this.animAlpha * 0.65;
     ctx.fillStyle = '#000000';
     ctx.fillRect(-this.x, -this.y, this._screenW, this._screenH);
     ctx.restore();
 
-    // 面板（缩放 + 透明度动画）
+    // 2. 面板 + 所有子节点一起 scale
     ctx.save();
     ctx.globalAlpha *= this.animAlpha;
     const cx = w / 2, cy = h / 2;
@@ -105,6 +114,15 @@ export class Modal extends UINode {
     ctx.textBaseline = 'middle';
     ctx.fillText(this._title, w / 2, 28);
 
-    ctx.restore();
+    // 子节点（在 scale 变换内渲染）
+    for (const child of this.$children) {
+      child.$render(ctx);
+    }
+
+    ctx.restore(); // scale
+    ctx.restore(); // translate
   }
+
+  // draw 留空 — 渲染逻辑全在 $render 中
+  protected draw(_ctx: CanvasRenderingContext2D): void {}
 }
