@@ -3,7 +3,7 @@
  */
 
 // 存储
-export { type Storage, MemoryStorage, WebStorage, createStorage } from './storage.js';
+export { type Storage, MemoryStorage, WebStorage, MiniGameStorage, createStorage } from './storage.js';
 
 // 签到
 export { CheckinSystem, type CheckinOptions, type CheckinState } from './checkin.js';

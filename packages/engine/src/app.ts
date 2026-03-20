@@ -8,6 +8,8 @@ import { UINode, InteractionRecorder, SeededRNG, type InteractionRecord } from '
 import { SceneRouter } from './scene.js';
 import { detectPlatform, type PlatformAdapter, type ScreenInfo } from './platform/detect.js';
 import { WebAdapter } from './platform/web.js';
+import { WxAdapter } from './platform/wx.js';
+import { TtAdapter } from './platform/tt.js';
 
 export interface ReplayStep {
   /** 第几步 */
@@ -89,8 +91,11 @@ export function createApp(options: AppOptions = {}): App {
       throw new Error('[lucid] Web platform requires a canvas element. Use createApp({ canvas: ... })');
     }
     adapter = new WebAdapter(options.canvas);
+  } else if (platformName === 'wx') {
+    adapter = new WxAdapter();
+  } else if (platformName === 'tt') {
+    adapter = new TtAdapter();
   } else {
-    // TODO: wx/tt adapters
     throw new Error(`[lucid] Platform "${platformName}" adapter not yet implemented`);
   }
 
