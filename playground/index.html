@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Lucid Demo</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0a1a;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: 20px;
+    min-height: 100vh;
+    font-family: sans-serif;
+    color: #fff;
+  }
+  .phone-frame {
+    width: 390px;
+    height: 844px;
+    border: 2px solid #333;
+    border-radius: 40px;
+    overflow: hidden;
+    position: relative;
+    background: #000;
+    box-shadow: 0 0 40px rgba(0,0,0,0.5);
+  }
+  canvas {
+    width: 390px;
+    height: 844px;
+    display: block;
+  }
+  .debug-panel {
+    position: fixed;
+    right: 20px;
+    top: 20px;
+    width: 420px;
+    max-height: 90vh;
+    background: #1a1a2e;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 12px;
+    overflow-y: auto;
+  }
+  .debug-panel h3 { color: #ffd166; margin-bottom: 8px; }
+  .debug-panel pre {
+    background: #0f0f23;
+    padding: 8px;
+    border-radius: 4px;
+    white-space: pre-wrap;
+    font-size: 11px;
+    line-height: 1.5;
+    color: #a0a0b0;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+  .debug-panel button {
+    margin: 4px 4px 4px 0;
+    padding: 4px 12px;
+    background: #333;
+    color: #fff;
+    border: 1px solid #555;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+  }
+  .debug-panel button:hover { background: #444; }
+  .debug-panel button.active { background: #e94560; border-color: #e94560; }
+</style>
+</head>
+<body>
+  <div class="phone-frame">
+    <canvas id="game" width="390" height="844"></canvas>
+  </div>
+  <div class="debug-panel">
+    <h3>Lucid Debug Panel</h3>
+    <div style="margin-bottom: 8px;">
+      <button onclick="showInspect()">$inspect()</button>
+      <button onclick="showInteractions()">Interactions</button>
+      <button onclick="clearInteractions()">Clear Log</button>
+    </div>
+    <pre id="debug-output">点击左侧按钮查看节点树 / 交互录制</pre>
+  </div>
+  <script type="module" src="./main.ts"></script>
+</body>
+</html>
