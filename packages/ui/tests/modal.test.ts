@@ -36,7 +36,9 @@ describe('Modal', () => {
     const modal = new Modal({ title: '测试' });
     const btn = new Button({ text: '确定' });
     modal.content.addChild(btn);
-    expect(modal.findByType(Button)).toHaveLength(1);
+    // Modal has built-in close button + user's button = 2
+    expect(modal.findByType(Button)).toHaveLength(2);
+    expect(modal.content.findByType(Button)).toHaveLength(1);
   });
 
   it('title can be updated', () => {

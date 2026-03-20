@@ -33,6 +33,9 @@ export interface App {
   /** 手动推进一帧（测试用） */
   tick(dtMs: number): void;
 
+  /** 当前 FPS */
+  readonly fps: number;
+
   /** 导出交互录制（debug 模式） */
   dumpInteractions(): InteractionRecord[];
   /** 清空交互录制 */
@@ -105,6 +108,11 @@ export function createApp(options: AppOptions = {}): App {
     },
   });
 
+  // FPS 监控
+  let _fps = 0;
+  let _fpsFrames = 0;
+  let _fpsTime = 0;
+
   // 游戏循环
   let rafId: number | null = null;
   let lastTime = 0;
@@ -115,17 +123,44 @@ export function createApp(options: AppOptions = {}): App {
     const dtMs = Math.min(rawDt, MAX_DT);
     lastTime = timestamp;
 
+    // FPS 计算
+    _fpsFrames++;
+    _fpsTime += dtMs;
+    if (_fpsTime >= 1000) {
+      _fps = Math.round(_fpsFrames * 1000 / _fpsTime);
+      _fpsFrames = 0;
+      _fpsTime = 0;
+    }
+
     tick(dtMs);
 
     rafId = adapter.requestAnimationFrame(frame);
   }
 
   function tick(dtMs: number): void {
-    const dt = dtMs / 1000; // UINode.$update 用秒
+    const dt = dtMs / 1000;
     root.$update(dt);
 
-    ctx.clearRect(0, 0, screen.width, screen.height);
+    // 清屏需要用 save/restore 因为 ctx 被 scale 了
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0); // 重置变换
+    ctx.clearRect(0, 0, screen.width * screen.dpr, screen.height * screen.dpr);
+    ctx.restore();
+
     root.$render(ctx);
+
+    // Debug 模式：绘制 FPS
+    if (debugMode) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
+      ctx.fillRect(screen.width - 60, 4, 56, 20);
+      ctx.fillStyle = _fps >= 55 ? '#4caf50' : _fps >= 30 ? '#ff9800' : '#f44336';
+      ctx.font = 'bold 12px monospace';
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(`${_fps} FPS`, screen.width - 8, 14);
+      ctx.restore();
+    }
   }
 
   const app: App = {
@@ -135,6 +170,8 @@ export function createApp(options: AppOptions = {}): App {
 
     get debug() { return recorder.enabled; },
     set debug(v: boolean) { recorder.enabled = v; },
+
+    get fps() { return _fps; },
 
     start() {
       startTime = Date.now();

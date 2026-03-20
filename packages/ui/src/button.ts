@@ -8,6 +8,15 @@ export interface ButtonProps extends UINodeOptions {
   disabled?: boolean;
 }
 
+const VARIANT_COLORS: Record<ButtonVariant, { bg: string; text: string; border?: string }> = {
+  primary:   { bg: '#e94560', text: '#ffffff' },
+  secondary: { bg: 'rgba(17,138,178,0.25)', text: '#ffffff', border: 'rgba(17,138,178,0.5)' },
+  outline:   { bg: 'transparent', text: 'rgba(255,255,255,0.8)', border: 'rgba(255,255,255,0.3)' },
+  gold:      { bg: '#f59e0b', text: '#1a1a2e' },
+  danger:    { bg: '#e94560', text: '#ffffff' },
+  ghost:     { bg: 'transparent', text: 'rgba(255,255,255,0.6)' },
+};
+
 export class Button extends UINode {
   private _text: string;
   variant: ButtonVariant;
@@ -49,6 +58,7 @@ export class Button extends UINode {
   protected draw(ctx: CanvasRenderingContext2D): void {
     const w = this.width, h = this.height;
     const r = Math.min(h / 2, 10);
+    const colors = VARIANT_COLORS[this.variant];
 
     ctx.save();
     if (this.pressed) {
@@ -61,17 +71,19 @@ export class Button extends UINode {
     // Background
     ctx.beginPath();
     ctx.roundRect(0, 0, w, h, r);
-    ctx.fillStyle = this.variant === 'outline' ? 'transparent' : '#e94560';
-    ctx.fill();
-    if (this.variant === 'outline') {
-      ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+    if (colors.bg !== 'transparent') {
+      ctx.fillStyle = colors.bg;
+      ctx.fill();
+    }
+    if (colors.border) {
+      ctx.strokeStyle = colors.border;
       ctx.lineWidth = 1;
       ctx.stroke();
     }
 
     // Text
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 16px sans-serif';
+    ctx.fillStyle = colors.text;
+    ctx.font = `bold ${h >= 44 ? 16 : 14}px sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(this._text, w / 2, h / 2);

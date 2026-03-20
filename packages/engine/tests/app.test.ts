@@ -92,14 +92,13 @@ function createMockCanvas(w = 390, h = 844): HTMLCanvasElement {
     top: 0, left: 0, right: w, bottom: h,
     toJSON: () => {},
   });
-  // mock getContext
-  (canvas as any).getContext = () => ({
-    save: vi.fn(),
-    restore: vi.fn(),
-    translate: vi.fn(),
-    scale: vi.fn(),
-    clearRect: vi.fn(),
+  const mockCtx = {
+    save: vi.fn(), restore: vi.fn(), translate: vi.fn(),
+    scale: vi.fn(), clearRect: vi.fn(), setTransform: vi.fn(),
+    fillRect: vi.fn(), fillText: vi.fn(),
     globalAlpha: 1,
-  });
+    fillStyle: '', font: '', textAlign: '', textBaseline: '',
+  };
+  (canvas as any).getContext = () => mockCtx;
   return canvas;
 }

@@ -10,19 +10,37 @@ export class WebAdapter implements PlatformAdapter {
   readonly name = 'web' as const;
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
+  private dpr: number;
+  private logicW: number;
+  private logicH: number;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
+    this.dpr = typeof window !== 'undefined' ? (window.devicePixelRatio || 1) : 1;
+
+    // 逻辑尺寸 = CSS 尺寸
+    this.logicW = canvas.width;
+    this.logicH = canvas.height;
+
+    // 物理像素 = 逻辑 × DPR（高清适配核心）
+    canvas.width = this.logicW * this.dpr;
+    canvas.height = this.logicH * this.dpr;
+    // CSS 尺寸保持逻辑像素
+    canvas.style.width = this.logicW + 'px';
+    canvas.style.height = this.logicH + 'px';
+
     this.ctx = canvas.getContext('2d')!;
+    // 缩放坐标系，后续所有绘制使用逻辑像素
+    this.ctx.scale(this.dpr, this.dpr);
   }
 
   getScreenInfo(): ScreenInfo {
     return {
-      width: this.canvas.width,
-      height: this.canvas.height,
-      dpr: typeof window !== 'undefined' ? (window.devicePixelRatio || 1) : 1,
+      width: this.logicW,
+      height: this.logicH,
+      dpr: this.dpr,
       safeTop: 0,
-      safeBottom: this.canvas.height,
+      safeBottom: this.logicH,
     };
   }
 

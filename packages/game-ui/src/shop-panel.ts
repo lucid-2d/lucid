@@ -1,5 +1,5 @@
 import { UINode } from '@lucid/core';
-import { Button, TabBar, type TabItem } from '@lucid/ui';
+import { Button, TabBar, Label, type TabItem } from '@lucid/ui';
 
 export interface ShopItem {
   id: string;
@@ -16,37 +16,48 @@ class ShopCard extends UINode {
   constructor(public item: ShopItem) {
     super({ id: `card-${item.id}`, width: 80, height: 90 });
     this.interactive = true;
-
     this.$on('touchstart', () => {});
-    this.$on('touchend', () => { this.$emit('tap'); });
+    this.$on('touchend', () => this.$emit('tap'));
   }
 
   get $text() { return this.item.name; }
   get $highlighted() { return this.item.equipped; }
 
   protected draw(ctx: CanvasRenderingContext2D): void {
-    ctx.fillStyle = this.item.equipped ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.06)';
+    const w = this.width, h = this.height;
     ctx.beginPath();
-    ctx.roundRect(0, 0, this.width, this.height, 8);
+    ctx.roundRect(0, 0, w, h, 8);
+    ctx.fillStyle = this.item.equipped ? 'rgba(233,69,96,0.2)' : 'rgba(255,255,255,0.06)';
     ctx.fill();
+    if (this.item.equipped) {
+      ctx.strokeStyle = '#e94560';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
 
-    ctx.font = '24px sans-serif';
+    ctx.font = '26px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(this.item.icon, this.width / 2, 30);
+    ctx.textBaseline = 'middle';
+    ctx.fillText(this.item.icon, w / 2, 28);
 
     ctx.fillStyle = '#ffffff';
     ctx.font = '12px sans-serif';
-    ctx.fillText(this.item.name, this.width / 2, 55);
+    ctx.fillText(this.item.name, w / 2, 56);
 
     if (!this.item.owned && this.item.price) {
       ctx.fillStyle = '#ffd166';
       ctx.font = '11px sans-serif';
-      ctx.fillText(this.item.price, this.width / 2, 75);
+      ctx.fillText(`💰${this.item.price}`, w / 2, 76);
+    } else if (this.item.owned) {
+      ctx.fillStyle = 'rgba(255,255,255,0.3)';
+      ctx.font = '10px sans-serif';
+      ctx.fillText(this.item.equipped ? '使用中' : '已拥有', w / 2, 76);
     }
   }
 }
 
-export interface ShopPanelProps {
+export interface ShopPanelProps extends Record<string, any> {
+  id?: string;
   tabs: TabItem[];
   items: ShopItem[];
   renderPreview?: (ctx: CanvasRenderingContext2D, item: ShopItem) => void;
@@ -59,35 +70,41 @@ export class ShopPanel extends UINode {
   private _tabBar: TabBar;
   private _cardContainer: UINode;
   private _actionBtn: Button;
-  private _renderPreview?: (ctx: CanvasRenderingContext2D, item: ShopItem) => void;
 
   constructor(props: ShopPanelProps) {
-    super({ id: 'shop', width: 390, height: 844 });
+    super({ id: props.id ?? 'shop', width: 390, height: 844 });
     this._items = props.items;
     this._activeTab = props.tabs[0]?.key ?? '';
-    this._renderPreview = props.renderPreview;
 
-    // Close button
-    const closeBtn = new Button({ id: 'close-btn', text: '×', variant: 'ghost', width: 40, height: 40 });
+    // Close button (top left)
+    const closeBtn = new Button({ id: 'close-btn', text: '← 返回', variant: 'ghost', width: 80, height: 36 });
+    closeBtn.x = 4; closeBtn.y = 12;
     closeBtn.$on('tap', () => this.$emit('close'));
     this.addChild(closeBtn);
 
+    // Title
+    const title = new Label({ text: '商店', fontSize: 18, fontWeight: 'bold', color: '#ffffff', align: 'center', width: 390, height: 30 });
+    title.y = 16;
+    this.addChild(title);
+
     // Tab bar
     this._tabBar = new TabBar({ id: 'tab-bar', tabs: props.tabs, activeKey: this._activeTab, width: 390, height: 40 });
+    this._tabBar.y = 56;
     this._tabBar.$on('change', (key: string) => {
       this._activeTab = key;
       this._selectedItem = null;
       this._rebuildCards();
-      this.$emit('tabChange', key);
     });
     this.addChild(this._tabBar);
 
     // Card container
     this._cardContainer = new UINode({ id: 'cards' });
+    this._cardContainer.y = 110;
     this.addChild(this._cardContainer);
 
-    // Action button
-    this._actionBtn = new Button({ id: 'action-btn', text: '选择', variant: 'primary', width: 200, height: 44 });
+    // Action button (bottom)
+    this._actionBtn = new Button({ id: 'action-btn', text: '选择物品', variant: 'primary', width: 220, height: 44, disabled: true });
+    this._actionBtn.x = 85; this._actionBtn.y = 750;
     this._actionBtn.$on('tap', () => this._handleAction());
     this.addChild(this._actionBtn);
 
@@ -95,23 +112,27 @@ export class ShopPanel extends UINode {
   }
 
   private _rebuildCards(): void {
-    // Remove old cards
     for (const child of [...this._cardContainer.$children]) {
       this._cardContainer.removeChild(child);
     }
 
     const tabItems = this._items.filter(i => i.category === this._activeTab);
-    for (const item of tabItems) {
+    const cols = 4, gap = 10, padX = 15;
+    const cardW = (390 - padX * 2 - gap * (cols - 1)) / cols;
+
+    tabItems.forEach((item, i) => {
       const card = new ShopCard(item);
+      card.width = cardW;
+      card.x = padX + (i % cols) * (cardW + gap);
+      card.y = Math.floor(i / cols) * (card.height + gap);
       card.$on('tap', () => {
         this._selectedItem = item;
         this.$emit('select', item);
         this._updateActionBtn();
       });
       this._cardContainer.addChild(card);
-    }
+    });
 
-    // Auto-select first
     if (tabItems.length > 0 && !this._selectedItem) {
       this._selectedItem = tabItems[0];
       this._updateActionBtn();
@@ -120,35 +141,41 @@ export class ShopPanel extends UINode {
 
   private _updateActionBtn(): void {
     if (!this._selectedItem) {
-      this._actionBtn.text = '选择';
+      this._actionBtn.text = '选择物品';
       this._actionBtn.disabled = true;
-      return;
-    }
-    if (this._selectedItem.equipped) {
+    } else if (this._selectedItem.equipped) {
       this._actionBtn.text = '已装备';
       this._actionBtn.disabled = true;
     } else if (this._selectedItem.owned) {
       this._actionBtn.text = '装备';
       this._actionBtn.disabled = false;
+      this._actionBtn.variant = 'primary';
     } else {
       this._actionBtn.text = this._selectedItem.price ? `购买 ${this._selectedItem.price}` : '获取';
       this._actionBtn.disabled = false;
+      this._actionBtn.variant = 'gold';
     }
   }
 
   private _handleAction(): void {
     if (!this._selectedItem) return;
     if (this._selectedItem.equipped) return;
-    if (this._selectedItem.owned) {
-      this.$emit('equip', this._selectedItem);
-    } else {
-      this.$emit('purchase', this._selectedItem);
-    }
+    if (this._selectedItem.owned) this.$emit('equip', this._selectedItem);
+    else this.$emit('purchase', this._selectedItem);
   }
 
   updateItems(items: ShopItem[]): void {
     this._items = items;
     this._selectedItem = null;
     this._rebuildCards();
+  }
+
+  protected draw(ctx: CanvasRenderingContext2D): void {
+    // Full screen background (shop replaces entire screen)
+    const grad = ctx.createLinearGradient(0, 0, 0, 844);
+    grad.addColorStop(0, '#16213e');
+    grad.addColorStop(1, '#0f3460');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 390, 844);
   }
 }
