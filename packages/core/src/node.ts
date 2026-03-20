@@ -8,6 +8,7 @@ import { EventEmitter } from './events.js';
 import { resolveEasing } from './easing.js';
 import type { EasingName, EasingFn } from './easing.js';
 import type { Point } from './types.js';
+import { computeLayout, type LayoutDirection, type LayoutAlign, type LayoutJustify, type Padding } from './layout.js';
 
 // ── 动画内部类型 ───────────────────────────────
 
@@ -45,6 +46,21 @@ export interface UINodeOptions {
   y?: number;
   width?: number;
   height?: number;
+  // Layout container
+  layout?: LayoutDirection;
+  gap?: number;
+  padding?: Padding;
+  alignItems?: LayoutAlign;
+  justifyContent?: LayoutJustify;
+  wrap?: boolean;
+  columns?: number;
+  // Layout child
+  flex?: number;
+  alignSelf?: LayoutAlign;
+  minWidth?: number;
+  maxWidth?: number;
+  minHeight?: number;
+  maxHeight?: number;
 }
 
 export class UINode extends EventEmitter {
@@ -61,6 +77,23 @@ export class UINode extends EventEmitter {
   interactive = false;
   alpha = 1;
 
+  // Layout container properties
+  layout?: LayoutDirection;
+  gap?: number;
+  padding?: Padding;
+  alignItems?: LayoutAlign;
+  justifyContent?: LayoutJustify;
+  wrap?: boolean;
+  columns?: number;
+
+  // Layout child properties
+  flex?: number;
+  alignSelf?: LayoutAlign;
+  minWidth?: number;
+  maxWidth?: number;
+  minHeight?: number;
+  maxHeight?: number;
+
   protected _dirty = true;
   private _animations: ActiveAnimation[] = [];
 
@@ -71,6 +104,20 @@ export class UINode extends EventEmitter {
     this.y = opts?.y ?? 0;
     this.width = opts?.width ?? 0;
     this.height = opts?.height ?? 0;
+    // Layout
+    if (opts?.layout) this.layout = opts.layout;
+    if (opts?.gap !== undefined) this.gap = opts.gap;
+    if (opts?.padding !== undefined) this.padding = opts.padding;
+    if (opts?.alignItems) this.alignItems = opts.alignItems;
+    if (opts?.justifyContent) this.justifyContent = opts.justifyContent;
+    if (opts?.wrap) this.wrap = opts.wrap;
+    if (opts?.columns !== undefined) this.columns = opts.columns;
+    if (opts?.flex !== undefined) this.flex = opts.flex;
+    if (opts?.alignSelf) this.alignSelf = opts.alignSelf;
+    if (opts?.minWidth !== undefined) this.minWidth = opts.minWidth;
+    if (opts?.maxWidth !== undefined) this.maxWidth = opts.maxWidth;
+    if (opts?.minHeight !== undefined) this.minHeight = opts.minHeight;
+    if (opts?.maxHeight !== undefined) this.maxHeight = opts.maxHeight;
   }
 
   // ── 树结构 ──────────────────────────────────
@@ -267,6 +314,11 @@ export class UINode extends EventEmitter {
     if (this._dirty) {
       this.onLayout();
       this._dirty = false;
+    }
+
+    // Auto-layout: compute children positions before rendering
+    if (this.layout) {
+      computeLayout(this);
     }
 
     ctx.save();

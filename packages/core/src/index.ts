@@ -7,6 +7,7 @@ export { UINode, type UINodeOptions, type AnimateOptions, type Animation } from 
 export { EventEmitter } from './events.js';
 export { type EasingName, type EasingFn, resolveEasing } from './easing.js';
 export { type Rect, type Point } from './types.js';
+export { computeLayout, type LayoutDirection, type LayoutAlign, type LayoutJustify, type Padding } from './layout.js';
 
 // 工具
 export { Timer, CountdownTimer, type CountdownOptions } from './timer.js';
