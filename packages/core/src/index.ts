@@ -8,5 +8,9 @@ export { EventEmitter } from './events.js';
 export { type EasingName, type EasingFn, resolveEasing } from './easing.js';
 export { type Rect, type Point } from './types.js';
 
+// 工具
+export { Timer, CountdownTimer, type CountdownOptions } from './timer.js';
+export { SeededRNG } from './rng.js';
+
 // AI 调试
 export { InteractionRecorder, type InteractionRecord, type RecorderOptions } from './recorder.js';

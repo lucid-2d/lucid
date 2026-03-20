@@ -4,7 +4,7 @@
  * 借鉴 Vue 的 createApp：一行启动整个游戏。
  */
 
-import { UINode, InteractionRecorder, type InteractionRecord } from '@lucid/core';
+import { UINode, InteractionRecorder, SeededRNG, type InteractionRecord } from '@lucid/core';
 import { SceneRouter } from './scene.js';
 import { detectPlatform, type PlatformAdapter, type ScreenInfo } from './platform/detect.js';
 import { WebAdapter } from './platform/web.js';
@@ -39,12 +39,16 @@ export interface AppOptions {
   adapter?: PlatformAdapter;
   /** 调试模式 */
   debug?: boolean;
+  /** RNG 种子（不指定则自动生成） */
+  rngSeed?: number;
 }
 
 export interface App {
   readonly root: UINode;
   readonly router: SceneRouter;
   readonly screen: ScreenInfo;
+  /** 全局可复现随机数生成器 */
+  readonly rng: SeededRNG;
   debug: boolean;
 
   /** 启动游戏循环 */
@@ -97,6 +101,9 @@ export function createApp(options: AppOptions = {}): App {
   const root = new UINode({ id: 'root', width: screen.width, height: screen.height });
   const router = new SceneRouter();
   root.addChild(router);
+
+  // 全局 RNG
+  const rng = new SeededRNG(options.rngSeed);
 
   // 交互录制器
   const debugMode = options.debug ?? false;
@@ -211,6 +218,7 @@ export function createApp(options: AppOptions = {}): App {
     root,
     router,
     screen,
+    rng,
 
     get debug() { return recorder.enabled; },
     set debug(v: boolean) { recorder.enabled = v; },
@@ -220,6 +228,10 @@ export function createApp(options: AppOptions = {}): App {
     start() {
       startTime = Date.now();
       lastTime = 0;
+      // 录制 RNG 种子（回放时用于恢复随机序列）
+      if (recorder.enabled) {
+        recorder.record({ t: 0, type: 'meta', x: 0, y: 0, path: '', meta: { rngSeed: rng.seed } });
+      }
       rafId = adapter.requestAnimationFrame(frame);
     },
 
@@ -247,6 +259,12 @@ export function createApp(options: AppOptions = {}): App {
 
       for (let i = 0; i < records.length; i++) {
         const rec = records[i];
+
+        // 恢复 RNG 种子
+        if (rec.type === 'meta' && rec.meta?.rngSeed) {
+          (rng as any)._state = rec.meta.rngSeed;
+          continue;
+        }
 
         // 按真实时间差等待（除以速度倍率）
         const dt = rec.t - prevT;

@@ -9,7 +9,7 @@ export interface InteractionRecord {
   /** 毫秒时间戳（相对于录制开始） */
   t: number;
   /** 事件类型 */
-  type: 'touchstart' | 'touchend' | 'touchmove';
+  type: 'touchstart' | 'touchend' | 'touchmove' | 'meta';
   /** 世界坐标 */
   x: number;
   y: number;
@@ -19,6 +19,8 @@ export interface InteractionRecord {
   action?: string;
   /** 命中节点的 $inspect(0) 快照 */
   snapshot?: string;
+  /** 元数据（meta 类型用，如 rngSeed） */
+  meta?: Record<string, any>;
 }
 
 export interface RecorderOptions {
