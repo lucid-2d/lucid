@@ -1,0 +1,14 @@
+{
+  "name": "@lucid/game-ui",
+  "version": "0.1.0",
+  "description": "Lucid game UI - business components (Shop, Checkin, Result, ...)",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": { "build": "tsc", "test": "vitest run", "test:watch": "vitest" },
+  "dependencies": {
+    "@lucid/core": "workspace:*",
+    "@lucid/ui": "workspace:*"
+  },
+  "devDependencies": { "vitest": "^3.1.0" }
+}

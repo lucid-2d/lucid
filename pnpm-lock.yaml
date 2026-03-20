@@ -31,6 +31,19 @@ importers:
         specifier: ^3.1.0
         version: 3.2.4(jsdom@29.0.0)
 
+  packages/game-ui:
+    dependencies:
+      '@lucid/core':
+        specifier: workspace:*
+        version: link:../core
+      '@lucid/ui':
+        specifier: workspace:*
+        version: link:../ui
+    devDependencies:
+      vitest:
+        specifier: ^3.1.0
+        version: 3.2.4(jsdom@29.0.0)
+
   packages/physics:
     devDependencies:
       vitest:
