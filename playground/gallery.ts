@@ -7,8 +7,12 @@
 
 import { SceneNode } from '../packages/engine/src/index';
 import { UINode } from '../packages/core/src/index';
-import { Button, Label, Modal, ProgressBar, Toggle, TabBar, ScrollView } from '../packages/ui/src/index';
-import { CheckinDialog, SettingsPanel, ResultPanel, ShopPanel, LeaderboardPanel, type ShopItem } from '../packages/game-ui/src/index';
+import { Button, Label, Modal, ProgressBar, Toggle, TabBar, ScrollView, Icon, IconButton, RedDot, Badge, Tag, Toast } from '../packages/ui/src/index';
+import {
+  CheckinDialog, SettingsPanel, ResultPanel, ShopPanel, LeaderboardPanel,
+  BattlePassPanel, LuckyBoxDialog, CoinShopPanel, PrivacyDialog,
+  type ShopItem,
+} from '../packages/game-ui/src/index';
 
 const W = 390, H = 844;
 
@@ -147,8 +151,53 @@ export class GalleryScene extends SceneNode {
     c.addChild(bar3);
     y += 24;
 
-    // ── Section: Modal ──
+    // ── Section: IconButton ──
     y += 10;
+    y = this.addSection(c, 'IconButton + Badge + Tag', y);
+    const ibIcons = ['pause', 'settings', 'share', 'gift', 'mission', 'star'] as const;
+    ibIcons.forEach((name, i) => {
+      const ib = new IconButton({ icon: name as any, size: 40, bgColor: 'rgba(255,255,255,0.12)', badge: i >= 4 ? i : undefined });
+      ib.x = 16 + i * 56;
+      ib.y = y;
+      ib.$on('tap', () => {
+        Toast.show('success', `点击了 ${name}`);
+        console.log(`[icon] ${name}`);
+      });
+      c.addChild(ib);
+    });
+    y += 50;
+
+    // Tags
+    const tags = [
+      { text: '限时', bg: '#e94560' },
+      { text: '新品', bg: '#4caf50' },
+      { text: 'HOT', bg: '#ff9800' },
+    ];
+    tags.forEach((t, i) => {
+      const tag = new Tag({ text: t.text, bgColor: t.bg });
+      tag.x = 16 + i * 64;
+      tag.y = y;
+      c.addChild(tag);
+    });
+    y += 36;
+
+    // ── Section: Toast ──
+    y = this.addSection(c, 'Toast — 点击触发', y);
+    const toastTypes = [
+      { type: 'success' as const, text: '操作成功', label: 'Success' },
+      { type: 'error' as const, text: '操作失败', label: 'Error' },
+      { type: 'reward' as const, text: '+100 金币', label: 'Reward' },
+    ];
+    toastTypes.forEach((t, i) => {
+      const btn = new Button({ text: t.label, variant: i === 2 ? 'gold' : i === 1 ? 'danger' : 'primary', width: 100, height: 36 });
+      btn.x = 16 + i * 120;
+      btn.y = y;
+      btn.$on('tap', () => Toast.show(t.type, t.text));
+      c.addChild(btn);
+    });
+    y += 50;
+
+    // ── Section: Modal ──
     y = this.addSection(c, 'Modal — 点击打开', y);
     const modalBtn = new Button({ text: '打开弹窗', variant: 'secondary', width: 180, height: 40 });
     modalBtn.x = (W - 180) / 2; modalBtn.y = y;
@@ -204,6 +253,44 @@ export class GalleryScene extends SceneNode {
     lbBtn.x = (W - 200) / 2; lbBtn.y = y;
     lbBtn.$on('tap', () => this.showLeaderboard());
     c.addChild(lbBtn);
+    y += 60;
+
+    // ── BattlePass ──
+    y = this.addSection(c, 'BattlePassPanel — 战令', y);
+    const bpBtn = new Button({ text: '打开战令', variant: 'gold', width: 200, height: 44 });
+    bpBtn.x = (W - 200) / 2; bpBtn.y = y;
+    bpBtn.$on('tap', () => this.showBattlePass());
+    c.addChild(bpBtn);
+    y += 60;
+
+    // ── LuckyBox ──
+    y = this.addSection(c, 'LuckyBoxDialog — 抽奖', y);
+    const luckBtn = new Button({ text: '打开抽奖', variant: 'danger', width: 200, height: 44 });
+    luckBtn.x = (W - 200) / 2; luckBtn.y = y;
+    luckBtn.$on('tap', () => this.showLuckyBox());
+    c.addChild(luckBtn);
+    y += 60;
+
+    // ── CoinShop ──
+    y = this.addSection(c, 'CoinShopPanel — 金币商店', y);
+    const csBtn = new Button({ text: '打开金币商店', variant: 'secondary', width: 200, height: 44 });
+    csBtn.x = (W - 200) / 2; csBtn.y = y;
+    csBtn.$on('tap', () => this.showCoinShop());
+    c.addChild(csBtn);
+    y += 60;
+
+    // ── Privacy ──
+    y = this.addSection(c, 'PrivacyDialog — 隐私合规', y);
+    const privBtn = new Button({ text: '打开隐私弹窗', variant: 'outline', width: 200, height: 44 });
+    privBtn.x = (W - 200) / 2; privBtn.y = y;
+    privBtn.$on('tap', () => this.showPrivacy());
+    c.addChild(privBtn);
+    y += 60;
+
+    // Bottom spacer
+    const spacer = new UINode({ width: W, height: 60 });
+    spacer.y = y;
+    c.addChild(spacer);
   }
 
   private addSection(container: UINode, title: string, y: number): number {
@@ -330,12 +417,94 @@ export class GalleryScene extends SceneNode {
     this.addChild(panel);
   }
 
+  private showBattlePass() {
+    this.removeOverlay();
+    const panel = new BattlePassPanel({
+      currentLevel: 5, currentXP: 120, xpToNext: 200, isPremium: false,
+      seasonName: '春季赛季',
+      rewards: [
+        { level: 1, freeReward: { icon: '🪙', label: '+50 金币' }, paidReward: { icon: '🌈', label: '彩虹球' }, freeClaimed: true },
+        { level: 2, freeReward: { icon: '🪙', label: '+100 金币' }, freeClaimed: true },
+        { level: 3, freeReward: { icon: '💎', label: '+5 钻石' }, paidReward: { icon: '🔥', label: '火焰球' }, freeClaimed: true },
+        { level: 4, freeReward: { icon: '🪙', label: '+150 金币' }, paidReward: { icon: '🖼', label: '春日头像框' }, freeClaimed: true },
+        { level: 5, freeReward: { icon: '🎫', label: '复活币×2' }, paidReward: { icon: '❄️', label: '冰霜球' } },
+        { level: 6, freeReward: { icon: '🪙', label: '+200 金币' } },
+        { level: 7, freeReward: { icon: '🏆', label: '春季终极框' }, paidReward: { icon: '🌸', label: '樱花特效' } },
+      ],
+    });
+    panel.id = 'overlay';
+    panel.$on('close', () => panel.removeFromParent());
+    panel.$on('claimReward', (lv: number, track: string) => console.log(`[战令] claim Lv.${lv} ${track}`));
+    panel.$on('buyPremium', () => console.log('[战令] buyPremium'));
+    this.addChild(panel);
+  }
+
+  private showLuckyBox() {
+    this.removeOverlay();
+    const dialog = new LuckyBoxDialog({ fragments: 7, redeemCost: 10, freeOpens: 1, adOpens: 2 });
+    dialog.id = 'overlay';
+    dialog.$on('open', () => console.log('[抽奖] open'));
+    dialog.$on('openByAd', () => console.log('[抽奖] openByAd'));
+    dialog.$on('redeem', () => console.log('[抽奖] redeem'));
+    dialog.$on('close', () => setTimeout(() => dialog.removeFromParent(), 200));
+    this.addChild(dialog);
+  }
+
+  private showCoinShop() {
+    this.removeOverlay();
+    const panel = new CoinShopPanel({
+      coins: 2580,
+      items: [
+        { id: 'revive', name: '复活币', desc: '游戏结束时复活', icon: '💫', cost: 500 },
+        { id: 'multi', name: '多球×3', desc: '下局+3球', icon: '🏀', cost: 300, owned: 1 },
+        { id: 'freeze', name: '冰冻球×3', desc: '下局+3冰冻', icon: '❄️', cost: 400 },
+        { id: 'bomb', name: '炸弹×1', desc: '清除一行', icon: '💣', cost: 800 },
+      ],
+    });
+    panel.id = 'overlay';
+    panel.$on('close', () => panel.removeFromParent());
+    panel.$on('purchase', (item: any) => console.log('[金币商店] purchase', item.id));
+    this.addChild(panel);
+  }
+
+  private showPrivacy() {
+    this.removeOverlay();
+    const dialog = new PrivacyDialog();
+    dialog.id = 'overlay';
+    dialog.$on('agree', () => {
+      console.log('[隐私] agreed');
+      setTimeout(() => dialog.removeFromParent(), 200);
+    });
+    dialog.$on('viewPolicy', () => console.log('[隐私] viewPolicy'));
+    dialog.$on('close', () => setTimeout(() => dialog.removeFromParent(), 200));
+    this.addChild(dialog);
+  }
+
   onBeforeUpdate() {
-    // Animate progress bar
     this.demoProgress += 0.004;
     if (this.demoProgress > 1.2) this.demoProgress = 0;
     const bar = this.findById('bar-anim') as ProgressBar | null;
     if (bar) bar.value = Math.min(this.demoProgress, 1);
+
+    // Toast update
+    Toast.update(0.016);
+  }
+
+  /** 重写 $render 以在最顶层绘制 Toast */
+  $render(ctx: CanvasRenderingContext2D): void {
+    if (!this.visible) return;
+    ctx.save();
+    ctx.translate(this.x, this.y);
+
+    this.draw(ctx);
+    for (const child of this.$children) {
+      child.$render(ctx);
+    }
+
+    // Toast 绘制在所有 UI 之上
+    Toast.draw(ctx, W, H);
+
+    ctx.restore();
   }
 
   protected draw(ctx: CanvasRenderingContext2D) {
