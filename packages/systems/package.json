@@ -1,11 +1,15 @@
 {
   "name": "@lucid/systems",
   "version": "0.1.0",
-  "description": "Game operation systems - storage, checkin, skin, achievement, mission, battlepass, ad, iap, share, analytics",
+  "description": "Lucid operation systems — Storage, Checkin, Skin, Achievement, Mission, BattlePass, Ad, IAP, Share, Analytics",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" }
+  },
   "files": ["dist/", "src/"],
+  "license": "MIT",
   "scripts": {
     "build": "tsc",
     "test": "vitest run",

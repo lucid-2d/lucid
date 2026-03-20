@@ -1,11 +1,15 @@
 {
   "name": "@lucid/physics",
   "version": "0.1.0",
-  "description": "Lucid physics - vectors, collision, particles, screen shake",
+  "description": "Lucid physics — Vec2 math, collision detection, particle pool, screen shake",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" }
+  },
   "files": ["dist/", "src/"],
+  "license": "MIT",
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
