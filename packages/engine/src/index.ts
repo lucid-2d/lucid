@@ -9,3 +9,4 @@ export { WebAdapter } from './platform/web.js';
 export { WxAdapter } from './platform/wx.js';
 export { TtAdapter } from './platform/tt.js';
 export { loadImage } from './image-loader.js';
+export { createTestApp, tap, touch, assertTree, generateTestCode } from './test-utils.js';

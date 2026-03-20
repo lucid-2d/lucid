@@ -74,6 +74,11 @@ import { createApp, SceneNode, SceneRouter, loadImage, WebAdapter, WxAdapter, Tt
 | `WxAdapter` | class | WeChat Mini Game platform. Uses `wx.*` globals. |
 | `TtAdapter` | class | Douyin Mini Game platform. Uses `tt.*` globals. |
 | `loadImage(src, timeout?)` | function | Platform-aware async image loader. Returns Promise. Auto-detects Web/Wx/Tt. Use with `Sprite`. |
+| `createTestApp(opts?)` | function | Headless test app with mock canvas. No DOM needed. `debug: true` by default. |
+| `tap(app, nodeId)` | function | Simulate tap on node by id. Emits touchstart + touchend. Returns `true` if found. |
+| `touch(app, x, y, type?)` | function | Simulate touch at coordinates via hitTest. Type: `'start'` \| `'end'` \| `'move'`, default: full tap. Returns node path. |
+| `assertTree(app, pattern)` | function | Assert `$inspect()` output contains all pattern lines (trimmed, ignoring extra nodes). Throws with diff on failure. |
+| `generateTestCode(records)` | function | Convert `InteractionRecord[]` (from `dumpInteractions()`) to vitest test code string. |
 
 ### @lucid/ui
 
