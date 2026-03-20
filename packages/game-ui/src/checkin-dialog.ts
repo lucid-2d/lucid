@@ -6,7 +6,7 @@ class DayCell extends UINode {
   private _completed: boolean;
 
   constructor(id: string, public day: number, public reward: number, isToday: boolean, completed: boolean) {
-    super({ id, width: 80, height: 80 });
+    super({ id });
     this._isToday = isToday;
     this._completed = completed;
   }
@@ -27,21 +27,22 @@ class DayCell extends UINode {
       ctx.stroke();
     }
 
-    // Day label
-    ctx.fillStyle = this._completed ? '#4caf50' : this._isToday ? '#ffd166' : 'rgba(255,255,255,0.5)';
-    ctx.font = '11px sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(`Day ${this.day + 1}`, w / 2, 18);
 
-    // Coin icon
-    ctx.font = '20px sans-serif';
-    ctx.fillText(this._completed ? '✓' : '🪙', w / 2, 42);
+    // Day label
+    ctx.fillStyle = this._completed ? '#4caf50' : this._isToday ? '#ffd166' : 'rgba(255,255,255,0.5)';
+    ctx.font = '10px sans-serif';
+    ctx.fillText(`Day${this.day + 1}`, w / 2, h * 0.22);
+
+    // Icon
+    ctx.font = `${Math.min(w * 0.3, 18)}px sans-serif`;
+    ctx.fillText(this._completed ? '✅' : '🪙', w / 2, h * 0.5);
 
     // Reward
-    ctx.fillStyle = this._completed ? '#4caf50' : '#ffffff';
-    ctx.font = 'bold 13px sans-serif';
-    ctx.fillText(this._completed ? '已领' : `+${this.reward}`, w / 2, 66);
+    ctx.fillStyle = this._completed ? 'rgba(76,175,80,0.6)' : '#ffffff';
+    ctx.font = `bold ${Math.min(w * 0.16, 13)}px sans-serif`;
+    ctx.fillText(this._completed ? '已领' : `+${this.reward}`, w / 2, h * 0.8);
   }
 }
 
@@ -53,19 +54,25 @@ export interface CheckinDialogProps {
 
 export class CheckinDialog extends Modal {
   constructor(props: CheckinDialogProps) {
-    super({ title: '每日签到', id: 'checkin', width: 320, height: 420, screenWidth: 390, screenHeight: 844 });
-
     const cols = 3;
     const cellGap = 8;
-    const gridPad = 10;
-    const cellW = (280 - cellGap * (cols - 1)) / cols;
-    const cellH = 80;
-    const bigCardH = 64;
-
+    const gridPad = 8;
+    const panelW = 300;
+    const contentW = panelW - 40; // modal content area (20px padding each side)
+    const cellW = (contentW - cellGap * (cols - 1)) / cols;
+    const cellH = 72;
+    const bigCardH = 56;
     const cycleDays = props.rewards.length;
-    const normalDays = cycleDays - 1; // 前 6 天用 3 列网格
+    const normalDays = cycleDays - 1;
+    const rows = Math.ceil(normalDays / cols);
 
-    // 前 6 天 (3+3)
+    // 计算总内容高度 → 推算弹窗高度
+    const gridH = rows * (cellH + cellGap) + bigCardH + cellGap + 52; // 52 for button
+    const panelH = gridH + 70; // 70 for title + content top padding
+
+    super({ title: '每日签到', id: 'checkin', width: panelW, height: panelH, screenWidth: 390, screenHeight: 844 });
+
+    // 前 6 天 (3 列)
     for (let i = 0; i < normalDays; i++) {
       const cell = new DayCell(`day-${i}`, i, props.rewards[i], i === props.currentDay, i < props.currentDay);
       cell.width = cellW;
@@ -75,26 +82,25 @@ export class CheckinDialog extends Modal {
       this.content.addChild(cell);
     }
 
-    // 第 7 天独占一行（大奖）
-    const lastIdx = normalDays;
-    const lastCell = new DayCell(`day-${lastIdx}`, lastIdx, props.rewards[lastIdx], lastIdx === props.currentDay, lastIdx < props.currentDay);
-    lastCell.width = 280;
+    // 第 7 天独占一行
+    const lastY = rows * (cellH + cellGap);
+    const lastCell = new DayCell(`day-${normalDays}`, normalDays, props.rewards[normalDays], normalDays === props.currentDay, normalDays < props.currentDay);
+    lastCell.width = contentW;
     lastCell.height = bigCardH;
     lastCell.x = gridPad;
-    lastCell.y = Math.ceil(normalDays / cols) * (cellH + cellGap);
+    lastCell.y = lastY;
     this.content.addChild(lastCell);
 
     // Claim button
-    const btnY = lastCell.y + bigCardH + 12;
     const claimBtn = new Button({
       id: 'claim-btn',
       text: props.claimed ? '已签到' : '签到领取',
       variant: props.claimed ? 'outline' : 'primary',
       disabled: props.claimed,
-      width: 200, height: 42,
+      width: 180, height: 42,
     });
-    claimBtn.x = 40;
-    claimBtn.y = btnY;
+    claimBtn.x = (contentW - 180) / 2 + gridPad;
+    claimBtn.y = lastY + bigCardH + cellGap;
     claimBtn.$on('tap', () => {
       this.$emit('claim', props.currentDay, props.rewards[props.currentDay]);
     });

@@ -13,6 +13,8 @@ export interface ShopItem {
 }
 
 class ShopCard extends UINode {
+  selected = false;
+
   constructor(public item: ShopItem) {
     super({ id: `card-${item.id}`, width: 80, height: 90 });
     this.interactive = true;
@@ -21,17 +23,19 @@ class ShopCard extends UINode {
   }
 
   get $text() { return this.item.name; }
-  get $highlighted() { return this.item.equipped; }
+  get $highlighted() { return this.selected || this.item.equipped; }
 
   protected draw(ctx: CanvasRenderingContext2D): void {
     const w = this.width, h = this.height;
+    const isActive = this.selected || this.item.equipped;
+
     ctx.beginPath();
     ctx.roundRect(0, 0, w, h, 8);
-    ctx.fillStyle = this.item.equipped ? 'rgba(233,69,96,0.2)' : 'rgba(255,255,255,0.06)';
+    ctx.fillStyle = isActive ? 'rgba(233,69,96,0.2)' : 'rgba(255,255,255,0.06)';
     ctx.fill();
-    if (this.item.equipped) {
-      ctx.strokeStyle = '#e94560';
-      ctx.lineWidth = 1.5;
+    if (isActive) {
+      ctx.strokeStyle = this.selected ? '#ffd166' : '#e94560';
+      ctx.lineWidth = 2;
       ctx.stroke();
     }
 
@@ -73,6 +77,7 @@ export class ShopPanel extends UINode {
 
   constructor(props: ShopPanelProps) {
     super({ id: props.id ?? 'shop', width: 390, height: 844 });
+    this.interactive = true; // 阻止穿透
     this._items = props.items;
     this._activeTab = props.tabs[0]?.key ?? '';
 
@@ -126,6 +131,11 @@ export class ShopPanel extends UINode {
       card.x = padX + (i % cols) * (cardW + gap);
       card.y = Math.floor(i / cols) * (card.height + gap);
       card.$on('tap', () => {
+        // Clear all selected states
+        for (const c of this._cardContainer.$children) {
+          if (c instanceof ShopCard) c.selected = false;
+        }
+        card.selected = true;
         this._selectedItem = item;
         this.$emit('select', item);
         this._updateActionBtn();

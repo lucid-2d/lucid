@@ -67,6 +67,7 @@ export class LeaderboardPanel extends UINode {
 
   constructor(props: LeaderboardPanelProps) {
     super({ id: 'leaderboard', width: 390, height: 844 });
+    this.interactive = true; // 阻止触摸穿透到下层
     this._entries = props.entries;
 
     // Close button
