@@ -28,6 +28,13 @@ export function computeLayout(node: UINode): void {
   const dir = node.layout;
   if (!dir) return;
 
+  // Recursively compute children's layouts first (bottom-up sizing)
+  for (const child of node.$children) {
+    if (child.visible && child.layout) {
+      computeLayout(child);
+    }
+  }
+
   const children = node.$children.filter(c => c.visible);
   if (children.length === 0) return;
 
@@ -37,9 +44,29 @@ export function computeLayout(node: UINode): void {
   const justify = node.justifyContent ?? 'start';
   const isRow = dir === 'row';
 
+  // Auto-size: if main/cross dimension is 0, calculate from children
+  if (isRow && node.height === 0) {
+    const maxH = Math.max(...children.map(c => c.height));
+    node.height = maxH + pt + pb;
+  }
+  if (!isRow && node.width === 0) {
+    const maxW = Math.max(...children.map(c => c.width));
+    node.width = maxW + pl + pr;
+  }
+
   if (node.wrap && isRow) {
     layoutWrapRow(node, children, gap, pt, pr, pb, pl, alignItems, justify);
     return;
+  }
+
+  // Auto-size main axis: if 0, use total children + gaps
+  if (isRow && node.width === 0) {
+    const totalW = children.reduce((s, c) => s + c.width, 0) + (children.length - 1) * gap;
+    node.width = totalW + pl + pr;
+  }
+  if (!isRow && node.height === 0) {
+    const totalH = children.reduce((s, c) => s + c.height, 0) + (children.length - 1) * gap;
+    node.height = totalH + pt + pb;
   }
 
   const mainSize = isRow ? node.width - pl - pr : node.height - pt - pb;
@@ -222,5 +249,10 @@ function layoutWrapRow(
     }
 
     rowY += rowH + gap;
+  }
+
+  // Auto-size: set container height from actual rows
+  if (node.height === 0 || rows.length > 0) {
+    node.height = rowY - gap + pb; // rowY already includes last gap, subtract it
   }
 }

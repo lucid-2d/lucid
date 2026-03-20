@@ -49,7 +49,7 @@ import { UINode, InteractionRecorder, SeededRNG, Timer, CountdownTimer } from '@
 
 | Export | Type | Description |
 |--------|------|-------------|
-| `UINode` | class | Base node. Properties: `x`, `y`, `width`, `height`, `visible`, `alpha`, `interactive`. Methods: `addChild(node, index?)`, `removeChild(node)`, `removeFromParent()`, `findById(id)`, `hitTest(x, y)`, `$inspect(depth?)`, `$on(event, handler)`, `$emit(event, ...args)`, `$animate(props, duration, easing?)`. Override: `draw(ctx)`, `$update(dt)`, `$render(ctx)`. |
+| `UINode` | class | Base node. Properties: `x`, `y`, `width`, `height`, `visible`, `alpha`, `interactive`. Layout container: `layout`, `gap`, `padding`, `alignItems`, `justifyContent`, `wrap`, `columns`. Layout child: `flex`, `alignSelf`, `minWidth`, `maxWidth`, `minHeight`, `maxHeight`. Methods: `addChild(node, index?)`, `removeChild(node)`, `removeFromParent()`, `findById(id)`, `hitTest(x, y)`, `$inspect(depth?)`, `$on(event, handler)`, `$emit(event, ...args)`, `$animate(props, duration, easing?)`. Override: `draw(ctx)`, `$update(dt)`, `$render(ctx)`. |
 | `InteractionRecorder` | class | Records touch events with node paths and timestamps. `start()`, `stop()`, `dump()`, `clear()`. |
 | `SeededRNG` | class | Mulberry32 deterministic RNG. `next(): number`, `int(min, max)`, `pick(array)`, `shuffle(array)`, `fork(): SeededRNG`. |
 | `Timer` | class | Elapsed time tracker. `elapsed`, `pause()`, `resume()`, `reset()`. |
@@ -153,6 +153,49 @@ import { vec2, add, sub, scale, normalize, distance, pointInRect, circleCircle, 
 | `pointInRect`, `pointInCircle`, `circleRect`, `circleCircle`, `lineCircle` | Collision detection. Returns `CollisionResult \| null` with `normal` and `depth`. |
 | `ParticlePool` | Object pool. `emit(x, y, opts?)`, `update(dt)`, `draw(ctx)`. |
 | `ScreenShake` | `start(intensity, duration)`, `update(dt)`, `apply(ctx)` / `restore(ctx)`. |
+
+## Layout system
+
+Flexbox subset. Set `layout` on any UINode to auto-position children.
+
+### Container properties
+
+| Property | Values | Description |
+|----------|--------|-------------|
+| `layout` | `'row'` \| `'column'` | Enable auto-layout |
+| `gap` | `number` | Spacing between children |
+| `padding` | `number` \| `[top, right, bottom, left]` | Inner padding |
+| `alignItems` | `'start'` \| `'center'` \| `'end'` | Cross-axis alignment |
+| `justifyContent` | `'start'` \| `'center'` \| `'end'` \| `'space-between'` | Main-axis distribution |
+| `wrap` | `boolean` | Enable row wrapping |
+| `columns` | `number` | Force N items per row (auto-calculates width) |
+
+### Child properties
+
+| Property | Values | Description |
+|----------|--------|-------------|
+| `flex` | `number` | Fill remaining space (proportional if multiple) |
+| `alignSelf` | `'start'` \| `'center'` \| `'end'` | Override parent's alignItems |
+| `minWidth` / `maxWidth` | `number` | Constrain flex sizing |
+| `minHeight` / `maxHeight` | `number` | Constrain flex sizing |
+
+### Examples
+
+```typescript
+// Vertical centered menu — no manual x/y
+const menu = new UINode({ width: 390, height: 844, layout: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 });
+menu.addChild(new Button({ text: 'Play', width: 200, height: 50 }));
+menu.addChild(new Button({ text: 'Settings', width: 200, height: 44 }));
+
+// HUD: left / center / right
+const hud = new UINode({ width: 390, height: 44, layout: 'row', justifyContent: 'space-between', alignItems: 'center', padding: [0, 16, 0, 16] });
+
+// Flex fill
+const body = new UINode({ flex: 1, minHeight: 100 });
+
+// Shop grid: 4 columns
+const grid = new UINode({ width: 360, layout: 'row', wrap: true, columns: 4, gap: 8 });
+```
 
 ## AI agent integration
 

@@ -367,6 +367,61 @@ describe('Layout via constructor options', () => {
   });
 });
 
+// ── Auto-sizing (hug content) ──
+
+describe('Auto-sizing', () => {
+  it('column container auto-calculates height from children', () => {
+    const c = new UINode({ id: 'ct', width: 200, layout: 'column', gap: 10 });
+    c.addChild(box('a', 100, 40));
+    c.addChild(box('b', 100, 60));
+    layout(c);
+
+    expect(c.height).toBe(110); // 40 + 10 + 60
+    expect(c.findById('a')!.y).toBe(0);
+    expect(c.findById('b')!.y).toBe(50);
+  });
+
+  it('column with padding auto-sizes correctly', () => {
+    const c = new UINode({ id: 'ct', width: 200, layout: 'column', gap: 0, padding: 20 });
+    c.addChild(box('a', 100, 50));
+    layout(c);
+
+    expect(c.height).toBe(90); // 20 + 50 + 20
+  });
+
+  it('row container auto-calculates width from children', () => {
+    const c = new UINode({ id: 'ct', height: 100, layout: 'row', gap: 8 });
+    c.addChild(box('a', 60, 30));
+    c.addChild(box('b', 80, 30));
+    layout(c);
+
+    expect(c.width).toBe(148); // 60 + 8 + 80
+  });
+
+  it('row auto-calculates height from tallest child', () => {
+    const c = new UINode({ id: 'ct', width: 300, layout: 'row' });
+    c.addChild(box('a', 60, 30));
+    c.addChild(box('b', 60, 50));
+    layout(c);
+
+    expect(c.height).toBe(50); // max child height
+  });
+
+  it('nested auto-sizing works bottom-up', () => {
+    const outer = new UINode({ id: 'ct', width: 300, layout: 'column', gap: 10 });
+    const inner1 = new UINode({ id: 'in1', width: 300, layout: 'column', gap: 5 });
+    inner1.addChild(box('a', 100, 30));
+    inner1.addChild(box('b', 100, 40));
+    outer.addChild(inner1);
+    outer.addChild(box('c', 100, 20));
+    layout(outer);
+
+    expect(inner1.height).toBe(75); // 30 + 5 + 40
+    expect(outer.height).toBe(105); // 75 + 10 + 20
+    expect(outer.findById('c')!.y).toBe(85); // 75 + 10
+  });
+});
+
 // ── Edge cases ──
 
 describe('Edge cases', () => {

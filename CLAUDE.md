@@ -21,7 +21,7 @@ playground/  — Visual component gallery (vite dev server)
 
 ```bash
 pnpm install                    # install dependencies
-pnpm -r test                    # run all 347 tests
+pnpm -r test                    # run all 381 tests
 pnpm -r build                   # build all packages
 npx vite --config playground/vite.config.ts --port 3456  # run playground
 ```
@@ -36,6 +36,7 @@ All visible elements extend `UINode`. The tree is the single source of truth for
 - **AI inspection**: `$inspect()` returns a text snapshot of the entire tree
 - **Recording**: `InteractionRecorder` logs every touch event with node paths
 - **Replay**: `app.replay(records, speed)` replays recorded interactions deterministically
+- **Layout**: Set `layout: 'row'|'column'` on any UINode to auto-position children (Flexbox subset + grid + wrap)
 
 ### Package dependency graph
 
@@ -68,20 +69,24 @@ app.router.push(new MyScene(app));
 app.start();
 ```
 
-### Creating a scene
+### Creating a scene (with layout)
 
 ```typescript
 import { SceneNode, type App } from '@lucid/engine';
 import { Button, Label, UIColors } from '@lucid/ui';
 
 class MenuScene extends SceneNode {
-  constructor(private app: App) { super({ id: 'menu' }); }
+  constructor(private app: App) {
+    super({ id: 'menu', width: 390, height: 844,
+            layout: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 });
+  }
 
   onEnter() {
+    this.addChild(new Label({ text: 'My Game', fontSize: 40, width: 300, height: 50 }));
     const btn = new Button({ id: 'play', text: 'Start', variant: 'primary', width: 200, height: 50 });
-    btn.x = 95; btn.y = 400;
     btn.$on('tap', () => this.app.router.replace(new GameScene(this.app)));
     this.addChild(btn);
+    // No manual x/y — layout engine positions children automatically
   }
 
   protected draw(ctx: CanvasRenderingContext2D) {
