@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Game — Lucid</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0a0a1a; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; padding-top: 10px; }
+    .phone-frame {
+      width: 390px; height: 844px; position: relative;
+      border-radius: 40px; overflow: hidden;
+      box-shadow: 0 0 40px rgba(0,0,0,0.5);
+      border: 3px solid #222;
+    }
+    canvas { display: block; width: 390px; height: 844px; }
+  </style>
+</head>
+<body>
+  <div class="phone-frame">
+    <canvas id="game" width="780" height="1688"></canvas>
+  </div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

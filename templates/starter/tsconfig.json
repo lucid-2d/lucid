@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@lucid/core": ["../../packages/core/src/index.ts"],
+      "@lucid/engine": ["../../packages/engine/src/index.ts"],
+      "@lucid/ui": ["../../packages/ui/src/index.ts"],
+      "@lucid/game-ui": ["../../packages/game-ui/src/index.ts"],
+      "@lucid/systems": ["../../packages/systems/src/index.ts"],
+      "@lucid/physics": ["../../packages/physics/src/index.ts"]
+    }
+  },
+  "include": ["src"]
+}

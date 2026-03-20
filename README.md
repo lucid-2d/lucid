@@ -205,6 +205,22 @@ const body = new UINode({ flex: 1, minHeight: 100 });
 const grid = new UINode({ width: 360, layout: 'row', wrap: true, columns: 4, gap: 8 });
 ```
 
+## Templates
+
+Ready-to-run game templates in `templates/` directory.
+
+| Template | Description | Run |
+|----------|-------------|-----|
+| `starter` | Minimal game: menu → tap-the-target → result | `npx vite --config templates/starter/vite.config.ts` |
+| `quiz` | Quiz game: question bank → timed options → scoring | `npx vite --config templates/quiz/vite.config.ts` |
+
+Each template includes:
+- `index.html` + `vite.config.ts` + `tsconfig.json`
+- 3 scenes: menu → game/quiz → result
+- Layout system usage (no manual x/y)
+- `$inspect()` with game state
+- Example test file with `createTestApp` + `assertTree`
+
 ## AI agent integration
 
 ### Playwright
