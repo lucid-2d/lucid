@@ -63,12 +63,16 @@ export class Modal extends UINode {
   close(): void {
     if (this._closing) return;
     this._closing = true;
-    this.$animate({ animScale: 0.85, animAlpha: 0 }, { duration: 150, easing: 'easeIn' })
-      .finished.then(() => {
-        this.visible = false;
-        this._closing = false;
-        this.$emit('close');
-      });
+    this.$animate({ animScale: 0.85, animAlpha: 0 }, { duration: 150, easing: 'easeIn' });
+  }
+
+  onBeforeUpdate(): void {
+    // 关闭动画结束检测（animAlpha 趋近 0）
+    if (this._closing && this.animAlpha <= 0.01) {
+      this.visible = false;
+      this._closing = false;
+      this.$emit('close');
+    }
   }
 
   /**
