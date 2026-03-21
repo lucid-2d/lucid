@@ -49,6 +49,10 @@ export class Button extends UINode {
 
   get $text() { return this._text; }
   get $disabled() { return this._disabled; }
+  get $highlighted() { return this.pressed; }
+  protected $inspectInfo(): string {
+    return this.variant !== 'primary' ? this.variant : '';
+  }
 
   protected draw(ctx: CanvasRenderingContext2D): void {
     const w = this.width, h = this.height;

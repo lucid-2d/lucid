@@ -51,6 +51,9 @@ export class Modal extends UINode {
   get title(): string { return this._title; }
   set title(v: string) { this._title = v; this.markDirty(); }
   get $text() { return this._title; }
+  protected $inspectInfo(): string {
+    return this._closing ? 'closing' : this.visible ? 'open' : 'closed';
+  }
 
   open(): void {
     this.visible = true;

@@ -88,6 +88,9 @@ export class ParticlePool {
     const scaleEnd = opts.scaleEnd ?? 0;
     const friction = opts.friction ?? 0;
 
+    this.lastEmitX = x;
+    this.lastEmitY = y;
+
     let emitted = 0;
     for (const p of this.pool) {
       if (emitted >= count) break;
@@ -161,9 +164,13 @@ export class ParticlePool {
     ctx.globalAlpha = 1;
   }
 
+  /** Last emission position (AI-visible) */
+  lastEmitX = 0;
+  lastEmitY = 0;
+
   /** AI-readable state summary */
   $inspect(): string {
-    return `ParticlePool ${this._activeCount}/${this.pool.length} active`;
+    return `ParticlePool ${this._activeCount}/${this.pool.length} active at(${Math.round(this.lastEmitX)},${Math.round(this.lastEmitY)})`;
   }
 
   /** Clear all active particles */

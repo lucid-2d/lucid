@@ -312,3 +312,115 @@ export function generateTestCode(records: InteractionRecord[]): string {
 
   return lines.join('\n');
 }
+
+// ── imageDiff ──
+
+export interface ImageDiffResult {
+  /** Total pixels compared */
+  totalPixels: number;
+  /** Number of pixels that differ */
+  diffPixels: number;
+  /** Percentage of pixels that differ (0..1) */
+  diffPercent: number;
+  /** Whether images are identical */
+  identical: boolean;
+  /** Whether images have same dimensions */
+  sameDimensions: boolean;
+}
+
+/**
+ * Compare two PNG buffers pixel-by-pixel.
+ * Requires @napi-rs/canvas (render mode).
+ *
+ * ```typescript
+ * const before = app.toImage();
+ * tap(app, 'btn');
+ * app.tick(16);
+ * const after = app.toImage();
+ * const diff = await imageDiff(before, after);
+ * expect(diff.diffPercent).toBeGreaterThan(0); // something changed
+ * ```
+ */
+export async function imageDiff(a: Buffer, b: Buffer, threshold = 0): Promise<ImageDiffResult> {
+  let napiCanvas: any;
+  try {
+    napiCanvas = require('@napi-rs/canvas');
+  } catch {
+    throw new Error('[lucid] imageDiff requires @napi-rs/canvas. Install: pnpm add -D @napi-rs/canvas');
+  }
+
+  const [imgA, imgB] = await Promise.all([
+    napiCanvas.loadImage(a),
+    napiCanvas.loadImage(b),
+  ]);
+
+  const sameDimensions = imgA.width === imgB.width && imgA.height === imgB.height;
+  if (!sameDimensions) {
+    return {
+      totalPixels: Math.max(imgA.width * imgA.height, imgB.width * imgB.height),
+      diffPixels: Math.max(imgA.width * imgA.height, imgB.width * imgB.height),
+      diffPercent: 1,
+      identical: false,
+      sameDimensions: false,
+    };
+  }
+
+  const w = imgA.width, h = imgA.height;
+  const canvasA = napiCanvas.createCanvas(w, h);
+  const ctxA = canvasA.getContext('2d');
+  ctxA.drawImage(imgA, 0, 0);
+  const dataA = ctxA.getImageData(0, 0, w, h).data;
+
+  const canvasB = napiCanvas.createCanvas(w, h);
+  const ctxB = canvasB.getContext('2d');
+  ctxB.drawImage(imgB, 0, 0);
+  const dataB = ctxB.getImageData(0, 0, w, h).data;
+
+  const totalPixels = w * h;
+  let diffPixels = 0;
+
+  for (let i = 0; i < dataA.length; i += 4) {
+    const dr = Math.abs(dataA[i] - dataB[i]);
+    const dg = Math.abs(dataA[i + 1] - dataB[i + 1]);
+    const db = Math.abs(dataA[i + 2] - dataB[i + 2]);
+    const da = Math.abs(dataA[i + 3] - dataB[i + 3]);
+    if (dr + dg + db + da > threshold) {
+      diffPixels++;
+    }
+  }
+
+  return {
+    totalPixels,
+    diffPixels,
+    diffPercent: diffPixels / totalPixels,
+    identical: diffPixels === 0,
+    sameDimensions: true,
+  };
+}
+
+/**
+ * Assert that two images differ by at least / at most a percentage.
+ *
+ * ```typescript
+ * assertImageChanged(before, after);               // just changed
+ * assertImageChanged(before, after, 0.01, 0.5);    // 1%-50% changed
+ * ```
+ */
+export async function assertImageChanged(
+  before: Buffer,
+  after: Buffer,
+  minDiff = 0.001,
+  maxDiff = 1,
+): Promise<void> {
+  const result = await imageDiff(before, after);
+  if (result.diffPercent < minDiff) {
+    throw new Error(
+      `assertImageChanged failed: images are too similar (${(result.diffPercent * 100).toFixed(2)}% diff, expected > ${(minDiff * 100).toFixed(2)}%)`
+    );
+  }
+  if (result.diffPercent > maxDiff) {
+    throw new Error(
+      `assertImageChanged failed: images differ too much (${(result.diffPercent * 100).toFixed(2)}% diff, expected < ${(maxDiff * 100).toFixed(2)}%)`
+    );
+  }
+}
