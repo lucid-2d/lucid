@@ -180,10 +180,7 @@ export class QuizScene extends SceneNode {
     ctx.fillRect(0, 0, W, H);
   }
 
-  $inspect(depth?: number): string {
-    let out = super.$inspect(depth);
-    const lines = out.split('\n');
-    lines[0] += ` q=${this.current + 1}/${TOTAL_QUESTIONS} score=${this.score}`;
-    return lines.join('\n');
+  protected $inspectInfo(): string {
+    return `q=${this.current + 1}/${TOTAL_QUESTIONS} score=${this.score}`;
   }
 }

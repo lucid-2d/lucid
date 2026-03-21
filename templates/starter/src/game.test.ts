@@ -13,7 +13,7 @@ describe('Game flow', () => {
 
     assertTree(app, `
       MenuScene#menu
-        Button#play "Play"
+      Button#play
     `);
   });
 
@@ -64,8 +64,8 @@ describe('Game flow', () => {
 
     assertTree(app, `
       ResultScene#result
-        Button#again "Play Again"
-        Button#menu "Menu"
+      Button#again
+      Button#menu
     `);
   });
 });

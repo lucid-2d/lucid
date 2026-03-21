@@ -90,10 +90,7 @@ export class GameScene extends SceneNode {
     ctx.fillRect(0, 0, W, H);
   }
 
-  $inspect(depth?: number): string {
-    let out = super.$inspect(depth);
-    const lines = out.split('\n');
-    lines[0] += ` score=${this.score} time=${Math.ceil(this.timeLeft)}`;
-    return lines.join('\n');
+  protected $inspectInfo(): string {
+    return `score=${this.score} time=${Math.ceil(this.timeLeft)}`;
   }
 }

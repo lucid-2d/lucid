@@ -1,6 +1,7 @@
 /**
  * Result Scene — score display + replay
  */
+import { UINode } from '@lucid/core';
 import { SceneNode, type App } from '@lucid/engine';
 import { Button, Label, UIColors } from '@lucid/ui';
 import { MenuScene } from './menu.js';

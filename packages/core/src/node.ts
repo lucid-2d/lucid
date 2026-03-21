@@ -404,6 +404,9 @@ export class UINode extends EventEmitter {
   get $highlighted(): boolean | undefined { return undefined; }
   get $disabled(): boolean | undefined { return undefined; }
 
+  /** Override to append extra state info to $inspect output line */
+  protected $inspectInfo(): string { return ''; }
+
   /**
    * 输出结构化文本描述，供 AI 读取。
    * @param depth 递归深度，默认无限。0 = 仅自身。
@@ -440,6 +443,10 @@ export class UINode extends EventEmitter {
     if (!this.visible) parts.push('hidden');
     if (this.$disabled) parts.push('disabled');
     if (this.$highlighted) parts.push('highlighted');
+
+    // 子类扩展信息
+    const extra = this.$inspectInfo();
+    if (extra) parts.push(extra);
 
     let line = pad + parts.join(' ');
 

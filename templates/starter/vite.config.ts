@@ -16,6 +16,9 @@ export default defineConfig({
       '@lucid/physics': path.join(lucid, 'physics/src/index.ts'),
     },
   },
-  root: '.',
+  test: {
+    include: ['src/**/*.test.ts'],
+  },
+  root: __dirname,
   publicDir: false,
 });
