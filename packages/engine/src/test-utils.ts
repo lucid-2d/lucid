@@ -10,6 +10,7 @@
 
 import { createApp, type App, type AppOptions } from './app.js';
 import type { InteractionRecord } from '@lucid/core';
+import { detectPlatform, type PlatformAdapter, type ScreenInfo } from './platform/detect.js';
 
 // ── Mock Canvas ──
 
@@ -50,29 +51,116 @@ function createMockCanvas(w = 390, h = 844): any {
   };
 }
 
+// ── Headless Adapter ──
+
+class HeadlessAdapter implements PlatformAdapter {
+  readonly name = 'web' as const;
+  private canvas: any;
+  private ctx: any;
+  private w: number;
+  private h: number;
+
+  constructor(w: number, h: number, napiCanvas: any) {
+    this.w = w;
+    this.h = h;
+    this.canvas = napiCanvas.createCanvas(w * 2, h * 2);
+    this.ctx = this.canvas.getContext('2d');
+    this.ctx.scale(2, 2); // DPR=2
+  }
+
+  getScreenInfo(): ScreenInfo {
+    return { width: this.w, height: this.h, dpr: 2, safeTop: 0, safeBottom: this.h };
+  }
+
+  getCanvas() { return this.canvas; }
+  getCtx() { return this.ctx; }
+  bindTouchEvents() {}
+  requestAnimationFrame(cb: (t: number) => void) { return setTimeout(cb, 16) as any; }
+  cancelAnimationFrame(id: number) { clearTimeout(id); }
+}
+
 // ── createTestApp ──
 
+export interface TestAppOptions extends Partial<AppOptions> {
+  /** Enable headless canvas rendering (requires @napi-rs/canvas) */
+  render?: boolean;
+  /** Canvas width in logical pixels (default: 390) */
+  width?: number;
+  /** Canvas height in logical pixels (default: 844) */
+  height?: number;
+}
+
+export interface TestApp extends App {
+  /** Export canvas as PNG Buffer (render mode only) */
+  toImage(): Buffer;
+  /** Save canvas as PNG file (render mode only) */
+  saveImage(path: string): void;
+}
+
 /**
- * Create a headless test app with mock canvas. No DOM required.
+ * Create a headless test app. No DOM required.
  *
  * ```typescript
+ * // Logic-only (no rendering, fast)
  * const app = createTestApp();
- * app.router.push(new MyScene(app));
+ *
+ * // With real canvas rendering (requires @napi-rs/canvas)
+ * const app = createTestApp({ render: true });
  * app.tick(16);
+ * app.saveImage('screenshot.png');
  * ```
  */
-export function createTestApp(opts?: Partial<AppOptions>): App {
-  const canvas = createMockCanvas(
-    opts?.canvas?.width ?? 390,
-    opts?.canvas?.height ?? 844,
-  );
-  return createApp({
-    platform: 'web',
-    canvas,
-    debug: true,
-    ...opts,
-    // Always override canvas with mock
-  });
+export function createTestApp(opts?: TestAppOptions): TestApp {
+  const w = opts?.width ?? 390;
+  const h = opts?.height ?? 844;
+  const renderMode = opts?.render ?? false;
+
+  let canvasRef: any = null;
+
+  let app: App;
+
+  if (renderMode) {
+    let napiCanvas: any;
+    try {
+      napiCanvas = require('@napi-rs/canvas');
+    } catch {
+      throw new Error(
+        '[lucid] @napi-rs/canvas is required for headless rendering.\n' +
+        'Install it: pnpm add -D @napi-rs/canvas'
+      );
+    }
+    const adapter = new HeadlessAdapter(w, h, napiCanvas);
+    canvasRef = adapter.getCanvas();
+    app = createApp({
+      adapter,
+      debug: true,
+      ...opts,
+    });
+  } else {
+    const canvas = createMockCanvas(w, h);
+    app = createApp({
+      platform: 'web',
+      canvas,
+      debug: true,
+      ...opts,
+    });
+  }
+
+  const testApp = app as TestApp;
+
+  testApp.toImage = () => {
+    if (!canvasRef) {
+      throw new Error('[lucid] toImage() requires render mode: createTestApp({ render: true })');
+    }
+    return canvasRef.toBuffer('image/png');
+  };
+
+  testApp.saveImage = (path: string) => {
+    const fs = require('fs');
+    fs.writeFileSync(path, testApp.toImage());
+  };
+
+  return testApp;
 }
 
 // ── tap ──

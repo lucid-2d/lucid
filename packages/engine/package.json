@@ -6,9 +6,15 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
-    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" }
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
   },
-  "files": ["dist/", "src/"],
+  "files": [
+    "dist/",
+    "src/"
+  ],
   "license": "MIT",
   "scripts": {
     "build": "tsc",
@@ -19,6 +25,7 @@
     "@lucid/core": "workspace:*"
   },
   "devDependencies": {
+    "@napi-rs/canvas": "^0.1.97",
     "jsdom": "^29.0.0",
     "vitest": "^3.1.0"
   }
