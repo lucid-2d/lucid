@@ -15,4 +15,4 @@ export {
 } from './collision.js';
 
 export { ScreenShake } from './screen-shake.js';
-export { ParticlePool, type Particle, type EmitOptions } from './particles.js';
+export { ParticlePool, ParticleEmitter, ParticlePresets, type Particle, type EmitOptions, type EmitterConfig } from './particles.js';
