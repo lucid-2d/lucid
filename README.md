@@ -102,10 +102,10 @@ import { Button, Label, Icon, Modal, Toggle, TabBar, ScrollView, ProgressBar, To
 
 | Component | Key Props | Events |
 |-----------|-----------|--------|
-| `Button` | `id, text, variant: 'primary'\|'outline'\|'ghost'\|'gold', width, height, disabled` | `tap` |
+| `Button` | `id, text, variant: 'primary'\|'outline'\|'ghost'\|'gold', width, height, disabled` | `tap`. AI: `$inspectInfo` = variant, `$highlighted` = pressed, `$disabled`. |
 | `Label` | `text, fontSize, fontWeight, color, align, wrap?, maxLines?, lineHeight?, verticalAlign?` | — . AI: `lineCount`, `truncated`, `renderedLines`. `$inspectInfo`: `3lines truncated`. |
 | `Icon` | `name: IconName, size, color` | — . AI: `$text` = icon name. |
-| `Modal` | `title, id, width, height, screenWidth, screenHeight` | `close`. Methods: `open()`, `close()`, `fitContent(bottomPad?)`. Children go in `.content`. Blocks touch behind overlay. |
+| `Modal` | `title, id, width, height, screenWidth, screenHeight` | `close`. Methods: `open()`, `close()`, `fitContent(bottomPad?)`. AI: `$inspectInfo` = open/closing/closed. |
 | `Toggle` | `id, label, value: boolean, width, height` | `change(value)`. AI: `$highlighted` = ON state. |
 | `TabBar` | `id, tabs: TabItem[], activeKey, width, height` | `change(key)`. AI: `$inspectInfo` = active key. |
 | `ScrollView` | `id, width, height, contentHeight` | Touch-drag scrolling. Auto-captures touch (scroll vs tap detection). `scrollY`, `maxScrollY`. `$inspectInfo`: scroll position. |
@@ -278,6 +278,20 @@ const changes = UINode.$diff(before, after);
 class GameScene extends SceneNode {
   protected $inspectInfo() { return `score=${this.score} level=${this.level}`; }
 }
+
+// Pixel-level image comparison
+const before = app.toImage();
+tap(app, 'play');
+app.tick(16);
+const after = app.toImage();
+const diff = await imageDiff(before, after);
+// { totalPixels, diffPixels, diffPercent, identical, sameDimensions }
+await assertImageChanged(before, after, 0.01, 0.5); // 1%-50% changed
+
+// Verify text wrapping
+const label = app.root.findById('desc') as Label;
+expect(label.lineCount).toBe(3);
+expect(label.truncated).toBe(false);
 ```
 
 ### Playwright

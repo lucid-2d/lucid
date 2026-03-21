@@ -22,7 +22,7 @@ templates/   — Game templates (starter, quiz)
 
 ```bash
 pnpm install                    # install dependencies
-pnpm -r test                    # run all 592 tests
+pnpm -r test                    # run all 598 tests
 pnpm -r build                   # build all packages
 npx vite --config playground/vite.config.ts --port 3456  # run playground
 ```
