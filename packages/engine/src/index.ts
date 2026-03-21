@@ -13,3 +13,4 @@ export { createTestApp, tap, touch, assertTree, generateTestCode, imageDiff, ass
 export { AudioManager, createAudio, createMockAudio, type AudioManagerOptions, type AudioAdapter, type AudioHandle } from './audio.js';
 export { Keyboard } from './keyboard.js';
 export { AssetLoader, type AssetEntry } from './asset-loader.js';
+export { batchSimulate, type SimulationConfig, type SimulationResult, type BatchResult } from './simulate.js';

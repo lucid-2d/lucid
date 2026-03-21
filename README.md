@@ -335,6 +335,77 @@ _app.dumpInteractions()      — get recorded touch events
 _app.replay(records, speed)  — replay (async, returns ReplayStep[])
 ```
 
+## AI-driven level design
+
+Traditional games rely on human designers to hand-place every collectible, obstacle, and enemy. Lucid enables a fundamentally different approach: **AI generates, simulates, evaluates, and iterates on level designs autonomously. Humans only play and give feedback.**
+
+### The loop
+
+```
+AI generates level variant
+  → Lucid simulates gameplay headlessly (createTestApp + tick)
+  → AI evaluates metrics ($inspect, $query, toImage)
+  → AI adjusts design based on results
+  → Repeat until quality threshold met
+  → Human plays and gives feedback
+  → AI incorporates feedback and regenerates
+```
+
+### batchSimulate — run N variants, find the best
+
+```typescript
+import { batchSimulate, createTestApp } from '@lucid-2d/engine';
+
+const result = batchSimulate({
+  count: 50,
+  setup: (i) => {
+    const app = createTestApp({ render: true });
+    const level = generateLevel(baseSeed + i);  // your level generator
+    app.router.push(new PlayScene(app, level));
+    return app;
+  },
+  run: (app) => {
+    // Fast-forward 30 seconds of gameplay
+    for (let t = 0; t < 1800; t++) app.tick(16);
+  },
+  evaluate: (app) => ({
+    score: parseInt(app.root.findById('score')?.$text ?? '0'),
+    collected: app.root.$query('.collected').length,
+    missed: app.root.$query('.missed').length,
+  }),
+  screenshot: (i, m) => m.score > 1000,  // save screenshots of good runs
+});
+
+// Analyze results
+console.log(result.summary);
+// { score: { min: 200, max: 1500, avg: 800 }, collected: { ... } }
+
+// Find best variant
+const best = result.results.sort((a, b) => b.metrics.score - a.metrics.score)[0];
+best.image && fs.writeFileSync('best-level.png', best.image);
+```
+
+### Why this works with Lucid
+
+| Capability | How AI uses it |
+|-----------|---------------|
+| `createTestApp` | Run game without browser |
+| `tick(16)` | Fast-forward gameplay (1800 ticks = 30s in ~100ms) |
+| `$inspect` / `$query` | Read game state programmatically |
+| `toImage` | Visual verification |
+| `$patch` | Adjust level parameters at runtime |
+| `batchSimulate` | Compare 50+ variants automatically |
+| `SeededRNG` | Reproducible randomness for each variant |
+| `debugOverlay` | Visualize item placement |
+
+### Game code provides
+
+- **Level generator**: How to create level layouts (procedural or template-based)
+- **AutoPlayer** (optional): AI strategy for simulating gameplay
+- **Quality metrics**: What makes a "good" level for your game type
+
+The framework handles the infrastructure. The AI handles the creativity.
+
 ## License
 
 MIT
