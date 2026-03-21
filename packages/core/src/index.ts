@@ -10,7 +10,7 @@ export { type Rect, type Point } from './types.js';
 export { computeLayout, type LayoutDirection, type LayoutAlign, type LayoutJustify, type Padding } from './layout.js';
 
 // 精灵
-export { Sprite, SpriteSheet, type SpriteProps, type SourceRect, type SpriteSheetRegions } from './sprite.js';
+export { Sprite, SpriteSheet, AnimatedSprite, type SpriteProps, type SourceRect, type SpriteSheetRegions, type AnimatedSpriteProps, type FrameDef, type PlayMode } from './sprite.js';
 
 // 工具
 export { Timer, CountdownTimer, type CountdownOptions } from './timer.js';

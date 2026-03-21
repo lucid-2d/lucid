@@ -145,4 +145,221 @@ export class SpriteSheet {
       ...opts,
     });
   }
+
+  /** 创建 AnimatedSprite，按帧名称序列播放 */
+  createAnimated(frameNames: string[], opts?: Partial<AnimatedSpriteProps>): AnimatedSprite {
+    const frames: FrameDef[] = frameNames.map(name => {
+      const region = this._regions.get(name);
+      if (!region) throw new Error(`Unknown sprite region: ${name}`);
+      return { image: this.image, sourceRect: region };
+    });
+    const firstRegion = this._regions.get(frameNames[0])!;
+    return new AnimatedSprite({
+      id: opts?.id ?? 'animated',
+      width: opts?.width ?? firstRegion.w,
+      height: opts?.height ?? firstRegion.h,
+      frames,
+      ...opts,
+    });
+  }
+}
+
+// ── AnimatedSprite ──
+
+export type PlayMode = 'loop' | 'once' | 'pingpong';
+
+export interface FrameDef {
+  /** Image source (Canvas, Image, etc.) */
+  image: any;
+  /** Optional source rect for sprite sheet cropping */
+  sourceRect?: SourceRect;
+}
+
+export interface AnimatedSpriteProps extends UINodeOptions {
+  /** Array of frames to play */
+  frames: (FrameDef | any)[];
+  /** Frames per second (default: 12) */
+  fps?: number;
+  /** Play mode (default: 'loop') */
+  mode?: PlayMode;
+  /** Auto-play on creation (default: true) */
+  autoPlay?: boolean;
+  /** Flip all frames horizontally */
+  flipX?: boolean;
+  /** Flip all frames vertically */
+  flipY?: boolean;
+}
+
+/**
+ * AnimatedSprite — frame sequence animation node.
+ *
+ * Plays a sequence of images/canvases as animation frames.
+ * Useful for: pre-rendered effects, sprite sheet animations,
+ * procedural texture playback (rotating planets, fire, water).
+ *
+ * ```typescript
+ * // From an array of canvases (e.g. pre-rendered planet rotation)
+ * const planet = new AnimatedSprite({
+ *   frames: preRenderedCanvases,
+ *   fps: 12, mode: 'loop',
+ * });
+ *
+ * // From a sprite sheet
+ * const explosion = sheet.createAnimated(['f1','f2','f3','f4'], { fps: 24, mode: 'once' });
+ * ```
+ */
+export class AnimatedSprite extends UINode {
+  private _frames: FrameDef[];
+  private _fps: number;
+  private _mode: PlayMode;
+  private _playing: boolean;
+  private _elapsed = 0;
+  private _frameIndex = 0;
+  private _direction = 1; // 1 = forward, -1 = reverse (for pingpong)
+  private _finished = false;
+  flipX: boolean;
+  flipY: boolean;
+
+  constructor(props: AnimatedSpriteProps) {
+    super(props);
+    // Normalize frames: accept raw images or FrameDef objects
+    this._frames = (props.frames ?? []).map(f =>
+      (f && typeof f === 'object' && 'image' in f) ? f : { image: f }
+    );
+    this._fps = props.fps ?? 12;
+    this._mode = props.mode ?? 'loop';
+    this._playing = props.autoPlay ?? true;
+    this.flipX = props.flipX ?? false;
+    this.flipY = props.flipY ?? false;
+  }
+
+  /** Current frame index */
+  get frameIndex(): number { return this._frameIndex; }
+  set frameIndex(v: number) {
+    this._frameIndex = Math.max(0, Math.min(v, this._frames.length - 1));
+  }
+
+  /** Total number of frames */
+  get frameCount(): number { return this._frames.length; }
+
+  /** Whether animation is playing */
+  get playing(): boolean { return this._playing; }
+
+  /** Whether a 'once' animation has finished */
+  get finished(): boolean { return this._finished; }
+
+  /** Frames per second */
+  get fps(): number { return this._fps; }
+  set fps(v: number) { this._fps = v; }
+
+  /** Play mode */
+  get mode(): PlayMode { return this._mode; }
+  set mode(v: PlayMode) { this._mode = v; }
+
+  play(): void {
+    this._playing = true;
+    this._finished = false;
+  }
+
+  pause(): void {
+    this._playing = false;
+  }
+
+  stop(): void {
+    this._playing = false;
+    this._frameIndex = 0;
+    this._elapsed = 0;
+    this._direction = 1;
+    this._finished = false;
+  }
+
+  /** Reset to first frame and play */
+  restart(): void {
+    this.stop();
+    this.play();
+  }
+
+  get $text(): string {
+    return `frame=${this._frameIndex + 1}/${this._frames.length}`;
+  }
+
+  protected $inspectInfo(): string {
+    const state = this._playing ? 'playing' : this._finished ? 'finished' : 'paused';
+    return `${state} ${this._fps}fps`;
+  }
+
+  $update(dt: number): void {
+    super.$update(dt);
+
+    if (!this._playing || this._frames.length === 0) return;
+
+    this._elapsed += dt;
+    const frameDuration = 1 / this._fps;
+
+    while (this._elapsed >= frameDuration) {
+      this._elapsed -= frameDuration;
+      this._advanceFrame();
+    }
+  }
+
+  private _advanceFrame(): void {
+    const last = this._frames.length - 1;
+
+    if (this._mode === 'loop') {
+      this._frameIndex = (this._frameIndex + 1) % this._frames.length;
+    } else if (this._mode === 'once') {
+      if (this._frameIndex < last) {
+        this._frameIndex++;
+      } else {
+        this._playing = false;
+        this._finished = true;
+        this.$emit('complete');
+      }
+    } else if (this._mode === 'pingpong') {
+      this._frameIndex += this._direction;
+      if (this._frameIndex >= last) {
+        this._frameIndex = last;
+        this._direction = -1;
+      } else if (this._frameIndex <= 0) {
+        this._frameIndex = 0;
+        this._direction = 1;
+      }
+    }
+  }
+
+  protected draw(ctx: CanvasRenderingContext2D): void {
+    if (this._frames.length === 0) return;
+    const frame = this._frames[this._frameIndex];
+    if (!frame || !frame.image) return;
+
+    const w = this.width;
+    const h = this.height;
+    if (w <= 0 || h <= 0) return;
+
+    const needsFlip = this.flipX || this.flipY;
+    if (needsFlip) {
+      ctx.save();
+      ctx.translate(this.flipX ? w : 0, this.flipY ? h : 0);
+      ctx.scale(this.flipX ? -1 : 1, this.flipY ? -1 : 1);
+    }
+
+    const sr = frame.sourceRect;
+    if (sr) {
+      ctx.drawImage(frame.image, sr.x, sr.y, sr.w, sr.h, 0, 0, w, h);
+    } else {
+      ctx.drawImage(frame.image, 0, 0, w, h);
+    }
+
+    if (needsFlip) {
+      ctx.restore();
+    }
+  }
+
+  /** Create from an array of plain images/canvases */
+  static fromImages(images: any[], opts?: Partial<AnimatedSpriteProps>): AnimatedSprite {
+    return new AnimatedSprite({
+      frames: images.map(img => ({ image: img })),
+      ...opts,
+    } as AnimatedSpriteProps);
+  }
 }
