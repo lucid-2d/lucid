@@ -1,5 +1,5 @@
-import { UINode } from '@lucid/core';
-import { Button, TabBar, Label, UIColors, drawIcon, type TabItem } from '@lucid/ui';
+import { UINode } from '@lucid-2d/core';
+import { Button, TabBar, Label, UIColors, drawIcon, type TabItem } from '@lucid-2d/ui';
 
 export interface ShopItem {
   id: string;

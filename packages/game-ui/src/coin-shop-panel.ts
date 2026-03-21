@@ -2,8 +2,8 @@
  * CoinShopPanel — 金币商店（参照 template coin-shop.ts）
  */
 
-import { UINode } from '@lucid/core';
-import { Button, Label, UIColors, drawIcon } from '@lucid/ui';
+import { UINode } from '@lucid-2d/core';
+import { Button, Label, UIColors, drawIcon } from '@lucid-2d/ui';
 
 export interface CoinShopItem {
   id: string;

@@ -1,7 +1,7 @@
 /**
  * Game entry point
  */
-import { createApp } from '@lucid/engine';
+import { createApp } from '@lucid-2d/engine';
 import { MenuScene } from './scenes/menu.js';
 
 const canvas = document.getElementById('game') as HTMLCanvasElement;

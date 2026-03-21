@@ -3,7 +3,7 @@ import { BattlePassPanel } from '../src/battle-pass-panel';
 import { LuckyBoxDialog } from '../src/lucky-box-dialog';
 import { CoinShopPanel } from '../src/coin-shop-panel';
 import { PrivacyDialog } from '../src/privacy-dialog';
-import { Button } from '@lucid/ui';
+import { Button } from '@lucid-2d/ui';
 
 describe('BattlePassPanel', () => {
   const rewards = [

@@ -2,7 +2,7 @@
  * Example test using Lucid test utilities
  */
 import { describe, it, expect } from 'vitest';
-import { createTestApp, tap, assertTree } from '@lucid/engine';
+import { createTestApp, tap, assertTree } from '@lucid-2d/engine';
 import { MenuScene } from './scenes/menu';
 
 describe('Game flow', () => {

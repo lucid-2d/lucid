@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { ScrollView } from '../src/scroll-view';
-import { UINode } from '@lucid/core';
+import { UINode } from '@lucid-2d/core';
 
 describe('ScrollView', () => {
   it('starts at scrollY 0', () => {

@@ -3,7 +3,7 @@
  */
 import { describe, it, expect, vi } from 'vitest';
 import { SceneNode, SceneRouter } from '../src/scene';
-import { UINode } from '@lucid/core';
+import { UINode } from '@lucid-2d/core';
 
 describe('SceneNode', () => {
   it('is a UINode', () => {

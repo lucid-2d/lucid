@@ -5,7 +5,7 @@
 import { describe, it, expect } from 'vitest';
 import { createTestApp, tap } from '../src/test-utils';
 import { SceneNode } from '../src/scene';
-import { UINode } from '@lucid/core';
+import { UINode } from '@lucid-2d/core';
 import fs from 'fs';
 import path from 'path';
 

@@ -1,5 +1,5 @@
 {
-  "name": "@lucid/engine",
+  "name": "@lucid-2d/engine",
   "version": "0.1.0",
   "description": "Lucid game engine — app lifecycle, scene routing, platform adapters (Web/Wx/Tt)",
   "type": "module",
@@ -22,11 +22,20 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@lucid/core": "workspace:*"
+    "@lucid-2d/core": "workspace:*"
   },
   "devDependencies": {
     "@napi-rs/canvas": "^0.1.97",
+    "@types/node": "^25.5.0",
     "jsdom": "^29.0.0",
     "vitest": "^3.1.0"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lucid-2d/lucid.git",
+    "directory": "packages/engine"
   }
 }

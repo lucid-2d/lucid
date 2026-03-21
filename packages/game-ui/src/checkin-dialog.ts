@@ -1,5 +1,5 @@
-import { UINode } from '@lucid/core';
-import { Modal, Button, Label, UIColors, drawIcon } from '@lucid/ui';
+import { UINode } from '@lucid-2d/core';
+import { Modal, Button, Label, UIColors, drawIcon } from '@lucid-2d/ui';
 
 class DayCell extends UINode {
   private _isToday: boolean;

@@ -4,7 +4,7 @@
 import { describe, it, expect } from 'vitest';
 import { createTestApp, tap, imageDiff, assertImageChanged } from '../src/test-utils';
 import { SceneNode } from '../src/scene';
-import { UINode } from '@lucid/core';
+import { UINode } from '@lucid-2d/core';
 
 class ColorScene extends SceneNode {
   color = '#ff0000';

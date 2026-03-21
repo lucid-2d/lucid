@@ -9,7 +9,7 @@
  */
 
 import { createApp, type App, type AppOptions } from './app.js';
-import type { InteractionRecord } from '@lucid/core';
+import type { InteractionRecord } from '@lucid-2d/core';
 import { detectPlatform, type PlatformAdapter, type ScreenInfo } from './platform/detect.js';
 
 // ── Mock Canvas ──
@@ -266,7 +266,7 @@ export function assertTree(app: App, pattern: string): void {
  */
 export function generateTestCode(records: InteractionRecord[]): string {
   const lines: string[] = [
-    `import { createTestApp, tap, touch } from '@lucid/engine';`,
+    `import { createTestApp, tap, touch } from '@lucid-2d/engine';`,
     ``,
     `test('recorded interaction', () => {`,
     `  const app = createTestApp();`,

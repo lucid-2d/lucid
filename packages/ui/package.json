@@ -1,14 +1,20 @@
 {
-  "name": "@lucid/ui",
+  "name": "@lucid-2d/ui",
   "version": "0.1.0",
   "description": "Lucid UI — 11 base components (Button, Label, Modal, Toggle, TabBar, ScrollView, etc.)",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
-    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" }
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
   },
-  "files": ["dist/", "src/"],
+  "files": [
+    "dist/",
+    "src/"
+  ],
   "license": "MIT",
   "scripts": {
     "build": "tsc",
@@ -16,9 +22,17 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@lucid/core": "workspace:*"
+    "@lucid-2d/core": "workspace:*"
   },
   "devDependencies": {
     "vitest": "^3.1.0"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lucid-2d/lucid.git",
+    "directory": "packages/ui"
   }
 }

@@ -3,7 +3,7 @@
  * 底层使用 icon-draw.ts 的 Canvas path 绘制
  */
 
-import { UINode, type UINodeOptions } from '@lucid/core';
+import { UINode, type UINodeOptions } from '@lucid-2d/core';
 import { drawIcon, type IconName, type IconStyle } from './icon-draw.js';
 import { UIColors } from './tokens.js';
 

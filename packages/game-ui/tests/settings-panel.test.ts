@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { SettingsPanel } from '../src/settings-panel';
-import { Toggle } from '@lucid/ui';
+import { Toggle } from '@lucid-2d/ui';
 
 describe('SettingsPanel', () => {
   const toggles = [

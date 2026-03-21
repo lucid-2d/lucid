@@ -2,7 +2,7 @@
  * IconButton — 圆形图标按钮（从 template icon-button.ts 迁移）
  */
 
-import { UINode, type UINodeOptions } from '@lucid/core';
+import { UINode, type UINodeOptions } from '@lucid-2d/core';
 import { drawIcon, type IconName } from './icon-draw.js';
 import { UIColors } from './tokens.js';
 

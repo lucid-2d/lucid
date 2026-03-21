@@ -2,8 +2,8 @@
  * LuckyBoxDialog — 抽奖弹窗（参照 template lucky-box.ts）
  */
 
-import { UINode } from '@lucid/core';
-import { Modal, Button, Label, ProgressBar, Icon, UIColors } from '@lucid/ui';
+import { UINode } from '@lucid-2d/core';
+import { Modal, Button, Label, ProgressBar, Icon, UIColors } from '@lucid-2d/ui';
 
 export interface LuckyBoxDialogProps {
   fragments: number;

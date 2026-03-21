@@ -3,7 +3,7 @@
  */
 import { describe, it, expect, vi } from 'vitest';
 import { createApp, type App } from '../src/app';
-import { UINode } from '@lucid/core';
+import { UINode } from '@lucid-2d/core';
 import { SceneNode } from '../src/scene';
 
 describe('createApp', () => {

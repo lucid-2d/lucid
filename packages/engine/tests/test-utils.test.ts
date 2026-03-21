@@ -4,7 +4,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { createTestApp, tap, touch, assertTree, generateTestCode } from '../src/test-utils';
 import { SceneNode } from '../src/scene';
-import { UINode } from '@lucid/core';
+import { UINode } from '@lucid-2d/core';
 
 // Simple test scene
 class TestScene extends SceneNode {
@@ -178,7 +178,7 @@ describe('generateTestCode', () => {
     ];
 
     const code = generateTestCode(records as any);
-    expect(code).toContain("import { createTestApp, tap, touch } from '@lucid/engine'");
+    expect(code).toContain("import { createTestApp, tap, touch } from '@lucid-2d/engine'");
     expect(code).toContain("tap(app, 'btn')");
     expect(code).toContain('test(');
   });

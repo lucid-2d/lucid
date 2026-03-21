@@ -1,4 +1,4 @@
-import { UINode, type UINodeOptions, drawText, wrapText, measureWrappedText } from '@lucid/core';
+import { UINode, type UINodeOptions, drawText, wrapText, measureWrappedText } from '@lucid-2d/core';
 
 export interface LabelProps extends UINodeOptions {
   text: string;

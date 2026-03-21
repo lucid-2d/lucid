@@ -2,7 +2,7 @@
  * Badge / RedDot / Tag — 角标和标签组件（从 template badge.ts 迁移）
  */
 
-import { UINode, type UINodeOptions } from '@lucid/core';
+import { UINode, type UINodeOptions } from '@lucid-2d/core';
 import { UIColors } from './tokens.js';
 
 // ── RedDot ──────────────────────────────────

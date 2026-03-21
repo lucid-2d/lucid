@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { CheckinDialog } from '../src/checkin-dialog';
-import { Button } from '@lucid/ui';
+import { Button } from '@lucid-2d/ui';
 
 describe('CheckinDialog', () => {
   const rewards = [10, 10, 15, 20, 20, 25, 50];

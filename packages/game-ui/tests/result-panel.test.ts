@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { ResultPanel } from '../src/result-panel';
-import { Button } from '@lucid/ui';
+import { Button } from '@lucid-2d/ui';
 
 describe('ResultPanel', () => {
   const baseProps = {

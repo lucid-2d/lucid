@@ -3,6 +3,6 @@ import path from 'path';
 export default defineConfig({
   test: { include: ['tests/**/*.test.ts'] },
   resolve: {
-    alias: { '@lucid/core': path.resolve(__dirname, '../core/src/index.ts') },
+    alias: { '@lucid-2d/core': path.resolve(__dirname, '../core/src/index.ts') },
   },
 });

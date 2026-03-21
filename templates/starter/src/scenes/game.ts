@@ -4,9 +4,9 @@
  * Replace this with your game logic.
  * This example: tap the target to score points.
  */
-import { UINode } from '@lucid/core';
-import { SceneNode, type App } from '@lucid/engine';
-import { Label, Button, UIColors } from '@lucid/ui';
+import { UINode } from '@lucid-2d/core';
+import { SceneNode, type App } from '@lucid-2d/engine';
+import { Label, Button, UIColors } from '@lucid-2d/ui';
 import { ResultScene } from './result.js';
 
 const W = 390, H = 844;

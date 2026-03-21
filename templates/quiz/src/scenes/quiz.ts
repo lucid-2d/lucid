@@ -4,9 +4,9 @@
  * Demonstrates: Layout system, UINode option buttons, $inspect for AI visibility.
  * Each option is a UINode child — AI can see and tap them via findById/emit.
  */
-import { UINode } from '@lucid/core';
-import { SceneNode, type App } from '@lucid/engine';
-import { Label, ProgressBar, UIColors } from '@lucid/ui';
+import { UINode } from '@lucid-2d/core';
+import { SceneNode, type App } from '@lucid-2d/engine';
+import { Label, ProgressBar, UIColors } from '@lucid-2d/ui';
 import { QUESTIONS, type Question } from '../questions.js';
 import { ResultScene } from './result.js';
 

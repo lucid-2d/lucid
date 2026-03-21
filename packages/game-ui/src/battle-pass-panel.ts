@@ -2,8 +2,8 @@
  * BattlePassPanel — 战令面板（参照 template battle-pass.ts）
  */
 
-import { UINode } from '@lucid/core';
-import { Button, Label, ProgressBar, ScrollView, UIColors, drawIcon } from '@lucid/ui';
+import { UINode } from '@lucid-2d/core';
+import { Button, Label, ProgressBar, ScrollView, UIColors, drawIcon } from '@lucid-2d/ui';
 
 export interface BattlePassReward {
   level: number;

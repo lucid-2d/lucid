@@ -8,11 +8,11 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@lucid/core': path.resolve(__dirname, '../packages/core/src/index.ts'),
-      '@lucid/engine': path.resolve(__dirname, '../packages/engine/src/index.ts'),
-      '@lucid/ui': path.resolve(__dirname, '../packages/ui/src/index.ts'),
-      '@lucid/game-ui': path.resolve(__dirname, '../packages/game-ui/src/index.ts'),
-      '@lucid/physics': path.resolve(__dirname, '../packages/physics/src/index.ts'),
+      '@lucid-2d/core': path.resolve(__dirname, '../packages/core/src/index.ts'),
+      '@lucid-2d/engine': path.resolve(__dirname, '../packages/engine/src/index.ts'),
+      '@lucid-2d/ui': path.resolve(__dirname, '../packages/ui/src/index.ts'),
+      '@lucid-2d/game-ui': path.resolve(__dirname, '../packages/game-ui/src/index.ts'),
+      '@lucid-2d/physics': path.resolve(__dirname, '../packages/physics/src/index.ts'),
     },
   },
 });

@@ -1,5 +1,5 @@
-import { UINode } from '@lucid/core';
-import { Modal, Toggle, Button, Label, UIColors } from '@lucid/ui';
+import { UINode } from '@lucid-2d/core';
+import { Modal, Toggle, Button, Label, UIColors } from '@lucid-2d/ui';
 
 export interface SettingsPanelProps {
   toggles: Array<{ id: string; label: string; value: boolean }>;

@@ -1,14 +1,20 @@
 {
-  "name": "@lucid/core",
+  "name": "@lucid-2d/core",
   "version": "0.1.0",
   "description": "AI-first Canvas 2D game framework — core node tree, events, animation, recording, RNG",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
-    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" }
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
   },
-  "files": ["dist/", "src/"],
+  "files": [
+    "dist/",
+    "src/"
+  ],
   "license": "MIT",
   "scripts": {
     "build": "tsc",
@@ -18,5 +24,13 @@
   },
   "devDependencies": {
     "vitest": "^3.1.0"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lucid-2d/lucid.git",
+    "directory": "packages/core"
   }
 }

@@ -4,7 +4,7 @@
  * 借鉴 Vue 的 createApp：一行启动整个游戏。
  */
 
-import { UINode, InteractionRecorder, SeededRNG, type InteractionRecord } from '@lucid/core';
+import { UINode, InteractionRecorder, SeededRNG, type InteractionRecord } from '@lucid-2d/core';
 import { SceneRouter } from './scene.js';
 import { detectPlatform, type PlatformAdapter, type ScreenInfo } from './platform/detect.js';
 import { WebAdapter } from './platform/web.js';

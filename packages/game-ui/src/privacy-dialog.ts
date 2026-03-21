@@ -2,8 +2,8 @@
  * PrivacyDialog — 隐私合规弹窗（参照 template privacy.ts）
  */
 
-import { UINode } from '@lucid/core';
-import { Modal, Button, Label, UIColors } from '@lucid/ui';
+import { UINode } from '@lucid-2d/core';
+import { Modal, Button, Label, UIColors } from '@lucid-2d/ui';
 
 export interface PrivacyDialogProps {
   title?: string;

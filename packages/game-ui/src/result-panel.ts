@@ -1,5 +1,5 @@
-import { UINode } from '@lucid/core';
-import { Button, Label, UIColors, drawIcon, type ButtonVariant, type IconName } from '@lucid/ui';
+import { UINode } from '@lucid-2d/core';
+import { Button, Label, UIColors, drawIcon, type ButtonVariant, type IconName } from '@lucid-2d/ui';
 
 class StatNode extends UINode {
   constructor(id: string, public iconName: IconName, public label: string, public value: string) {

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { ShopPanel, type ShopItem } from '../src/shop-panel';
-import { Button } from '@lucid/ui';
+import { Button } from '@lucid-2d/ui';
 
 describe('ShopPanel', () => {
   const tabs = [

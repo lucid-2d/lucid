@@ -3,7 +3,7 @@
  */
 import { describe, it, expect, vi } from 'vitest';
 import { createApp } from '../src/app';
-import { UINode } from '@lucid/core';
+import { UINode } from '@lucid-2d/core';
 
 describe('touch coordinate conversion', () => {
   it('touchend passes correct localX/localY to nested node', () => {

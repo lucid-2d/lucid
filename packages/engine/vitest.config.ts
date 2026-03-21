@@ -8,7 +8,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@lucid/core': path.resolve(__dirname, '../core/src/index.ts'),
+      '@lucid-2d/core': path.resolve(__dirname, '../core/src/index.ts'),
     },
   },
 });

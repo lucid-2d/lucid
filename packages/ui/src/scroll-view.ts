@@ -1,4 +1,4 @@
-import { UINode, type UINodeOptions } from '@lucid/core';
+import { UINode, type UINodeOptions } from '@lucid-2d/core';
 
 export interface ScrollViewProps extends UINodeOptions {
   width: number;

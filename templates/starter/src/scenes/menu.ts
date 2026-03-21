@@ -3,8 +3,8 @@
  *
  * Uses layout system for automatic positioning.
  */
-import { SceneNode, type App } from '@lucid/engine';
-import { Button, Label, UIColors } from '@lucid/ui';
+import { SceneNode, type App } from '@lucid-2d/engine';
+import { Button, Label, UIColors } from '@lucid-2d/ui';
 import { GameScene } from './game.js';
 
 const W = 390, H = 844;

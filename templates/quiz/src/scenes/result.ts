@@ -1,9 +1,9 @@
 /**
  * Quiz Result Scene
  */
-import { UINode } from '@lucid/core';
-import { SceneNode, type App } from '@lucid/engine';
-import { Button, Label, UIColors } from '@lucid/ui';
+import { UINode } from '@lucid-2d/core';
+import { SceneNode, type App } from '@lucid-2d/engine';
+import { Button, Label, UIColors } from '@lucid-2d/ui';
 import { MenuScene } from './menu.js';
 import { QuizScene } from './quiz.js';
 

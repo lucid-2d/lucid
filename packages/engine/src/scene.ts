@@ -8,7 +8,7 @@
  * - 支持过渡动画（fade/slide）
  */
 
-import { UINode, type UINodeOptions } from '@lucid/core';
+import { UINode, type UINodeOptions } from '@lucid-2d/core';
 
 export class SceneNode extends UINode {
   /** 进入场景时调用（首次推入或 replace 到） */

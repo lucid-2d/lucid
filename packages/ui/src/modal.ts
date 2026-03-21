@@ -1,4 +1,4 @@
-import { UINode, type UINodeOptions } from '@lucid/core';
+import { UINode, type UINodeOptions } from '@lucid-2d/core';
 import { Button } from './button.js';
 import { UIColors } from './tokens.js';
 
