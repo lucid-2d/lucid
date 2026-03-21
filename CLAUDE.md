@@ -1,8 +1,11 @@
 # Lucid — AI-first Canvas 2D Game Framework
 
+**GitHub**: https://github.com/lucid-2d/lucid
+**Packages**: `@lucid-2d/core`, `@lucid-2d/engine`, `@lucid-2d/ui`, `@lucid-2d/physics`, `@lucid-2d/game-ui`, `@lucid-2d/systems`
+
 ## What this is
 
-Lucid is a Canvas 2D game framework designed for AI agents to build, inspect, debug, and test games. Every UI element is a `UINode` — a tree node that supports `$inspect()` for state snapshots, interaction recording, and deterministic replay.
+Lucid is a Canvas 2D game framework designed for AI agents to build, inspect, debug, and test games. Every UI element is a `UINode` — a tree node that supports `$inspect()` for state snapshots, interaction recording, and deterministic replay. All rendering results are AI-queryable — line counts, truncation, button variants, scroll positions, particle states.
 
 ## Repository structure
 
@@ -67,7 +70,7 @@ core (zero deps)
 ### Creating an app
 
 ```typescript
-import { createApp } from '@lucid/engine';
+import { createApp } from '@lucid-2d/engine';
 
 const app = createApp({ platform: 'web', canvas, debug: true });
 app.router.push(new MyScene(app));
@@ -77,8 +80,8 @@ app.start();
 ### Creating a scene (with layout)
 
 ```typescript
-import { SceneNode, type App } from '@lucid/engine';
-import { Button, Label, UIColors } from '@lucid/ui';
+import { SceneNode, type App } from '@lucid-2d/engine';
+import { Button, Label, UIColors } from '@lucid-2d/ui';
 
 class MenuScene extends SceneNode {
   constructor(private app: App) {
@@ -104,7 +107,7 @@ class MenuScene extends SceneNode {
 ### Custom UINode
 
 ```typescript
-import { UINode } from '@lucid/core';
+import { UINode } from '@lucid-2d/core';
 
 class HealthBar extends UINode {
   value = 1; // 0..1
@@ -145,7 +148,7 @@ btn.$emit('tap');
 ### Headless rendering (no browser)
 
 ```typescript
-import { createTestApp, tap } from '@lucid/engine';
+import { createTestApp, tap } from '@lucid-2d/engine';
 
 const app = createTestApp({ render: true }); // @napi-rs/canvas
 app.router.push(new MenuScene(app));
@@ -188,8 +191,8 @@ await app.replay(records, 2);
 ### Using operation systems
 
 ```typescript
-import { createStorage, CheckinSystem, SkinSystem } from '@lucid/systems';
-import { CheckinDialog } from '@lucid/game-ui';
+import { createStorage, CheckinSystem, SkinSystem } from '@lucid-2d/systems';
+import { CheckinDialog } from '@lucid-2d/game-ui';
 
 const storage = createStorage('myapp:');
 const checkin = new CheckinSystem({ storage, rewards: [10, 15, 20, 25, 30, 40, 80] });

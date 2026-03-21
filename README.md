@@ -5,17 +5,23 @@ AI-first Canvas 2D game framework. Every element is a `UINode` — inspectable, 
 ## Install
 
 ```bash
-npm install @lucid/core @lucid/engine @lucid/ui
+# 1. Configure GitHub Packages registry (one-time)
+echo "@lucid-2d:registry=https://npm.pkg.github.com" >> .npmrc
+
+# 2. Install
+npm install @lucid-2d/core @lucid-2d/engine @lucid-2d/ui
 # optional
-npm install @lucid/physics @lucid/game-ui @lucid/systems
+npm install @lucid-2d/physics @lucid-2d/game-ui @lucid-2d/systems
+# dev only (headless rendering)
+npm install -D @napi-rs/canvas
 ```
 
 ## Quick start
 
 ```typescript
-import { createApp } from '@lucid/engine';
-import { SceneNode } from '@lucid/engine';
-import { Button, Label, UIColors } from '@lucid/ui';
+import { createApp } from '@lucid-2d/engine';
+import { SceneNode } from '@lucid-2d/engine';
+import { Button, Label, UIColors } from '@lucid-2d/ui';
 
 class MenuScene extends SceneNode {
   constructor(private app) { super({ id: 'menu' }); }
@@ -39,12 +45,12 @@ window._app = app; // expose for AI agent
 
 ## Packages
 
-### @lucid/core
+### @lucid-2d/core
 
 Node tree, events, animation, recording, timers, RNG, sprites, text, camera, nine-slice, i18n.
 
 ```typescript
-import { UINode, Sprite, SpriteSheet, AnimatedSprite, NineSlice, Camera, I18n, InteractionRecorder, SeededRNG, Timer, CountdownTimer, wrapText, drawText } from '@lucid/core';
+import { UINode, Sprite, SpriteSheet, AnimatedSprite, NineSlice, Camera, I18n, InteractionRecorder, SeededRNG, Timer, CountdownTimer, wrapText, drawText } from '@lucid-2d/core';
 ```
 
 | Export | Type | Description |
@@ -64,12 +70,12 @@ import { UINode, Sprite, SpriteSheet, AnimatedSprite, NineSlice, Camera, I18n, I
 | `NineSlice` | class | Nine-slice scaling UINode for panels/buttons. Props: `image`, `insets: [top, right, bottom, left]`. Corners stay fixed, edges stretch single-axis, center stretches both. |
 | `I18n` | class | Internationalization. `new I18n({ en: {...}, zh: {...} })`. Methods: `t(key, ...args)` (positional params `{0}`, `{1}`), `locale` getter/setter, `add(locale, translations)`, `has(key)`, `locales`. Fallback: current → first locale → key. |
 
-### @lucid/engine
+### @lucid-2d/engine
 
 App lifecycle, scene routing, platform adapters, image loading, audio, keyboard.
 
 ```typescript
-import { createApp, SceneNode, SceneRouter, loadImage, WebAdapter, WxAdapter, TtAdapter } from '@lucid/engine';
+import { createApp, SceneNode, SceneRouter, loadImage, WebAdapter, WxAdapter, TtAdapter } from '@lucid-2d/engine';
 ```
 
 | Export | Type | Description |
@@ -92,12 +98,12 @@ import { createApp, SceneNode, SceneRouter, loadImage, WebAdapter, WxAdapter, Tt
 | `Keyboard` | class | PC keyboard input. `bind(target)`, `isDown(key)`, `wasPressed(key)`, `wasReleased(key)`, `update()`. Test: `simulatePress(key)`, `simulateRelease(key)`. |
 | `AssetLoader` | class | Batch asset loading. `add(name, src)`, `load(): Promise<Map>`, `onProgress`, `progress`, `get(name)`. Auto-detects image/audio/json. |
 
-### @lucid/ui
+### @lucid-2d/ui
 
 11 base components + design tokens.
 
 ```typescript
-import { Button, Label, Icon, Modal, Toggle, TabBar, ScrollView, ProgressBar, Toast, Badge, Tag, UIColors } from '@lucid/ui';
+import { Button, Label, Icon, Modal, Toggle, TabBar, ScrollView, ProgressBar, Toast, Badge, Tag, UIColors } from '@lucid-2d/ui';
 ```
 
 | Component | Key Props | Events |
@@ -118,12 +124,12 @@ import { Button, Label, Icon, Modal, Toggle, TabBar, ScrollView, ProgressBar, To
 
 **UIColors** (28 tokens): `primary`, `secondary`, `accent`, `text`, `textSecondary`, `textLight`, `textMuted`, `textHint`, `panelFill`, `panelBorder`, `bgTop`, `bgBottom`, `cardBg`, `trackBg`, `divider`, `success`, `error`, `warning`, `goldStart`, `goldEnd`, `dangerStart`, `dangerEnd`, `overlayBg`, `buttonText`, `buttonOutlineText`, `buttonGhostText`, `toggleOn`, `toggleOff`.
 
-### @lucid/game-ui
+### @lucid-2d/game-ui
 
 9 business components for common game screens.
 
 ```typescript
-import { CheckinDialog, ShopPanel, SettingsPanel, ResultPanel, LeaderboardPanel, BattlePassPanel, LuckyBoxDialog, CoinShopPanel, PrivacyDialog } from '@lucid/game-ui';
+import { CheckinDialog, ShopPanel, SettingsPanel, ResultPanel, LeaderboardPanel, BattlePassPanel, LuckyBoxDialog, CoinShopPanel, PrivacyDialog } from '@lucid-2d/game-ui';
 ```
 
 | Component | Purpose | Key Props |
@@ -138,12 +144,12 @@ import { CheckinDialog, ShopPanel, SettingsPanel, ResultPanel, LeaderboardPanel,
 | `CoinShopPanel` | IAP coin packages | `items: CoinShopItem[], balance`. Events: `purchase(item)`, `close`. |
 | `PrivacyDialog` | Privacy policy modal | `content: string`. Events: `close`. |
 
-### @lucid/systems
+### @lucid-2d/systems
 
 10 operation systems. All use `Storage` interface for persistence.
 
 ```typescript
-import { createStorage, CheckinSystem, SkinSystem, AchievementSystem, MissionSystem, BattlePassSystem, AdSystem, IAPSystem, ShareSystem, AnalyticsSystem } from '@lucid/systems';
+import { createStorage, CheckinSystem, SkinSystem, AchievementSystem, MissionSystem, BattlePassSystem, AdSystem, IAPSystem, ShareSystem, AnalyticsSystem } from '@lucid-2d/systems';
 ```
 
 | System | Constructor | Key Methods |
@@ -159,12 +165,12 @@ import { createStorage, CheckinSystem, SkinSystem, AchievementSystem, MissionSys
 | `ShareSystem` | `{ adapter: ShareAdapter }` | `share(data)`. |
 | `AnalyticsSystem` | `{ adapters: AnalyticsAdapter[] }` | `track(event, params?)`, `setUser(id, props?)`. |
 
-### @lucid/physics
+### @lucid-2d/physics
 
 Vectors, collision, particles, screen shake.
 
 ```typescript
-import { vec2, add, sub, scale, normalize, distance, pointInRect, circleCircle, ParticlePool, ParticleEmitter, ParticlePresets, ScreenShake } from '@lucid/physics';
+import { vec2, add, sub, scale, normalize, distance, pointInRect, circleCircle, ParticlePool, ParticleEmitter, ParticlePresets, ScreenShake } from '@lucid-2d/physics';
 ```
 
 | Export | Description |
@@ -240,7 +246,7 @@ Each template includes:
 ### Headless rendering (no browser needed)
 
 ```typescript
-import { createTestApp, tap, assertTree } from '@lucid/engine';
+import { createTestApp, tap, assertTree } from '@lucid-2d/engine';
 
 const app = createTestApp({ render: true }); // real canvas via @napi-rs/canvas
 app.router.push(new MenuScene(app));
