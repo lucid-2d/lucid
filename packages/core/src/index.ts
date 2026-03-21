@@ -16,5 +16,8 @@ export { Sprite, SpriteSheet, type SpriteProps, type SourceRect, type SpriteShee
 export { Timer, CountdownTimer, type CountdownOptions } from './timer.js';
 export { SeededRNG } from './rng.js';
 
+// 文本
+export { wrapText, measureWrappedText, drawText, type TextMetrics, type DrawTextOptions } from './text.js';
+
 // AI 调试
 export { InteractionRecorder, type InteractionRecord, type RecorderOptions } from './recorder.js';

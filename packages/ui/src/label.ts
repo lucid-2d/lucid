@@ -1,4 +1,4 @@
-import { UINode, type UINodeOptions } from '@lucid/core';
+import { UINode, type UINodeOptions, drawText, wrapText, measureWrappedText } from '@lucid/core';
 
 export interface LabelProps extends UINodeOptions {
   text: string;
@@ -6,6 +6,14 @@ export interface LabelProps extends UINodeOptions {
   fontWeight?: string;
   color?: string;
   align?: 'left' | 'center' | 'right';
+  /** Enable auto line-wrapping (default: false) */
+  wrap?: boolean;
+  /** Line height multiplier (default: 1.4) */
+  lineHeight?: number;
+  /** Max visible lines, truncates with ellipsis (requires wrap) */
+  maxLines?: number;
+  /** Vertical alignment (default: 'middle') */
+  verticalAlign?: 'top' | 'middle' | 'bottom';
 }
 
 export class Label extends UINode {
@@ -14,6 +22,10 @@ export class Label extends UINode {
   fontWeight: string;
   color: string;
   align: 'left' | 'center' | 'right';
+  wrap: boolean;
+  lineHeight: number;
+  maxLines?: number;
+  verticalAlign: 'top' | 'middle' | 'bottom';
 
   constructor(props: LabelProps) {
     super(props);
@@ -22,6 +34,10 @@ export class Label extends UINode {
     this.fontWeight = props.fontWeight ?? 'normal';
     this.color = props.color ?? '#ffffff';
     this.align = props.align ?? 'left';
+    this.wrap = props.wrap ?? false;
+    this.lineHeight = props.lineHeight ?? 1.4;
+    this.maxLines = props.maxLines;
+    this.verticalAlign = props.verticalAlign ?? 'middle';
     this.interactive = false;
   }
 
@@ -37,20 +53,45 @@ export class Label extends UINode {
   protected draw(ctx: CanvasRenderingContext2D): void {
     ctx.fillStyle = this.color;
     ctx.font = `${this.fontWeight} ${this.fontSize}px sans-serif`;
-    ctx.textAlign = this.align;
-    ctx.textBaseline = 'middle';
-    const x = this.align === 'center' ? this.width / 2 : this.align === 'right' ? this.width : 0;
 
-    const lines = this._text.split('\n');
-    if (lines.length === 1) {
-      ctx.fillText(this._text, x, this.height / 2);
+    if (this.wrap && this.width > 0) {
+      drawText(ctx, this._text, {
+        maxWidth: this.width,
+        height: this.height || 9999,
+        fontSize: this.fontSize,
+        lineHeightMultiplier: this.lineHeight,
+        align: this.align,
+        verticalAlign: this.verticalAlign,
+        maxLines: this.maxLines,
+      });
     } else {
-      const lineH = this.fontSize * 1.4;
-      const totalH = lines.length * lineH;
-      const startY = (this.height - totalH) / 2 + lineH / 2;
-      for (let i = 0; i < lines.length; i++) {
-        ctx.fillText(lines[i], x, startY + i * lineH);
+      // Original single-line behavior
+      ctx.textAlign = this.align;
+      ctx.textBaseline = 'middle';
+      const x = this.align === 'center' ? this.width / 2 : this.align === 'right' ? this.width : 0;
+
+      const lines = this._text.split('\n');
+      if (lines.length === 1) {
+        ctx.fillText(this._text, x, this.height / 2);
+      } else {
+        const lineH = this.fontSize * this.lineHeight;
+        const totalH = lines.length * lineH;
+        const startY = (this.height - totalH) / 2 + lineH / 2;
+        for (let i = 0; i < lines.length; i++) {
+          ctx.fillText(lines[i], x, startY + i * lineH);
+        }
       }
     }
+  }
+
+  /**
+   * Measure wrapped content height. Useful for auto-sizing.
+   * Call after setting font on ctx (or use in onLayout).
+   */
+  measureHeight(ctx: CanvasRenderingContext2D): number {
+    ctx.font = `${this.fontWeight} ${this.fontSize}px sans-serif`;
+    const lineH = this.fontSize * this.lineHeight;
+    const m = measureWrappedText(ctx, this._text, this.width, lineH);
+    return m.height;
   }
 }
