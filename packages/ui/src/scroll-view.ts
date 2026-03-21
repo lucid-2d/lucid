@@ -81,9 +81,10 @@ export class ScrollView extends UINode {
 
   /** Find the interactive child under the tap point and emit tap on it */
   private _forwardTap(localX: number, localY: number): void {
-    // Convert to content-local coordinates (account for scroll offset)
-    const contentY = localY + this._scrollY;
-    const hit = this._hitTestContent(this.content, localX, contentY);
+    // Ensure content.y is in sync with scroll position
+    this.content.y = -this._scrollY;
+    // hitTestContent uses node positions (content.y = -scrollY handles offset)
+    const hit = this._hitTestContent(this.content, localX, localY);
     if (hit && hit !== this) {
       hit.$emit('touchstart', { localX: 0, localY: 0, worldX: 0, worldY: 0 });
       hit.$emit('touchend', { localX: 0, localY: 0, worldX: 0, worldY: 0 });
@@ -129,6 +130,7 @@ export class ScrollView extends UINode {
 
   private _clamp(): void {
     this._scrollY = Math.max(0, Math.min(this._scrollY, this.maxScrollY));
+    this.content.y = -this._scrollY;
   }
 
   protected $inspectInfo(): string {
