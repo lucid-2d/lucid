@@ -16,11 +16,17 @@ export { Sprite, SpriteSheet, AnimatedSprite, type SpriteProps, type SourceRect,
 export { Timer, CountdownTimer, type CountdownOptions } from './timer.js';
 export { SeededRNG } from './rng.js';
 
+// 九宫格
+export { NineSlice, type NineSliceProps } from './nine-slice.js';
+
 // 摄像机
 export { Camera, type CameraOptions, type FollowOptions } from './camera.js';
 
 // 文本
 export { wrapText, measureWrappedText, drawText, type TextMetrics, type DrawTextOptions } from './text.js';
+
+// 国际化
+export { I18n, type Translations, type LocaleMap } from './i18n.js';
 
 // AI 调试
 export { InteractionRecorder, type InteractionRecord, type RecorderOptions } from './recorder.js';
