@@ -8,20 +8,21 @@ Lucid is a Canvas 2D game framework designed for AI agents to build, inspect, de
 
 ```
 packages/
-  core/      — UINode, events, animation, Timer, SeededRNG, InteractionRecorder
-  engine/    — createApp, SceneRouter, platform adapters (Web/Wx/Tt)
+  core/      — UINode, events, animation, Timer, SeededRNG, Sprite, AnimatedSprite, text utils
+  engine/    — createApp, SceneRouter, platform adapters, headless rendering, test utils
   ui/        — 11 base components (Button, Label, Modal, Toggle, TabBar, ScrollView, ...)
   game-ui/   — 9 business components (CheckinDialog, ShopPanel, SettingsPanel, ...)
   physics/   — Vec2, collision detection, particles, screen shake
   systems/   — 10 operation systems (Storage, Checkin, Skin, Achievement, Mission, ...)
 playground/  — Visual component gallery (vite dev server)
+templates/   — Game templates (starter, quiz)
 ```
 
 ## Commands
 
 ```bash
 pnpm install                    # install dependencies
-pnpm -r test                    # run all 381 tests
+pnpm -r test                    # run all 484 tests
 pnpm -r build                   # build all packages
 npx vite --config playground/vite.config.ts --port 3456  # run playground
 ```
@@ -33,10 +34,14 @@ npx vite --config playground/vite.config.ts --port 3456  # run playground
 All visible elements extend `UINode`. The tree is the single source of truth for:
 - **Rendering**: `$render(ctx)` traverses the tree, calls `draw(ctx)` per node
 - **Hit testing**: `hitTest(x, y)` finds the deepest interactive node at a point
-- **AI inspection**: `$inspect()` returns a text snapshot of the entire tree
+- **AI inspection**: `$inspect()` returns a text snapshot; `$inspectInfo()` hook for custom state
+- **AI querying**: `$query('Button')`, `$query('#play')`, `$query('.interactive')`, `$query('Scene Button')`
+- **AI diffing**: `$snapshot()` captures state, `UINode.$diff(before, after)` returns property changes
+- **Runtime patching**: `$patch({ x: 100, width: 200 })` batch-modify properties
 - **Recording**: `InteractionRecorder` logs every touch event with node paths
 - **Replay**: `app.replay(records, speed)` replays recorded interactions deterministically
 - **Layout**: Set `layout: 'row'|'column'` on any UINode to auto-position children (Flexbox subset + grid + wrap)
+- **Debug overlay**: `app.debugOverlay = true` draws node borders, IDs, and touch areas on canvas
 
 ### Package dependency graph
 
@@ -135,6 +140,40 @@ console.log(app.root.$inspect());
 // find and interact
 const btn = app.root.findById('play');
 btn.$emit('tap');
+```
+
+### Headless rendering (no browser)
+
+```typescript
+import { createTestApp, tap } from '@lucid/engine';
+
+const app = createTestApp({ render: true }); // @napi-rs/canvas
+app.router.push(new MenuScene(app));
+app.tick(16);
+app.saveImage('screenshot.png');
+
+app.debugOverlay = true; // show node borders + IDs
+app.tick(16);
+app.saveImage('debug.png');
+```
+
+### AI query and diff
+
+```typescript
+// Query nodes
+app.root.$query('Button');              // by class name
+app.root.$query('#play');               // by id
+app.root.$query('MenuScene Button');    // descendant
+app.root.$query('.interactive');        // by state
+
+// Runtime modification
+app.root.findById('btn').$patch({ x: 100, width: 200 });
+
+// Snapshot diffing
+const before = app.root.$snapshot();
+// ... make changes ...
+const after = app.root.$snapshot();
+const changes = UINode.$diff(before, after);
 ```
 
 ### Recording and replay

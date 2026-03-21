@@ -41,21 +41,25 @@ window._app = app; // expose for AI agent
 
 ### @lucid/core
 
-Node tree, events, animation, recording, timers, RNG, sprites.
+Node tree, events, animation, recording, timers, RNG, sprites, text utilities.
 
 ```typescript
-import { UINode, Sprite, SpriteSheet, InteractionRecorder, SeededRNG, Timer, CountdownTimer } from '@lucid/core';
+import { UINode, Sprite, SpriteSheet, AnimatedSprite, InteractionRecorder, SeededRNG, Timer, CountdownTimer, wrapText, drawText } from '@lucid/core';
 ```
 
 | Export | Type | Description |
 |--------|------|-------------|
-| `UINode` | class | Base node. Properties: `x`, `y`, `width`, `height`, `visible`, `alpha`, `interactive`. Layout container: `layout`, `gap`, `padding`, `alignItems`, `justifyContent`, `wrap`, `columns`. Layout child: `flex`, `alignSelf`, `minWidth`, `maxWidth`, `minHeight`, `maxHeight`. Methods: `addChild(node, index?)`, `removeChild(node)`, `removeFromParent()`, `findById(id)`, `hitTest(x, y)`, `$inspect(depth?)`, `$on(event, handler)`, `$emit(event, ...args)`, `$animate(props, duration, easing?)`. Override: `draw(ctx)`, `$update(dt)`, `$render(ctx)`. |
+| `UINode` | class | Base node. Properties: `x`, `y`, `width`, `height`, `visible`, `alpha`, `interactive`. Layout container: `layout`, `gap`, `padding`, `alignItems`, `justifyContent`, `wrap`, `columns`. Layout child: `flex`, `alignSelf`, `minWidth`, `maxWidth`, `minHeight`, `maxHeight`. Methods: `addChild(node, index?)`, `removeChild(node)`, `removeFromParent()`, `findById(id)`, `hitTest(x, y)`, `$inspect(depth?)`, `$on(event, handler)`, `$emit(event, ...args)`, `$animate(props, duration, easing?)`, `$patch(props)`, `$query(selector)`, `$snapshot()`. Static: `UINode.$diff(before, after)`. Override: `draw(ctx)`, `$update(dt)`, `$render(ctx)`, `$inspectInfo()`. |
 | `InteractionRecorder` | class | Records touch events with node paths and timestamps. `start()`, `stop()`, `dump()`, `clear()`. |
 | `SeededRNG` | class | Mulberry32 deterministic RNG. `next(): number`, `int(min, max)`, `pick(array)`, `shuffle(array)`, `fork(): SeededRNG`. |
 | `Timer` | class | Elapsed time tracker. `elapsed`, `pause()`, `resume()`, `reset()`. |
 | `CountdownTimer` | class | Countdown with callbacks. `remaining`, `progress`, `onTick`, `onComplete`. |
 | `Sprite` | class | Image UINode. Props: `image` (any CanvasImageSource), `sourceRect?: {x,y,w,h}` (sprite sheet cropping), `flipX?`, `flipY?`. Draws via `ctx.drawImage`. |
-| `SpriteSheet` | class | Named regions in a sprite atlas. `new SpriteSheet(image, { idle: {x,y,w,h}, ... })`. Methods: `getRegion(name)`, `createSprite(name, opts?)`, `regionNames`. Static: `fromGrid(image, cols, rows, cellW, cellH, names?)`. |
+| `SpriteSheet` | class | Named regions in a sprite atlas. `new SpriteSheet(image, { idle: {x,y,w,h}, ... })`. Methods: `getRegion(name)`, `createSprite(name, opts?)`, `createAnimated(names, opts?)`, `regionNames`. Static: `fromGrid(image, cols, rows, cellW, cellH, names?)`. |
+| `AnimatedSprite` | class | Frame sequence animation. Props: `frames: FrameDef[]`, `fps?: number`, `mode?: 'loop'\|'once'\|'pingpong'`, `autoPlay?`, `flipX?`, `flipY?`. Methods: `play()`, `pause()`, `stop()`, `restart()`. Events: `complete` (once mode). Static: `fromImages(images, opts?)`. |
+| `wrapText(ctx, text, maxWidth)` | function | Auto line-wrap (word boundaries for Latin, character boundaries for CJK). Returns `string[]`. |
+| `drawText(ctx, text, opts)` | function | Multi-line text rendering with alignment, vertical alignment, and `maxLines` ellipsis truncation. |
+| `measureWrappedText(ctx, text, maxWidth, lineHeight)` | function | Measure wrapped text dimensions. Returns `{ width, height, lines }`. |
 
 ### @lucid/engine
 
@@ -67,14 +71,14 @@ import { createApp, SceneNode, SceneRouter, loadImage, WebAdapter, WxAdapter, Tt
 
 | Export | Type | Description |
 |--------|------|-------------|
-| `createApp(opts)` | function | Creates app. Options: `{ platform?: 'web'\|'wx'\|'tt', canvas?, adapter?, debug?, rngSeed? }`. Returns `App` with `.root`, `.router`, `.screen`, `.rng`, `.start()`, `.stop()`, `.tick(dt)`, `.replay(records, speed)`, `.dumpInteractions()`. |
+| `createApp(opts)` | function | Creates app. Options: `{ platform?, canvas?, adapter?, debug?, debugOverlay?, rngSeed? }`. Returns `App` with `.root`, `.router`, `.screen`, `.rng`, `.debug`, `.debugOverlay`, `.start()`, `.stop()`, `.tick(dt)`, `.replay(records, speed)`, `.dumpInteractions()`. |
 | `SceneNode` | class | Extends UINode. Override `onEnter()` and `onExit()`. |
 | `SceneRouter` | class | `push(scene)`, `replace(scene)`, `pop()`. |
 | `WebAdapter` | class | Browser platform. Auto-creates from canvas element. |
 | `WxAdapter` | class | WeChat Mini Game platform. Uses `wx.*` globals. |
 | `TtAdapter` | class | Douyin Mini Game platform. Uses `tt.*` globals. |
 | `loadImage(src, timeout?)` | function | Platform-aware async image loader. Returns Promise. Auto-detects Web/Wx/Tt. Use with `Sprite`. |
-| `createTestApp(opts?)` | function | Headless test app with mock canvas. No DOM needed. `debug: true` by default. |
+| `createTestApp(opts?)` | function | Headless test app. Options: `{ render?: boolean, width?, height? }`. When `render: true`, uses `@napi-rs/canvas` for real PNG output. Returns `TestApp` with `toImage(): Buffer` and `saveImage(path)`. |
 | `tap(app, nodeId)` | function | Simulate tap on node by id. Emits touchstart + touchend. Returns `true` if found. |
 | `touch(app, x, y, type?)` | function | Simulate touch at coordinates via hitTest. Type: `'start'` \| `'end'` \| `'move'`, default: full tap. Returns node path. |
 | `assertTree(app, pattern)` | function | Assert `$inspect()` output contains all pattern lines (trimmed, ignoring extra nodes). Throws with diff on failure. |
@@ -91,7 +95,7 @@ import { Button, Label, Icon, Modal, Toggle, TabBar, ScrollView, ProgressBar, To
 | Component | Key Props | Events |
 |-----------|-----------|--------|
 | `Button` | `id, text, variant: 'primary'\|'outline'\|'ghost'\|'gold', width, height, disabled` | `tap` |
-| `Label` | `text, fontSize, fontWeight, color, align: 'left'\|'center'\|'right', width, height` | — |
+| `Label` | `text, fontSize, fontWeight, color, align, wrap?: boolean, maxLines?, lineHeight?, verticalAlign?` | — |
 | `Icon` | `name: IconName, size, color` | — |
 | `Modal` | `title, id, width, height, screenWidth, screenHeight` | `close`. Methods: `open()`, `close()`, `fitContent(bottomPad?)`. Children go in `.content`. Blocks touch behind overlay. |
 | `Toggle` | `id, label, value: boolean, width, height` | `change(value)` |
@@ -223,6 +227,49 @@ Each template includes:
 
 ## AI agent integration
 
+### Headless rendering (no browser needed)
+
+```typescript
+import { createTestApp, tap, assertTree } from '@lucid/engine';
+
+const app = createTestApp({ render: true }); // real canvas via @napi-rs/canvas
+app.router.push(new MenuScene(app));
+app.tick(16);
+
+app.saveImage('menu.png');           // save screenshot
+const buf = app.toImage();            // get PNG buffer
+
+// Debug overlay: shows node boundaries + IDs
+app.debugOverlay = true;
+app.tick(16);
+app.saveImage('menu-debug.png');
+```
+
+### AI debugging tools
+
+```typescript
+// Query nodes (CSS-like selectors)
+const buttons = app.root.$query('Button');
+const play = app.root.$query('#play');
+const menuBtns = app.root.$query('MenuScene Button');
+const interactive = app.root.$query('.interactive');
+
+// Batch-modify properties at runtime
+app.root.findById('btn').$patch({ x: 100, width: 200 });
+
+// Snapshot + diff for change detection
+const before = app.root.$snapshot();
+app.root.findById('score').$patch({ x: 50 });
+const after = app.root.$snapshot();
+const changes = UINode.$diff(before, after);
+// → [{ path: 'root > score', prop: 'x', from: 0, to: 50 }]
+
+// Custom state in $inspect output
+class GameScene extends SceneNode {
+  protected $inspectInfo() { return `score=${this.score} level=${this.level}`; }
+}
+```
+
 ### Playwright
 
 ```typescript
@@ -249,8 +296,11 @@ await page.evaluate((r) => window._app.replay(r, 2), records);
 _app.root                    — root UINode
 _app.root.$inspect()         — text tree snapshot
 _app.root.findById(id)       — find node by id
+_app.root.$query(selector)   — CSS-like query (.interactive, Button, #id)
+_app.root.$snapshot()        — structured state snapshot
 _app.router                  — scene router (.push / .replace / .pop)
 _app.rng                     — SeededRNG instance
+_app.debugOverlay            — toggle debug overlay (node borders/IDs)
 _app.dumpInteractions()      — get recorded touch events
 _app.replay(records, speed)  — replay (async, returns ReplayStep[])
 ```
