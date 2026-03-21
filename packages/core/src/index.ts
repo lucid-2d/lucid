@@ -16,6 +16,9 @@ export { Sprite, SpriteSheet, AnimatedSprite, type SpriteProps, type SourceRect,
 export { Timer, CountdownTimer, type CountdownOptions } from './timer.js';
 export { SeededRNG } from './rng.js';
 
+// 摄像机
+export { Camera, type CameraOptions, type FollowOptions } from './camera.js';
+
 // 文本
 export { wrapText, measureWrappedText, drawText, type TextMetrics, type DrawTextOptions } from './text.js';
 
