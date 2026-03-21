@@ -129,3 +129,141 @@ describe('SceneRouter', () => {
     expect(router.depth).toBe(1);
   });
 });
+
+// ── Transitions ──
+
+describe('SceneRouter transitions', () => {
+  it('push with fade transition', () => {
+    const router = new SceneRouter();
+    const a = new SceneNode({ id: 'a', width: 390, height: 844 });
+    const b = new SceneNode({ id: 'b', width: 390, height: 844 });
+
+    router.push(a);
+    router.push(b, { type: 'fade', duration: 1000 });
+
+    expect(router.transitioning).toBe(true);
+    // New scene starts transparent
+    expect(b.alpha).toBe(0);
+  });
+
+  it('fade transition progresses over time', () => {
+    const router = new SceneRouter();
+    const a = new SceneNode({ id: 'a', width: 390, height: 844 });
+    const b = new SceneNode({ id: 'b', width: 390, height: 844 });
+
+    router.push(a);
+    router.push(b, { type: 'fade', duration: 1000 });
+
+    // Halfway
+    router.$update(0.5);
+    expect(b.alpha).toBeCloseTo(0.5);
+    expect(a.alpha).toBeCloseTo(0.5);
+  });
+
+  it('fade transition completes and restores alpha', () => {
+    const router = new SceneRouter();
+    const a = new SceneNode({ id: 'a', width: 390, height: 844 });
+    const b = new SceneNode({ id: 'b', width: 390, height: 844 });
+
+    router.push(a);
+    router.push(b, { type: 'fade', duration: 500 });
+
+    router.$update(0.6); // past duration
+    expect(router.transitioning).toBe(false);
+    expect(b.alpha).toBe(1);
+    expect(a.alpha).toBe(1); // restored
+  });
+
+  it('replace with slideLeft transition', () => {
+    const router = new SceneRouter();
+    const a = new SceneNode({ id: 'a', width: 390, height: 844 });
+    const b = new SceneNode({ id: 'b', width: 390, height: 844 });
+
+    router.push(a);
+    router.replace(b, { type: 'slideLeft', duration: 1000 });
+
+    expect(router.transitioning).toBe(true);
+    // New scene starts off-screen right
+    expect(b.x).toBe(390);
+    // Old scene is still in children during transition
+    expect(router.$children).toContain(a);
+  });
+
+  it('slideLeft transition removes old scene when complete', () => {
+    const router = new SceneRouter();
+    const a = new SceneNode({ id: 'a', width: 390, height: 844 });
+    const b = new SceneNode({ id: 'b', width: 390, height: 844 });
+
+    router.push(a);
+    router.replace(b, { type: 'slideLeft', duration: 500 });
+
+    router.$update(0.6);
+    expect(router.transitioning).toBe(false);
+    expect(router.$children).not.toContain(a);
+    expect(b.x).toBe(0); // restored
+  });
+
+  it('no transition (type=none) is instant', () => {
+    const router = new SceneRouter();
+    const a = new SceneNode({ id: 'a' });
+    const b = new SceneNode({ id: 'b' });
+
+    router.push(a);
+    router.push(b, { type: 'none' });
+
+    expect(router.transitioning).toBe(false);
+  });
+
+  it('default transition applies to all operations', () => {
+    const router = new SceneRouter();
+    router.defaultTransition = { type: 'fade', duration: 200 };
+
+    const a = new SceneNode({ id: 'a', width: 390, height: 844 });
+    const b = new SceneNode({ id: 'b', width: 390, height: 844 });
+
+    router.push(a);
+    router.push(b); // uses default
+    expect(router.transitioning).toBe(true);
+  });
+
+  it('per-call transition overrides default', () => {
+    const router = new SceneRouter();
+    router.defaultTransition = { type: 'fade', duration: 200 };
+
+    const a = new SceneNode({ id: 'a' });
+    const b = new SceneNode({ id: 'b' });
+
+    router.push(a);
+    router.push(b, { type: 'none' }); // override
+    expect(router.transitioning).toBe(false);
+  });
+
+  it('pop with slideRight transition', () => {
+    const router = new SceneRouter();
+    const a = new SceneNode({ id: 'a', width: 390, height: 844 });
+    const b = new SceneNode({ id: 'b', width: 390, height: 844 });
+
+    router.push(a);
+    router.push(b);
+    router.pop({ type: 'slideRight', duration: 500 });
+
+    expect(router.transitioning).toBe(true);
+    router.$update(0.6);
+    expect(router.transitioning).toBe(false);
+    expect(router.$children).not.toContain(b);
+  });
+
+  it('slideUp and slideDown work', () => {
+    const router = new SceneRouter();
+    const a = new SceneNode({ id: 'a', width: 390, height: 844 });
+    const b = new SceneNode({ id: 'b', width: 390, height: 844 });
+
+    router.push(a);
+    router.push(b, { type: 'slideUp', duration: 400 });
+    expect(b.y).toBe(844); // starts from bottom
+
+    router.$update(0.5); // complete
+    expect(router.transitioning).toBe(false);
+    expect(b.y).toBe(0);
+  });
+});
