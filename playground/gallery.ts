@@ -4,8 +4,9 @@
  * 使用 Layout 系统自动布局，无手动 x/y 计算
  */
 
-import { SceneNode } from '../packages/engine/src/index';
-import { UINode, Sprite, SpriteSheet } from '../packages/core/src/index';
+import { SceneNode, SceneRouter } from '../packages/engine/src/index';
+import { UINode, Sprite, SpriteSheet, AnimatedSprite, NineSlice, I18n, drawText } from '../packages/core/src/index';
+import { ParticlePool, ParticleEmitter, ParticlePresets } from '../packages/physics/src/index';
 import {
   Button, Label, Modal, ProgressBar, Toggle, TabBar, ScrollView,
   Icon, IconButton, RedDot, Badge, Tag, Toast,
@@ -19,7 +20,7 @@ import {
 
 const W = 390, H = 844;
 
-type GalleryTab = 'base' | 'business' | 'sprite';
+type GalleryTab = 'base' | 'business' | 'sprite' | 'new';
 
 // ── Test image generators (no external files needed) ──
 
@@ -116,6 +117,67 @@ function generateAvatar(size: number, color: string, label: string): HTMLCanvasE
   return c;
 }
 
+/** Generate animated frames (rotating color wheel) */
+function generateAnimFrames(count: number, size: number): HTMLCanvasElement[] {
+  const frames: HTMLCanvasElement[] = [];
+  for (let i = 0; i < count; i++) {
+    const c = document.createElement('canvas');
+    c.width = size; c.height = size;
+    const ctx = c.getContext('2d')!;
+    const r = size / 2;
+    const angle = (i / count) * Math.PI * 2;
+    // Background circle
+    ctx.fillStyle = `hsl(${(i / count) * 360}, 70%, 50%)`;
+    ctx.beginPath();
+    ctx.arc(r, r, r - 2, 0, Math.PI * 2);
+    ctx.fill();
+    // Rotating indicator
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(r, r);
+    ctx.lineTo(r + Math.cos(angle) * (r - 6), r + Math.sin(angle) * (r - 6));
+    ctx.stroke();
+    // Frame number
+    ctx.fillStyle = '#fff';
+    ctx.font = `bold ${size * 0.2}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`${i + 1}`, r, r);
+    frames.push(c);
+  }
+  return frames;
+}
+
+/** Generate 9-slice panel image */
+function generateNineSliceImage(w: number, h: number, inset: number): HTMLCanvasElement {
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  const ctx = c.getContext('2d')!;
+  // Border
+  ctx.fillStyle = '#3a3a6e';
+  ctx.beginPath();
+  ctx.roundRect(0, 0, w, h, inset);
+  ctx.fill();
+  // Inner fill
+  ctx.fillStyle = '#1a1a3e';
+  ctx.beginPath();
+  ctx.roundRect(inset / 2, inset / 2, w - inset, h - inset, inset / 2);
+  ctx.fill();
+  // Corner markers
+  ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([2, 2]);
+  ctx.beginPath();
+  ctx.moveTo(inset, 0); ctx.lineTo(inset, h);
+  ctx.moveTo(w - inset, 0); ctx.lineTo(w - inset, h);
+  ctx.moveTo(0, inset); ctx.lineTo(w, inset);
+  ctx.moveTo(0, h - inset); ctx.lineTo(w, h - inset);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  return c;
+}
+
 /** Section header + content wrapper with column layout */
 function section(title: string): UINode {
   const s = new UINode({ width: W, layout: 'column', gap: 10, padding: [0, 16, 16, 16] });
@@ -134,13 +196,22 @@ export class GalleryScene extends SceneNode {
   private baseScroll!: ScrollView;
   private bizScroll!: ScrollView;
   private spriteScroll!: ScrollView;
+  private newScroll!: ScrollView;
   private demoProgress = 0;
+  private particlePool!: ParticlePool;
+  private fireEmitter!: ParticleEmitter;
+  private trailEmitter!: ParticleEmitter;
 
   onEnter() {
     // Top tab bar
     this.topTabBar = new TabBar({
       id: 'gallery-tabs',
-      tabs: [{ key: 'base', label: 'Base UI' }, { key: 'business', label: 'Business' }, { key: 'sprite', label: 'Sprite' }],
+      tabs: [
+        { key: 'base', label: 'Base UI' },
+        { key: 'business', label: 'Business' },
+        { key: 'sprite', label: 'Sprite' },
+        { key: 'new', label: 'New ✦' },
+      ],
       activeKey: 'base', width: W, height: 36,
     });
     this.topTabBar.y = 8;
@@ -149,6 +220,7 @@ export class GalleryScene extends SceneNode {
       this.baseScroll.visible = key === 'base';
       this.bizScroll.visible = key === 'business';
       this.spriteScroll.visible = key === 'sprite';
+      this.newScroll.visible = key === 'new';
     });
     this.addChild(this.topTabBar);
 
@@ -171,6 +243,13 @@ export class GalleryScene extends SceneNode {
     this.spriteScroll.visible = false;
     this.addChild(this.spriteScroll);
     this.spriteScroll.contentHeight = this.buildSpriteUI(this.spriteScroll.content);
+
+    // New features scroll
+    this.newScroll = new ScrollView({ id: 'new-scroll', width: W, height: H - 50 });
+    this.newScroll.y = 50;
+    this.newScroll.visible = false;
+    this.addChild(this.newScroll);
+    this.newScroll.contentHeight = this.buildNewFeaturesUI(this.newScroll.content);
   }
 
   private buildBaseUI(c: UINode): number {
@@ -489,6 +568,155 @@ export class GalleryScene extends SceneNode {
     return this.measureColumnHeight(col) + 60;
   }
 
+  // ── New Features UI (P4-P7) ──
+
+  private buildNewFeaturesUI(c: UINode): number {
+    const col = new UINode({ id: 'new-col', width: W, layout: 'column', gap: 14 });
+
+    // 1. AnimatedSprite
+    const animSec = section('AnimatedSprite — 帧序列动画');
+    const animRow = new UINode({ width: W - 32, layout: 'row', gap: 20, alignItems: 'center', justifyContent: 'center' });
+
+    // Loop mode
+    const loopFrames = generateAnimFrames(12, 64);
+    const loopAnim = AnimatedSprite.fromImages(loopFrames, {
+      id: 'anim-loop', width: 64, height: 64, fps: 8,
+    });
+    const loopCol = new UINode({ layout: 'column', alignItems: 'center', gap: 4, width: 80 });
+    loopCol.addChild(loopAnim);
+    loopCol.addChild(new Label({ text: 'loop 8fps', fontSize: 9, color: UIColors.textHint, align: 'center', width: 80, height: 12 }));
+    animRow.addChild(loopCol);
+
+    // Pingpong
+    const ppFrames = generateAnimFrames(8, 64);
+    const ppAnim = AnimatedSprite.fromImages(ppFrames, {
+      id: 'anim-pp', width: 64, height: 64, fps: 6, mode: 'pingpong',
+    });
+    const ppCol = new UINode({ layout: 'column', alignItems: 'center', gap: 4, width: 80 });
+    ppCol.addChild(ppAnim);
+    ppCol.addChild(new Label({ text: 'pingpong 6fps', fontSize: 9, color: UIColors.textHint, align: 'center', width: 80, height: 12 }));
+    animRow.addChild(ppCol);
+
+    // Fast
+    const fastFrames = generateAnimFrames(24, 64);
+    const fastAnim = AnimatedSprite.fromImages(fastFrames, {
+      id: 'anim-fast', width: 64, height: 64, fps: 24,
+    });
+    const fastCol = new UINode({ layout: 'column', alignItems: 'center', gap: 4, width: 80 });
+    fastCol.addChild(fastAnim);
+    fastCol.addChild(new Label({ text: 'loop 24fps', fontSize: 9, color: UIColors.textHint, align: 'center', width: 80, height: 12 }));
+    animRow.addChild(fastCol);
+
+    animSec.addChild(animRow);
+    col.addChild(animSec);
+
+    // 2. NineSlice
+    const nsSec = section('NineSlice — 九宫格拉伸');
+    const nsImg = generateNineSliceImage(48, 48, 12);
+    const nsRow = new UINode({ width: W - 32, layout: 'column', gap: 10, alignItems: 'center' });
+
+    const sizes: Array<[number, number, string]> = [[120, 50, '120×50'], [250, 40, '250×40'], [300, 100, '300×100']];
+    for (const [w, h, label] of sizes) {
+      const wrap = new UINode({ layout: 'column', alignItems: 'center', gap: 4, width: W - 32 });
+      wrap.addChild(new NineSlice({ image: nsImg, insets: [12, 12, 12, 12], width: w, height: h }));
+      wrap.addChild(new Label({ text: `${label} (corners preserved)`, fontSize: 9, color: UIColors.textHint, align: 'center', width: 200, height: 12 }));
+      nsRow.addChild(wrap);
+    }
+    nsSec.addChild(nsRow);
+    col.addChild(nsSec);
+
+    // 3. Text wrapping
+    const textSec = section('Text Wrapping — 自动换行 + 省略号');
+    const textCol = new UINode({ width: W - 32, layout: 'column', gap: 12 });
+
+    // Wrapped text
+    const wrapLabel = new Label({
+      text: 'This is a long text that demonstrates automatic line wrapping. 中英文混排也能正确处理，框架会在合适的位置断行。',
+      fontSize: 14, color: UIColors.text, width: W - 64, height: 80,
+      wrap: true, verticalAlign: 'top',
+    });
+    textCol.addChild(wrapLabel);
+
+    // MaxLines with ellipsis
+    const ellipsisLabel = new Label({
+      text: 'maxLines=2: This text is intentionally very long so that it will be truncated after exactly two lines with an ellipsis indicator at the end of the second line.',
+      fontSize: 13, color: UIColors.textMuted, width: W - 64, height: 44,
+      wrap: true, maxLines: 2, verticalAlign: 'top',
+    });
+    textCol.addChild(ellipsisLabel);
+
+    textSec.addChild(textCol);
+    col.addChild(textSec);
+
+    // 4. Particles
+    const particleSec = section('Particles — 粒子预设 (点击触发爆炸)');
+
+    // Particle canvas area
+    this.particlePool = new ParticlePool(300);
+    this.fireEmitter = new ParticleEmitter(this.particlePool, ParticlePresets.fire({ color: '#ff6b35' }));
+    this.fireEmitter.x = 80;
+    this.fireEmitter.y = 0; // will be set relative to particle area
+    this.trailEmitter = new ParticleEmitter(this.particlePool, ParticlePresets.trail({ color: '#6c5ce7' }));
+    this.trailEmitter.x = W - 80;
+    this.trailEmitter.y = 0;
+
+    const particleArea = new ParticleAreaNode(W - 32, 160, this.particlePool, this.fireEmitter, this.trailEmitter);
+    particleArea.interactive = true;
+    particleArea.$on('touchstart', () => {});
+    particleArea.$on('touchend', (e: any) => {
+      this.particlePool.emit(e.localX, e.localY, ParticlePresets.explosion({ color: '#ffd166' }));
+    });
+    particleSec.addChild(particleArea);
+
+    const particleInfo = new UINode({ width: W - 32, layout: 'row', gap: 8, justifyContent: 'center' });
+    particleInfo.addChild(new Label({ text: '🔥 Fire', fontSize: 11, color: '#ff6b35', width: 60, height: 16 }));
+    particleInfo.addChild(new Label({ text: '💜 Trail', fontSize: 11, color: '#6c5ce7', width: 60, height: 16 }));
+    particleInfo.addChild(new Label({ text: '👆 Tap=Explosion', fontSize: 11, color: '#ffd166', width: 120, height: 16 }));
+    particleSec.addChild(particleInfo);
+    col.addChild(particleSec);
+
+    // 5. I18n
+    const i18nSec = section('I18n — 国际化');
+    const i18n = new I18n({
+      en: { title: 'Hello World', score: 'Score: {0}', play: 'Play Game' },
+      zh: { title: '你好世界', score: '得分: {0}', play: '开始游戏' },
+      ja: { title: 'こんにちは世界', score: 'スコア: {0}', play: 'ゲーム開始' },
+    });
+
+    const i18nCol = new UINode({ width: W - 32, layout: 'column', gap: 8 });
+    const i18nLabels: Label[] = [];
+
+    const updateI18nLabels = () => {
+      i18nLabels[0].text = `[${i18n.locale}] ${i18n.t('title')}`;
+      i18nLabels[1].text = i18n.t('score', 12800);
+      i18nLabels[2].text = i18n.t('play');
+    };
+
+    for (let i = 0; i < 3; i++) {
+      const l = new Label({ text: '', fontSize: 16, color: UIColors.text, width: W - 64, height: 22 });
+      i18nLabels.push(l);
+      i18nCol.addChild(l);
+    }
+
+    const langRow = new UINode({ width: W - 32, layout: 'row', gap: 8, justifyContent: 'center' });
+    for (const lang of ['en', 'zh', 'ja']) {
+      const btn = new Button({ text: lang.toUpperCase(), variant: i18n.locale === lang ? 'primary' : 'outline', width: 70, height: 32 });
+      btn.$on('tap', () => {
+        i18n.locale = lang;
+        updateI18nLabels();
+      });
+      langRow.addChild(btn);
+    }
+    i18nCol.addChild(langRow);
+    i18nSec.addChild(i18nCol);
+    col.addChild(i18nSec);
+
+    updateI18nLabels();
+
+    c.addChild(col);
+    return this.measureColumnHeight(col) + 80;
+  }
+
   // ── Overlay helpers (unchanged) ──
 
   private removeOverlay() {
@@ -675,6 +903,13 @@ export class GalleryScene extends SceneNode {
     const bar = this.findById('bar-anim') as ProgressBar | null;
     if (bar) bar.value = Math.min(this.demoProgress, 1);
     Toast.update(0.016);
+
+    // Update particles if visible
+    if (this.particlePool && this.galleryTab === 'new') {
+      this.fireEmitter.update(0.016);
+      this.trailEmitter.update(0.016);
+      this.particlePool.update(0.016);
+    }
   }
 
   $render(ctx: CanvasRenderingContext2D): void {
@@ -695,5 +930,46 @@ export class GalleryScene extends SceneNode {
     grad.addColorStop(1, UIColors.bgBottom);
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, W, H);
+  }
+}
+
+/** Custom UINode that draws particles in a bounded area */
+class ParticleAreaNode extends UINode {
+  private pool: ParticlePool;
+  private fire: ParticleEmitter;
+  private trail: ParticleEmitter;
+  private _time = 0;
+
+  constructor(w: number, h: number, pool: ParticlePool, fire: ParticleEmitter, trail: ParticleEmitter) {
+    super({ id: 'particle-area', width: w, height: h });
+    this.pool = pool;
+    this.fire = fire;
+    this.trail = trail;
+    this.fire.y = h - 10;
+    this.trail.y = h - 10;
+  }
+
+  $update(dt: number): void {
+    super.$update(dt);
+    this._time += dt;
+    // Move trail emitter in a wave
+    this.trail.x = this.width - 80 + Math.sin(this._time * 2) * 40;
+  }
+
+  protected draw(ctx: CanvasRenderingContext2D): void {
+    // Dark background
+    ctx.fillStyle = 'rgba(10, 10, 30, 0.9)';
+    ctx.beginPath();
+    ctx.roundRect(0, 0, this.width, this.height, 8);
+    ctx.fill();
+
+    // Clip to area
+    ctx.save();
+    ctx.beginPath();
+    ctx.roundRect(0, 0, this.width, this.height, 8);
+    ctx.clip();
+
+    this.pool.draw(ctx);
+    ctx.restore();
   }
 }

@@ -161,6 +161,11 @@ export class ParticlePool {
     ctx.globalAlpha = 1;
   }
 
+  /** AI-readable state summary */
+  $inspect(): string {
+    return `ParticlePool ${this._activeCount}/${this.pool.length} active`;
+  }
+
   /** Clear all active particles */
   clear(): void {
     for (const p of this.pool) p.active = false;

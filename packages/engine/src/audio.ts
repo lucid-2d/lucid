@@ -333,6 +333,16 @@ export class AudioManager {
     }
   }
 
+  /** AI-readable state summary */
+  $inspect(): string {
+    const parts = ['AudioManager'];
+    if (this._muted) parts.push('muted');
+    if (this._bgmName) parts.push(`bgm="${this._bgmName}"`);
+    parts.push(`sfx=${this._sfxVolume} bgm=${this._bgmVolume}`);
+    parts.push(`${this._sounds.size} loaded`);
+    return parts.join(' ');
+  }
+
   /** Destroy all audio resources */
   destroy(): void {
     this.stopAllSfx();

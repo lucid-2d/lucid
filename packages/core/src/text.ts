@@ -186,7 +186,7 @@ export function drawText(
   ctx: CanvasRenderingContext2D,
   text: string,
   opts: DrawTextOptions,
-): { width: number; height: number } {
+): DrawTextResult {
   const lineHeightMul = opts.lineHeightMultiplier ?? 1.4;
   const lineH = opts.fontSize * lineHeightMul;
   const align = opts.align ?? 'left';
@@ -194,9 +194,11 @@ export function drawText(
   const ellipsis = opts.ellipsis ?? '...';
 
   let lines = wrapText(ctx, text, opts.maxWidth);
+  let truncated = false;
 
   // Truncate with ellipsis
   if (opts.maxLines && lines.length > opts.maxLines) {
+    truncated = true;
     lines = lines.slice(0, opts.maxLines);
     // Add ellipsis to last visible line
     let lastLine = lines[lines.length - 1];
@@ -234,5 +236,14 @@ export function drawText(
     if (w > maxW) maxW = w;
   }
 
-  return { width: maxW, height: totalH };
+  return { width: maxW, height: totalH, lines, truncated };
+}
+
+export interface DrawTextResult {
+  width: number;
+  height: number;
+  /** Actual rendered lines */
+  lines: string[];
+  /** Whether text was truncated by maxLines */
+  truncated: boolean;
 }

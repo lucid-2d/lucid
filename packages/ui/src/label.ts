@@ -27,6 +27,14 @@ export class Label extends UINode {
   maxLines?: number;
   verticalAlign: 'top' | 'middle' | 'bottom';
 
+  // ── AI-visible rendering results ──
+  /** Number of rendered lines (updated after each draw) */
+  lineCount = 1;
+  /** Whether text was truncated by maxLines */
+  truncated = false;
+  /** Actual rendered lines (updated after each draw) */
+  renderedLines: string[] = [];
+
   constructor(props: LabelProps) {
     super(props);
     this._text = props.text;
@@ -50,12 +58,20 @@ export class Label extends UINode {
 
   get $text() { return this._text; }
 
+  protected $inspectInfo(): string {
+    if (!this.wrap) return '';
+    const parts: string[] = [];
+    if (this.lineCount > 1) parts.push(`${this.lineCount}lines`);
+    if (this.truncated) parts.push('truncated');
+    return parts.join(' ');
+  }
+
   protected draw(ctx: CanvasRenderingContext2D): void {
     ctx.fillStyle = this.color;
     ctx.font = `${this.fontWeight} ${this.fontSize}px sans-serif`;
 
     if (this.wrap && this.width > 0) {
-      drawText(ctx, this._text, {
+      const result = drawText(ctx, this._text, {
         maxWidth: this.width,
         height: this.height || 9999,
         fontSize: this.fontSize,
@@ -64,6 +80,9 @@ export class Label extends UINode {
         verticalAlign: this.verticalAlign,
         maxLines: this.maxLines,
       });
+      this.lineCount = result.lines.length;
+      this.truncated = result.truncated;
+      this.renderedLines = result.lines;
     } else {
       // Original single-line behavior
       ctx.textAlign = this.align;
@@ -71,6 +90,10 @@ export class Label extends UINode {
       const x = this.align === 'center' ? this.width / 2 : this.align === 'right' ? this.width : 0;
 
       const lines = this._text.split('\n');
+      this.lineCount = lines.length;
+      this.truncated = false;
+      this.renderedLines = lines;
+
       if (lines.length === 1) {
         ctx.fillText(this._text, x, this.height / 2);
       } else {

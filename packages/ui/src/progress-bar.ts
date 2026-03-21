@@ -24,12 +24,7 @@ export class ProgressBar extends UINode {
     this.markDirty();
   }
 
-  $inspect(depth?: number): string {
-    const base = super.$inspect(depth);
-    const first = base.split('\n')[0];
-    return first + ` ${Math.round(this._value * 100)}%` +
-      (depth === 0 ? '' : '\n' + base.split('\n').slice(1).join('\n')).replace(/\n$/, '');
-  }
+  get $text() { return `${Math.round(this._value * 100)}%`; }
 
   protected draw(ctx: CanvasRenderingContext2D): void {
     const w = this.width, h = this.height, r = h / 2;

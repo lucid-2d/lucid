@@ -3,6 +3,9 @@ import path from 'path';
 
 export default defineConfig({
   root: __dirname,
+  optimizeDeps: {
+    exclude: ['@napi-rs/canvas'],
+  },
   resolve: {
     alias: {
       '@lucid/core': path.resolve(__dirname, '../packages/core/src/index.ts'),

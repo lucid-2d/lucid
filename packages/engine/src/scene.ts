@@ -88,6 +88,14 @@ export class SceneRouter extends UINode {
     return this._transition !== null;
   }
 
+  protected $inspectInfo(): string {
+    const parts: string[] = [];
+    if (this._transition) {
+      parts.push(`transition:${this._transition.type}`);
+    }
+    return parts.join(' ');
+  }
+
   /** 压入新场景（暂停当前，进入新场景） */
   push(scene: SceneNode, transition?: TransitionOptions): void {
     const oldScene = this.current ?? null;

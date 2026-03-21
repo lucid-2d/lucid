@@ -60,13 +60,9 @@ export class ScrollView extends UINode {
     this._scrollY = Math.max(0, Math.min(this._scrollY, this.maxScrollY));
   }
 
-  /** $inspect 显示滚动位置 */
-  $inspect(depth?: number): string {
-    const base = super.$inspect(depth);
-    const first = base.split('\n')[0];
-    const scrollInfo = this.maxScrollY > 0 ? ` scroll=${Math.round(this._scrollY)}/${this.maxScrollY}` : '';
-    return first + scrollInfo +
-      (depth === 0 ? '' : '\n' + base.split('\n').slice(1).join('\n')).replace(/\n$/, '');
+  protected $inspectInfo(): string {
+    if (this.maxScrollY <= 0) return '';
+    return `scroll=${Math.round(this._scrollY)}/${this.maxScrollY}`;
   }
 
   protected draw(ctx: CanvasRenderingContext2D): void {

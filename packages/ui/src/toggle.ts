@@ -38,6 +38,7 @@ export class Toggle extends UINode {
   }
 
   get $text() { return this._label; }
+  get $highlighted() { return this._value; }
 
   protected draw(ctx: CanvasRenderingContext2D): void {
     const trackW = 48, trackH = 26;

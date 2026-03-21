@@ -168,6 +168,16 @@ export class Camera {
            wy + wh > r.y && wy < r.y + r.height;
   }
 
+  /** AI-readable state summary */
+  $inspect(): string {
+    const parts = [`Camera at(${Math.round(this.x)},${Math.round(this.y)})`];
+    if (this.zoom !== 1) parts.push(`zoom=${this.zoom}`);
+    if (this._target) parts.push('following');
+    const r = this.visibleRect;
+    parts.push(`visible(${Math.round(r.x)},${Math.round(r.y)} ${Math.round(r.width)}x${Math.round(r.height)})`);
+    return parts.join(' ');
+  }
+
   private _clamp(): void {
     if (this.worldWidth <= 0 || this.worldHeight <= 0) return;
 

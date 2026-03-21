@@ -23,7 +23,7 @@ export { NineSlice, type NineSliceProps } from './nine-slice.js';
 export { Camera, type CameraOptions, type FollowOptions } from './camera.js';
 
 // 文本
-export { wrapText, measureWrappedText, drawText, type TextMetrics, type DrawTextOptions } from './text.js';
+export { wrapText, measureWrappedText, drawText, type TextMetrics, type DrawTextOptions, type DrawTextResult } from './text.js';
 
 // 国际化
 export { I18n, type Translations, type LocaleMap } from './i18n.js';
