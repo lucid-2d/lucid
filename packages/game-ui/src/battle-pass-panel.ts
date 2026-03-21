@@ -109,9 +109,21 @@ class RewardRow extends UINode {
 }
 
 export class BattlePassPanel extends UINode {
+  private _level: number;
+  private _xp: number;
+  private _premium: boolean;
+
+  get $text() { return `Lv.${this._level}`; }
+  protected $inspectInfo(): string {
+    return `xp=${this._xp}${this._premium ? ' premium' : ''}`;
+  }
+
   constructor(props: BattlePassPanelProps) {
     super({ id: 'battle-pass', width: 390, height: 844 });
     this.interactive = true;
+    this._level = props.currentLevel;
+    this._xp = props.currentXP;
+    this._premium = props.isPremium;
 
     const closeBtn = new Button({ id: 'close-btn', text: '← 返回', variant: 'ghost', width: 80, height: 36 });
     closeBtn.x = 4; closeBtn.y = 12;

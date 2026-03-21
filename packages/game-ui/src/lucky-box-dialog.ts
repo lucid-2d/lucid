@@ -88,4 +88,8 @@ export class LuckyBoxDialog extends Modal {
     this.fitContent();
     this.open();
   }
+
+  protected $inspectInfo(): string {
+    return `frags=${this._fragments}/${this._redeemCost} free=${this._freeOpens} ad=${this._adOpens}`;
+  }
 }

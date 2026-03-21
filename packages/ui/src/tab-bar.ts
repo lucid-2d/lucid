@@ -62,11 +62,8 @@ export class TabBar extends UINode {
     return { x: lx, w: lw };
   }
 
-  $inspect(depth?: number): string {
-    const base = super.$inspect(depth);
-    const first = base.split('\n')[0];
-    return first + ` active="${this._activeKey}"` +
-      (depth === 0 ? '' : '\n' + base.split('\n').slice(1).join('\n')).replace(/\n$/, '');
+  protected $inspectInfo(): string {
+    return `active="${this._activeKey}"`;
   }
 
   protected draw(ctx: CanvasRenderingContext2D): void {

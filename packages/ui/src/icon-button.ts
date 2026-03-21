@@ -40,6 +40,10 @@ export class IconButton extends UINode {
     });
   }
 
+  get $text() {
+    return this.badge ? `${this.icon}(${this.badge})` : this.icon;
+  }
+
   protected draw(ctx: CanvasRenderingContext2D): void {
     const sz = this.width;
     const cx = sz / 2, cy = sz / 2;

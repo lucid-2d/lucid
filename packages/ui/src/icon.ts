@@ -32,6 +32,8 @@ export class Icon extends UINode {
     this.iconStyle = props.style;
   }
 
+  get $text() { return this.name; }
+
   protected draw(ctx: CanvasRenderingContext2D): void {
     drawIcon(ctx, this.name, this.width / 2, this.height / 2, this.iconSize, this.color, this.iconStyle);
   }

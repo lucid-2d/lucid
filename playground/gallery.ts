@@ -714,7 +714,8 @@ export class GalleryScene extends SceneNode {
     updateI18nLabels();
 
     c.addChild(col);
-    return this.measureColumnHeight(col) + 80;
+    // Generous estimate — sections with custom nodes need more space
+    return 1200;
   }
 
   // ── Overlay helpers (unchanged) ──

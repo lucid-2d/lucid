@@ -120,6 +120,9 @@ export class ResultPanel extends UINode {
   }
 
   get $text() { return this._title; }
+  protected $inspectInfo(): string {
+    return `score=${this._score}${this._isNewBest ? ' newBest' : ''}`;
+  }
 
   protected draw(ctx: CanvasRenderingContext2D): void {
     const grad = ctx.createLinearGradient(0, 0, 0, this.height);
@@ -129,10 +132,4 @@ export class ResultPanel extends UINode {
     ctx.fillRect(0, 0, this.width, this.height);
   }
 
-  $inspect(depth?: number): string {
-    let out = super.$inspect(depth);
-    const lines = out.split('\n');
-    lines[0] += ` score=${this._score}${this._isNewBest ? ' NEW BEST' : ''}`;
-    return lines.join('\n');
-  }
 }

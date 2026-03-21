@@ -71,6 +71,10 @@ export class CoinShopPanel extends UINode {
   private _coins: number;
   private _items: CoinShopItem[];
 
+  protected $inspectInfo(): string {
+    return `coins=${this._coins} ${this._items.length}items`;
+  }
+
   constructor(props: CoinShopPanelProps) {
     super({ id: 'coin-shop', width: 390, height: 844 });
     this.interactive = true;

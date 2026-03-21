@@ -54,13 +54,7 @@ export class SettingsPanel extends Modal {
     this.open();
   }
 
-  $inspect(depth?: number): string {
-    let out = super.$inspect(depth);
-    if (this._version) {
-      const lines = out.split('\n');
-      lines[0] += ` ${this._version}`;
-      out = lines.join('\n');
-    }
-    return out;
+  protected $inspectInfo(): string {
+    return this._version ?? '';
   }
 }
