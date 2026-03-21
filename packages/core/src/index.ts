@@ -3,7 +3,7 @@
  */
 
 // 核心
-export { UINode, type UINodeOptions, type AnimateOptions, type Animation } from './node.js';
+export { UINode, type UINodeOptions, type AnimateOptions, type Animation, type NodeSnapshot, type PropChange } from './node.js';
 export { EventEmitter } from './events.js';
 export { type EasingName, type EasingFn, resolveEasing } from './easing.js';
 export { type Rect, type Point } from './types.js';

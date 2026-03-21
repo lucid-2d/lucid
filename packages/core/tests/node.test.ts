@@ -331,6 +331,169 @@ describe('UINode $patch', () => {
   });
 });
 
+// ── $query ───────────────────────────────────────
+
+describe('UINode $query', () => {
+  // Build a test tree
+  class MenuScene extends UINode {}
+  class GameScene extends UINode {}
+  class ButtonNode extends UINode {}
+
+  function buildTree() {
+    const root = new UINode({ id: 'root', width: 390, height: 844 });
+    const menu = new MenuScene({ id: 'menu' });
+    const btn1 = new ButtonNode({ id: 'play' });
+    btn1.interactive = true;
+    const btn2 = new ButtonNode({ id: 'settings' });
+    btn2.interactive = true;
+    const label = new UINode({ id: 'title' });
+    menu.addChild(label);
+    menu.addChild(btn1);
+    menu.addChild(btn2);
+    root.addChild(menu);
+
+    const game = new GameScene({ id: 'game' });
+    game.visible = false;
+    const btn3 = new ButtonNode({ id: 'pause' });
+    btn3.interactive = true;
+    game.addChild(btn3);
+    root.addChild(game);
+
+    return root;
+  }
+
+  it('query by class name', () => {
+    const root = buildTree();
+    const buttons = root.$query('ButtonNode');
+    expect(buttons.map(n => n.id)).toEqual(['play', 'settings', 'pause']);
+  });
+
+  it('query by id', () => {
+    const root = buildTree();
+    const result = root.$query('#play');
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe('play');
+  });
+
+  it('query by .interactive', () => {
+    const root = buildTree();
+    const interactive = root.$query('.interactive');
+    expect(interactive.map(n => n.id)).toEqual(['play', 'settings', 'pause']);
+  });
+
+  it('query by .hidden', () => {
+    const root = buildTree();
+    const hidden = root.$query('.hidden');
+    expect(hidden).toHaveLength(1);
+    expect(hidden[0].id).toBe('game');
+  });
+
+  it('descendant selector', () => {
+    const root = buildTree();
+    const menuButtons = root.$query('MenuScene ButtonNode');
+    expect(menuButtons.map(n => n.id)).toEqual(['play', 'settings']);
+  });
+
+  it('returns empty for no match', () => {
+    const root = buildTree();
+    expect(root.$query('NonExistent')).toHaveLength(0);
+    expect(root.$query('#nope')).toHaveLength(0);
+  });
+
+  it('multi-level descendant', () => {
+    const root = buildTree();
+    // root > GameScene > ButtonNode
+    const result = root.$query('GameScene ButtonNode');
+    expect(result.map(n => n.id)).toEqual(['pause']);
+  });
+});
+
+// ── $snapshot / $diff ────────────────────────────
+
+describe('UINode $snapshot / $diff', () => {
+  it('$snapshot captures node state', () => {
+    const node = new UINode({ id: 'btn', x: 10, y: 20, width: 100, height: 50 });
+    node.interactive = true;
+    const snap = node.$snapshot();
+    expect(snap.type).toBe('UINode');
+    expect(snap.id).toBe('btn');
+    expect(snap.x).toBe(10);
+    expect(snap.y).toBe(20);
+    expect(snap.width).toBe(100);
+    expect(snap.height).toBe(50);
+    expect(snap.interactive).toBe(true);
+    expect(snap.visible).toBe(true);
+  });
+
+  it('$snapshot captures children', () => {
+    const parent = new UINode({ id: 'p' });
+    parent.addChild(new UINode({ id: 'a' }));
+    parent.addChild(new UINode({ id: 'b' }));
+    const snap = parent.$snapshot();
+    expect(snap.children).toHaveLength(2);
+    expect(snap.children![0].id).toBe('a');
+    expect(snap.children![1].id).toBe('b');
+  });
+
+  it('$snapshot captures $text and $inspectInfo', () => {
+    class LabelNode extends UINode {
+      get $text() { return 'hello'; }
+      protected $inspectInfo() { return 'score=5'; }
+    }
+    const node = new LabelNode({ id: 'lbl' });
+    const snap = node.$snapshot();
+    expect(snap.text).toBe('hello');
+    expect(snap.info).toBe('score=5');
+  });
+
+  it('$diff detects property changes', () => {
+    const node = new UINode({ id: 'n', x: 0, y: 0, width: 100, height: 50 });
+    const before = node.$snapshot();
+
+    node.$patch({ x: 50, width: 200 });
+    const after = node.$snapshot();
+
+    const changes = UINode.$diff(before, after);
+    expect(changes).toHaveLength(2);
+    expect(changes).toContainEqual({ path: 'n', prop: 'x', from: 0, to: 50 });
+    expect(changes).toContainEqual({ path: 'n', prop: 'width', from: 100, to: 200 });
+  });
+
+  it('$diff returns empty for identical snapshots', () => {
+    const node = new UINode({ id: 'n', x: 10 });
+    const snap = node.$snapshot();
+    expect(UINode.$diff(snap, snap)).toHaveLength(0);
+  });
+
+  it('$diff detects nested changes', () => {
+    const root = new UINode({ id: 'root' });
+    const child = new UINode({ id: 'child', x: 0 });
+    root.addChild(child);
+
+    const before = root.$snapshot();
+    child.x = 99;
+    const after = root.$snapshot();
+
+    const changes = UINode.$diff(before, after);
+    expect(changes).toHaveLength(1);
+    expect(changes[0]).toEqual({ path: 'root > child', prop: 'x', from: 0, to: 99 });
+  });
+
+  it('$diff detects added/removed children', () => {
+    const root = new UINode({ id: 'root' });
+    root.addChild(new UINode({ id: 'a' }));
+    const before = root.$snapshot();
+
+    root.addChild(new UINode({ id: 'b' }));
+    const after = root.$snapshot();
+
+    const changes = UINode.$diff(before, after);
+    const addChange = changes.find(c => c.prop === 'children');
+    expect(addChange).toBeDefined();
+    expect(addChange!.to).toContain('+');
+  });
+});
+
 // ── helpers ───────────────────────────────────────
 
 function createMockCtx(): CanvasRenderingContext2D {

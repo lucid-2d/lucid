@@ -63,6 +63,28 @@ export interface UINodeOptions {
   maxHeight?: number;
 }
 
+export interface NodeSnapshot {
+  type: string;
+  id: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  visible: boolean;
+  interactive: boolean;
+  alpha: number;
+  text?: string;
+  info?: string;
+  children?: NodeSnapshot[];
+}
+
+export interface PropChange {
+  path: string;
+  prop: string;
+  from: any;
+  to: any;
+}
+
 export class UINode extends EventEmitter {
   id: string;
   $parent: UINode | null = null;
@@ -183,6 +205,54 @@ export class UINode extends EventEmitter {
     for (const child of this._children) {
       if (child instanceof ctor) result.push(child);
       child._collectByType(ctor, result);
+    }
+  }
+
+  /**
+   * CSS-like query within this subtree.
+   *
+   * Selectors:
+   *   '#id'          — match by id
+   *   'ClassName'    — match by constructor name
+   *   '.interactive' — match interactive nodes
+   *   '.visible'     — match visible nodes (default all are visible)
+   *   '.hidden'      — match hidden nodes
+   *   'A B'          — B descendant of A
+   *
+   * ```typescript
+   * root.$query('Button');              // all Buttons
+   * root.$query('#play');               // node with id 'play'
+   * root.$query('.interactive');        // all interactive nodes
+   * root.$query('MenuScene Button');    // Buttons inside MenuScene
+   * ```
+   */
+  $query(selector: string): UINode[] {
+    const parts = selector.trim().split(/\s+/);
+    if (parts.length === 1) {
+      return this._querySimple(parts[0]);
+    }
+    // Descendant chain: first selector narrows scope, then search within results
+    let candidates: UINode[] = this._querySimple(parts[0]);
+    for (let i = 1; i < parts.length; i++) {
+      const next: UINode[] = [];
+      for (const c of candidates) {
+        next.push(...c._querySimple(parts[i]));
+      }
+      candidates = next;
+    }
+    return candidates;
+  }
+
+  private _querySimple(sel: string): UINode[] {
+    const results: UINode[] = [];
+    this._collectQuery(sel, results);
+    return results;
+  }
+
+  private _collectQuery(sel: string, results: UINode[]): void {
+    for (const child of this._children) {
+      if (_matchSelector(child, sel)) results.push(child);
+      child._collectQuery(sel, results);
     }
   }
 
@@ -426,6 +496,78 @@ export class UINode extends EventEmitter {
   protected $inspectInfo(): string { return ''; }
 
   /**
+   * Capture a structured snapshot of this subtree for diffing.
+   *
+   * ```typescript
+   * const before = root.$snapshot();
+   * // ... make changes ...
+   * const after = root.$snapshot();
+   * const changes = UINode.$diff(before, after);
+   * ```
+   */
+  $snapshot(): NodeSnapshot {
+    const snap: NodeSnapshot = {
+      type: this.constructor.name,
+      id: this.id,
+      x: this.x,
+      y: this.y,
+      width: this.width,
+      height: this.height,
+      visible: this.visible,
+      interactive: this.interactive,
+      alpha: this.alpha,
+    };
+    const text = this.$text;
+    if (text !== undefined) snap.text = text;
+    const extra = this.$inspectInfo();
+    if (extra) snap.info = extra;
+    if (this._children.length > 0) {
+      snap.children = this._children.map(c => c.$snapshot());
+    }
+    return snap;
+  }
+
+  /**
+   * Compare two snapshots, return property-level changes.
+   *
+   * ```typescript
+   * const changes = UINode.$diff(before, after);
+   * // [{ path: 'menu > play', prop: 'x', from: 0, to: 100 }]
+   * ```
+   */
+  static $diff(before: NodeSnapshot, after: NodeSnapshot, parentPath = ''): PropChange[] {
+    const changes: PropChange[] = [];
+    const path = parentPath ? `${parentPath} > ${before.id || before.type}` : (before.id || before.type);
+
+    // Compare scalar props
+    const keys: (keyof NodeSnapshot)[] = ['x', 'y', 'width', 'height', 'visible', 'interactive', 'alpha', 'text', 'info'];
+    for (const key of keys) {
+      if (before[key] !== after[key]) {
+        changes.push({ path, prop: key, from: before[key], to: after[key] });
+      }
+    }
+
+    // Compare children
+    const bChildren = before.children ?? [];
+    const aChildren = after.children ?? [];
+    const maxLen = Math.max(bChildren.length, aChildren.length);
+
+    for (let i = 0; i < maxLen; i++) {
+      if (i >= bChildren.length) {
+        const added = aChildren[i];
+        changes.push({ path, prop: 'children', from: undefined, to: `+${added.type}#${added.id}` });
+      } else if (i >= aChildren.length) {
+        const removed = bChildren[i];
+        changes.push({ path, prop: 'children', from: `${removed.type}#${removed.id}`, to: undefined });
+      } else {
+        changes.push(...UINode.$diff(bChildren[i], aChildren[i], path));
+      }
+    }
+
+    return changes;
+  }
+
+  /**
    * 输出结构化文本描述，供 AI 读取。
    * @param depth 递归深度，默认无限。0 = 仅自身。
    */
@@ -492,4 +634,23 @@ export class UINode extends EventEmitter {
     }
     return chain.reverse().join(' > ');
   }
+}
+
+// ── selector matching ──
+
+function _matchSelector(node: UINode, sel: string): boolean {
+  if (sel.startsWith('#')) {
+    return node.id === sel.slice(1);
+  }
+  if (sel === '.interactive') {
+    return node.interactive;
+  }
+  if (sel === '.hidden') {
+    return !node.visible;
+  }
+  if (sel === '.visible') {
+    return node.visible;
+  }
+  // Class name match
+  return node.constructor.name === sel;
 }
