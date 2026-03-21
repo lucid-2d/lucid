@@ -41,10 +41,10 @@ window._app = app; // expose for AI agent
 
 ### @lucid/core
 
-Node tree, events, animation, recording, timers, RNG, sprites, text utilities.
+Node tree, events, animation, recording, timers, RNG, sprites, text, camera.
 
 ```typescript
-import { UINode, Sprite, SpriteSheet, AnimatedSprite, InteractionRecorder, SeededRNG, Timer, CountdownTimer, wrapText, drawText } from '@lucid/core';
+import { UINode, Sprite, SpriteSheet, AnimatedSprite, Camera, InteractionRecorder, SeededRNG, Timer, CountdownTimer, wrapText, drawText } from '@lucid/core';
 ```
 
 | Export | Type | Description |
@@ -60,6 +60,7 @@ import { UINode, Sprite, SpriteSheet, AnimatedSprite, InteractionRecorder, Seede
 | `wrapText(ctx, text, maxWidth)` | function | Auto line-wrap (word boundaries for Latin, character boundaries for CJK). Returns `string[]`. |
 | `drawText(ctx, text, opts)` | function | Multi-line text rendering with alignment, vertical alignment, and `maxLines` ellipsis truncation. |
 | `measureWrappedText(ctx, text, maxWidth, lineHeight)` | function | Measure wrapped text dimensions. Returns `{ width, height, lines }`. |
+| `Camera` | class | Viewport for scrolling/zooming worlds. Props: `viewWidth`, `viewHeight`, `worldWidth?`, `worldHeight?`. Methods: `moveTo(x,y)`, `moveBy(dx,dy)`, `follow(target, opts?)`, `update(dt)`, `apply(ctx)`, `restore(ctx)`, `screenToWorld(sx,sy)`, `worldToScreen(wx,wy)`, `isVisible(x,y,w,h)`. |
 
 ### @lucid/engine
 
@@ -83,6 +84,11 @@ import { createApp, SceneNode, SceneRouter, loadImage, WebAdapter, WxAdapter, Tt
 | `touch(app, x, y, type?)` | function | Simulate touch at coordinates via hitTest. Type: `'start'` \| `'end'` \| `'move'`, default: full tap. Returns node path. |
 | `assertTree(app, pattern)` | function | Assert `$inspect()` output contains all pattern lines (trimmed, ignoring extra nodes). Throws with diff on failure. |
 | `generateTestCode(records)` | function | Convert `InteractionRecord[]` (from `dumpInteractions()`) to vitest test code string. |
+| `AudioManager` | class | Cross-platform audio. `load(name, src)`, `playSfx(name)`, `playBgm(name, opts?)`, `stopBgm()`, `pauseBgm()`, `resumeBgm()`. Props: `sfxVolume`, `bgmVolume`, `muted`. |
+| `createAudio(opts?)` | function | Create AudioManager with auto-detected platform (Web/Wx/Tt). |
+| `createMockAudio()` | function | Mock AudioManager for testing (no real playback). |
+| `Keyboard` | class | PC keyboard input. `bind(target)`, `isDown(key)`, `wasPressed(key)`, `wasReleased(key)`, `update()`. Test: `simulatePress(key)`, `simulateRelease(key)`. |
+| `AssetLoader` | class | Batch asset loading. `add(name, src)`, `load(): Promise<Map>`, `onProgress`, `progress`, `get(name)`. Auto-detects image/audio/json. |
 
 ### @lucid/ui
 

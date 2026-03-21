@@ -8,8 +8,8 @@ Lucid is a Canvas 2D game framework designed for AI agents to build, inspect, de
 
 ```
 packages/
-  core/      — UINode, events, animation, Timer, SeededRNG, Sprite, AnimatedSprite, text utils
-  engine/    — createApp, SceneRouter, platform adapters, headless rendering, test utils
+  core/      — UINode, events, animation, Timer, SeededRNG, Sprite, AnimatedSprite, Camera, text utils
+  engine/    — createApp, SceneRouter, platform adapters, headless rendering, audio, keyboard, asset loader, test utils
   ui/        — 11 base components (Button, Label, Modal, Toggle, TabBar, ScrollView, ...)
   game-ui/   — 9 business components (CheckinDialog, ShopPanel, SettingsPanel, ...)
   physics/   — Vec2, collision detection, particles, screen shake
@@ -22,7 +22,7 @@ templates/   — Game templates (starter, quiz)
 
 ```bash
 pnpm install                    # install dependencies
-pnpm -r test                    # run all 484 tests
+pnpm -r test                    # run all 542 tests
 pnpm -r build                   # build all packages
 npx vite --config playground/vite.config.ts --port 3456  # run playground
 ```
