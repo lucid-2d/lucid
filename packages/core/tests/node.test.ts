@@ -283,6 +283,54 @@ describe('UINode $update', () => {
   });
 });
 
+// ── $patch ───────────────────────────────────────
+
+describe('UINode $patch', () => {
+  it('updates multiple properties at once', () => {
+    const node = new UINode({ id: 'n', x: 0, y: 0, width: 100, height: 50 });
+    node.$patch({ x: 50, y: 100, width: 200 });
+    expect(node.x).toBe(50);
+    expect(node.y).toBe(100);
+    expect(node.width).toBe(200);
+    expect(node.height).toBe(50); // unchanged
+  });
+
+  it('ignores properties not on the node', () => {
+    const node = new UINode({ id: 'n' });
+    node.$patch({ x: 10, nonExistent: 'hello' } as any);
+    expect(node.x).toBe(10);
+    expect((node as any).nonExistent).toBeUndefined();
+  });
+
+  it('returns this for chaining', () => {
+    const node = new UINode();
+    const result = node.$patch({ x: 1 });
+    expect(result).toBe(node);
+  });
+
+  it('marks node dirty after patch', () => {
+    const onLayout = vi.fn();
+    class TestNode extends UINode {
+      protected onLayout() { onLayout(); }
+    }
+    const node = new TestNode({ width: 100, height: 100 });
+    const ctx = createMockCtx();
+    node.$render(ctx); // clears initial dirty
+    onLayout.mockClear();
+
+    node.$patch({ x: 50 });
+    node.$render(ctx);
+    expect(onLayout).toHaveBeenCalledOnce();
+  });
+
+  it('works with visibility and alpha', () => {
+    const node = new UINode();
+    node.$patch({ visible: false, alpha: 0.5 });
+    expect(node.visible).toBe(false);
+    expect(node.alpha).toBe(0.5);
+  });
+});
+
 // ── helpers ───────────────────────────────────────
 
 function createMockCtx(): CanvasRenderingContext2D {

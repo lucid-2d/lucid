@@ -400,6 +400,24 @@ export class UINode extends EventEmitter {
 
   // ── AI 调试 ──────────────────────────────────
 
+  /**
+   * Batch-update properties. AI agent can call this at runtime
+   * to tweak node without editing source code.
+   *
+   * ```typescript
+   * node.$patch({ x: 100, width: 200, visible: false });
+   * ```
+   */
+  $patch(props: Record<string, any>): this {
+    for (const [key, value] of Object.entries(props)) {
+      if (key in this) {
+        (this as any)[key] = value;
+      }
+    }
+    this._dirty = true;
+    return this;
+  }
+
   get $text(): string | undefined { return undefined; }
   get $highlighted(): boolean | undefined { return undefined; }
   get $disabled(): boolean | undefined { return undefined; }
