@@ -41,10 +41,10 @@ window._app = app; // expose for AI agent
 
 ### @lucid/core
 
-Node tree, events, animation, recording, timers, RNG, sprites, text, camera.
+Node tree, events, animation, recording, timers, RNG, sprites, text, camera, nine-slice, i18n.
 
 ```typescript
-import { UINode, Sprite, SpriteSheet, AnimatedSprite, Camera, InteractionRecorder, SeededRNG, Timer, CountdownTimer, wrapText, drawText } from '@lucid/core';
+import { UINode, Sprite, SpriteSheet, AnimatedSprite, NineSlice, Camera, I18n, InteractionRecorder, SeededRNG, Timer, CountdownTimer, wrapText, drawText } from '@lucid/core';
 ```
 
 | Export | Type | Description |
@@ -61,10 +61,12 @@ import { UINode, Sprite, SpriteSheet, AnimatedSprite, Camera, InteractionRecorde
 | `drawText(ctx, text, opts)` | function | Multi-line text rendering with alignment, vertical alignment, and `maxLines` ellipsis truncation. |
 | `measureWrappedText(ctx, text, maxWidth, lineHeight)` | function | Measure wrapped text dimensions. Returns `{ width, height, lines }`. |
 | `Camera` | class | Viewport for scrolling/zooming worlds. Props: `viewWidth`, `viewHeight`, `worldWidth?`, `worldHeight?`. Methods: `moveTo(x,y)`, `moveBy(dx,dy)`, `follow(target, opts?)`, `update(dt)`, `apply(ctx)`, `restore(ctx)`, `screenToWorld(sx,sy)`, `worldToScreen(wx,wy)`, `isVisible(x,y,w,h)`. |
+| `NineSlice` | class | Nine-slice scaling UINode for panels/buttons. Props: `image`, `insets: [top, right, bottom, left]`. Corners stay fixed, edges stretch single-axis, center stretches both. |
+| `I18n` | class | Internationalization. `new I18n({ en: {...}, zh: {...} })`. Methods: `t(key, ...args)` (positional params `{0}`, `{1}`), `locale` getter/setter, `add(locale, translations)`, `has(key)`, `locales`. Fallback: current → first locale → key. |
 
 ### @lucid/engine
 
-App lifecycle, scene routing, platform adapters, image loading.
+App lifecycle, scene routing, platform adapters, image loading, audio, keyboard.
 
 ```typescript
 import { createApp, SceneNode, SceneRouter, loadImage, WebAdapter, WxAdapter, TtAdapter } from '@lucid/engine';
@@ -73,8 +75,8 @@ import { createApp, SceneNode, SceneRouter, loadImage, WebAdapter, WxAdapter, Tt
 | Export | Type | Description |
 |--------|------|-------------|
 | `createApp(opts)` | function | Creates app. Options: `{ platform?, canvas?, adapter?, debug?, debugOverlay?, rngSeed? }`. Returns `App` with `.root`, `.router`, `.screen`, `.rng`, `.debug`, `.debugOverlay`, `.start()`, `.stop()`, `.tick(dt)`, `.replay(records, speed)`, `.dumpInteractions()`. |
-| `SceneNode` | class | Extends UINode. Override `onEnter()` and `onExit()`. |
-| `SceneRouter` | class | `push(scene)`, `replace(scene)`, `pop()`. |
+| `SceneNode` | class | Extends UINode. Override `onEnter()`, `onExit()`, `onPause()`, `onResume()`. |
+| `SceneRouter` | class | `push(scene, transition?)`, `replace(scene, transition?)`, `pop(transition?)`. Transition: `{ type: 'fade'\|'slideLeft'\|'slideRight'\|'slideUp'\|'slideDown', duration }`. Set `defaultTransition` for global default. |
 | `WebAdapter` | class | Browser platform. Auto-creates from canvas element. |
 | `WxAdapter` | class | WeChat Mini Game platform. Uses `wx.*` globals. |
 | `TtAdapter` | class | Douyin Mini Game platform. Uses `tt.*` globals. |
@@ -162,14 +164,16 @@ import { createStorage, CheckinSystem, SkinSystem, AchievementSystem, MissionSys
 Vectors, collision, particles, screen shake.
 
 ```typescript
-import { vec2, add, sub, scale, normalize, distance, pointInRect, circleCircle, ParticlePool, ScreenShake } from '@lucid/physics';
+import { vec2, add, sub, scale, normalize, distance, pointInRect, circleCircle, ParticlePool, ParticleEmitter, ParticlePresets, ScreenShake } from '@lucid/physics';
 ```
 
 | Export | Description |
 |--------|-------------|
 | `vec2(x, y)` | Create Vec2. All vec2 ops are pure functions: `add`, `sub`, `scale`, `normalize`, `dot`, `cross`, `distance`, `angle`, `fromAngle`, `perp`, `lerp`, `reflect`. |
 | `pointInRect`, `pointInCircle`, `circleRect`, `circleCircle`, `lineCircle` | Collision detection. Returns `CollisionResult \| null` with `normal` and `depth`. |
-| `ParticlePool` | Object pool. `emit(x, y, opts?)`, `update(dt)`, `draw(ctx)`. |
+| `ParticlePool` | Object pool with built-in renderer. `emit(x, y, opts?)`, `update(dt)`, `draw(ctx)`, `clear()`. Supports alpha fade, scale animation, friction. |
+| `ParticleEmitter` | Continuous emitter. `new ParticleEmitter(pool, config)`. Props: `x`, `y`, `active`. Methods: `update(dt)`, `start()`, `stop()`. Config: `rate` (particles/sec) + all EmitOptions. |
+| `ParticlePresets` | 5 presets: `explosion()`, `sparkle()`, `smoke()`, `fire()`, `trail()`. Each returns EmitOptions/EmitterConfig, accepts overrides. |
 | `ScreenShake` | `start(intensity, duration)`, `update(dt)`, `apply(ctx)` / `restore(ctx)`. |
 
 ## Layout system
