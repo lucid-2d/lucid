@@ -129,6 +129,33 @@ describe('Headless rendering', () => {
     expect(buf.length).toBeGreaterThan(0);
   });
 
+  it('debugOverlay draws extra info on canvas', () => {
+    const app = createTestApp({ render: true });
+    app.router.push(new ButtonScene({ id: 'btn-scene' }));
+    app.tick(16);
+
+    const withoutOverlay = app.toImage();
+
+    app.debugOverlay = true;
+    app.tick(16);
+    const withOverlay = app.toImage();
+
+    // Overlay should produce different image (node borders + labels)
+    expect(Buffer.compare(withoutOverlay, withOverlay)).not.toBe(0);
+  });
+
+  it('debugOverlay can be toggled at runtime', () => {
+    const app = createTestApp({ render: true });
+    app.router.push(new ColorScene({ id: 'color' }));
+    app.tick(16);
+
+    expect(app.debugOverlay).toBe(false);
+    app.debugOverlay = true;
+    expect(app.debugOverlay).toBe(true);
+    app.debugOverlay = false;
+    expect(app.debugOverlay).toBe(false);
+  });
+
   it('$inspect works the same in render mode', () => {
     const app = createTestApp({ render: true });
     app.router.push(new ColorScene({ id: 'color' }));

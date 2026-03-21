@@ -41,6 +41,8 @@ export interface AppOptions {
   adapter?: PlatformAdapter;
   /** 调试模式 */
   debug?: boolean;
+  /** 显示 debug 叠加层（节点边框、ID、触摸区域） */
+  debugOverlay?: boolean;
   /** RNG 种子（不指定则自动生成） */
   rngSeed?: number;
 }
@@ -52,6 +54,8 @@ export interface App {
   /** 全局可复现随机数生成器 */
   readonly rng: SeededRNG;
   debug: boolean;
+  /** 显示 debug 叠加层（节点边框/ID/触摸区域） */
+  debugOverlay: boolean;
 
   /** 启动游戏循环 */
   start(): void;
@@ -77,6 +81,47 @@ export interface App {
    * @param speed 回放速度（1 = 真实速度，2 = 两倍速，0.5 = 慢放）
    */
   replay(records: InteractionRecord[], speed?: number): Promise<ReplayStep[]>;
+}
+
+// ── Debug Overlay ──
+
+function renderDebugOverlay(ctx: CanvasRenderingContext2D, node: UINode, offsetX = 0, offsetY = 0): void {
+  if (!node.visible) return;
+
+  const wx = offsetX + node.x;
+  const wy = offsetY + node.y;
+
+  // Draw bounding box if node has size
+  if (node.width > 0 && node.height > 0) {
+    ctx.save();
+    ctx.strokeStyle = node.interactive ? 'rgba(76, 175, 80, 0.7)' : 'rgba(100, 149, 237, 0.4)';
+    ctx.lineWidth = node.interactive ? 1.5 : 0.5;
+    ctx.setLineDash(node.interactive ? [] : [3, 3]);
+    ctx.strokeRect(wx + 0.5, wy + 0.5, node.width - 1, node.height - 1);
+    ctx.setLineDash([]);
+    ctx.restore();
+  }
+
+  // Draw ID label for named nodes
+  if (node.id && node.width > 0) {
+    const className = node.constructor.name;
+    const label = className === 'UINode' ? `#${node.id}` : `${className}#${node.id}`;
+    ctx.save();
+    ctx.font = '9px monospace';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    const tw = ctx.measureText(label).width;
+    ctx.fillStyle = node.interactive ? 'rgba(76, 175, 80, 0.8)' : 'rgba(100, 149, 237, 0.7)';
+    ctx.fillRect(wx, wy, tw + 4, 12);
+    ctx.fillStyle = '#fff';
+    ctx.fillText(label, wx + 2, wy + 1);
+    ctx.restore();
+  }
+
+  // Recurse into children
+  for (const child of node.$children) {
+    renderDebugOverlay(ctx, child, wx, wy);
+  }
 }
 
 export function createApp(options: AppOptions = {}): App {
@@ -112,6 +157,7 @@ export function createApp(options: AppOptions = {}): App {
 
   // 交互录制器
   const debugMode = options.debug ?? false;
+  let overlayMode = options.debugOverlay ?? false;
   const recorder = new InteractionRecorder({ enabled: debugMode });
   let startTime = 0;
 
@@ -207,6 +253,11 @@ export function createApp(options: AppOptions = {}): App {
 
     root.$render(ctx);
 
+    // Debug overlay: node boundaries + IDs
+    if (overlayMode) {
+      renderDebugOverlay(ctx, root);
+    }
+
     // Debug 模式：绘制 FPS
     if (debugMode) {
       ctx.save();
@@ -229,6 +280,9 @@ export function createApp(options: AppOptions = {}): App {
 
     get debug() { return recorder.enabled; },
     set debug(v: boolean) { recorder.enabled = v; },
+
+    get debugOverlay() { return overlayMode; },
+    set debugOverlay(v: boolean) { overlayMode = v; },
 
     get fps() { return _fps; },
 
