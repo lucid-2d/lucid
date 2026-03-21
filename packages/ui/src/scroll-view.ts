@@ -3,6 +3,8 @@ import { UINode, type UINodeOptions } from '@lucid/core';
 export interface ScrollViewProps extends UINodeOptions {
   width: number;
   height: number;
+  /** Pixels of movement before switching from tap to scroll mode (default: 5) */
+  scrollThreshold?: number;
 }
 
 export class ScrollView extends UINode {
@@ -10,33 +12,102 @@ export class ScrollView extends UINode {
   private _scrollY = 0;
   private _contentHeight = 0;
 
-  // 触摸滚动状态
+  // Touch state
   private _touchStartY = 0;
+  private _touchStartX = 0;
   private _scrollAtStart = 0;
-  private _dragging = false;
+  private _isScrolling = false;
+  private _touchActive = false;
+  private _scrollThreshold: number;
 
   constructor(props: ScrollViewProps) {
     super(props);
     this.interactive = true;
+    this._scrollThreshold = props.scrollThreshold ?? 5;
     this.content = new UINode({ id: (props.id ?? '') + '-content' });
     this.addChild(this.content);
+  }
 
-    this.$on('touchstart', (e: any) => {
+  /**
+   * Override hitTest: ScrollView always captures touch within its bounds,
+   * preventing children from stealing scroll gestures.
+   */
+  hitTest(wx: number, wy: number): UINode | null {
+    if (!this.visible) return null;
+    const lx = wx - this.x;
+    const ly = wy - this.y;
+    if (lx >= 0 && lx <= this.width && ly >= 0 && ly <= this.height) {
+      return this; // Always capture — we decide tap vs scroll in touchend
+    }
+    return null;
+  }
+
+  /**
+   * Handle touch events internally.
+   * Called by the engine's touch bridge via $emit.
+   */
+  $emit(event: string, ...args: any[]): void {
+    if (event === 'touchstart') {
+      const e = args[0] as { localX: number; localY: number; worldX: number; worldY: number };
       this._touchStartY = e.localY;
+      this._touchStartX = e.localX;
       this._scrollAtStart = this._scrollY;
-      this._dragging = true;
-    });
-
-    this.$on('touchmove', (e: any) => {
-      if (!this._dragging) return;
+      this._isScrolling = false;
+      this._touchActive = true;
+    } else if (event === 'touchmove') {
+      if (!this._touchActive) return;
+      const e = args[0] as { localX: number; localY: number };
       const dy = this._touchStartY - e.localY;
-      this._scrollY = this._scrollAtStart + dy;
-      this._clamp();
-    });
+      if (!this._isScrolling && Math.abs(dy) > this._scrollThreshold) {
+        this._isScrolling = true;
+      }
+      if (this._isScrolling) {
+        this._scrollY = this._scrollAtStart + dy;
+        this._clamp();
+      }
+    } else if (event === 'touchend') {
+      if (this._touchActive && !this._isScrolling) {
+        // Was a tap, not a scroll — find and tap the child underneath
+        const e = args[0] as { localX: number; localY: number; worldX: number; worldY: number };
+        this._forwardTap(e.localX, e.localY);
+      }
+      this._touchActive = false;
+      this._isScrolling = false;
+    }
 
-    this.$on('touchend', () => {
-      this._dragging = false;
-    });
+    // Still emit for external listeners
+    super.$emit(event, ...args);
+  }
+
+  /** Find the interactive child under the tap point and emit tap on it */
+  private _forwardTap(localX: number, localY: number): void {
+    // Convert to content-local coordinates (account for scroll offset)
+    const contentY = localY + this._scrollY;
+    const hit = this._hitTestContent(this.content, localX, contentY);
+    if (hit && hit !== this) {
+      hit.$emit('touchstart', { localX: 0, localY: 0, worldX: 0, worldY: 0 });
+      hit.$emit('touchend', { localX: 0, localY: 0, worldX: 0, worldY: 0 });
+    }
+  }
+
+  /** Recursive hitTest within content (local coordinates) */
+  private _hitTestContent(node: UINode, x: number, y: number): UINode | null {
+    if (!node.visible) return null;
+    const lx = x - node.x;
+    const ly = y - node.y;
+
+    // Check children in reverse (top-most first)
+    const children = node.$children;
+    for (let i = children.length - 1; i >= 0; i--) {
+      const hit = this._hitTestContent(children[i], lx, ly);
+      if (hit) return hit;
+    }
+
+    // Check self
+    if (node.interactive && lx >= 0 && lx <= node.width && ly >= 0 && ly <= node.height) {
+      return node;
+    }
+    return null;
   }
 
   get scrollY(): number { return this._scrollY; }

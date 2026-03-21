@@ -103,13 +103,13 @@ import { Button, Label, Icon, Modal, Toggle, TabBar, ScrollView, ProgressBar, To
 | Component | Key Props | Events |
 |-----------|-----------|--------|
 | `Button` | `id, text, variant: 'primary'\|'outline'\|'ghost'\|'gold', width, height, disabled` | `tap` |
-| `Label` | `text, fontSize, fontWeight, color, align, wrap?: boolean, maxLines?, lineHeight?, verticalAlign?` | — |
-| `Icon` | `name: IconName, size, color` | — |
+| `Label` | `text, fontSize, fontWeight, color, align, wrap?, maxLines?, lineHeight?, verticalAlign?` | — . AI: `lineCount`, `truncated`, `renderedLines`. `$inspectInfo`: `3lines truncated`. |
+| `Icon` | `name: IconName, size, color` | — . AI: `$text` = icon name. |
 | `Modal` | `title, id, width, height, screenWidth, screenHeight` | `close`. Methods: `open()`, `close()`, `fitContent(bottomPad?)`. Children go in `.content`. Blocks touch behind overlay. |
-| `Toggle` | `id, label, value: boolean, width, height` | `change(value)` |
-| `TabBar` | `id, tabs: TabItem[], activeKey, width, height` | `change(key)` |
-| `ScrollView` | `id, width, height, contentHeight` | Touch-drag scrolling built-in. |
-| `ProgressBar` | `id, width, height, value: 0..1, color?` | — |
+| `Toggle` | `id, label, value: boolean, width, height` | `change(value)`. AI: `$highlighted` = ON state. |
+| `TabBar` | `id, tabs: TabItem[], activeKey, width, height` | `change(key)`. AI: `$inspectInfo` = active key. |
+| `ScrollView` | `id, width, height, contentHeight` | Touch-drag scrolling. Auto-captures touch (scroll vs tap detection). `scrollY`, `maxScrollY`. `$inspectInfo`: scroll position. |
+| `ProgressBar` | `id, width, height, value: 0..1, color?` | — . AI: `$text` = percentage. |
 | `Toast` | Singleton object | `Toast.show(type, message)`. Needs `Toast.update(dt)` + `Toast.draw(ctx, w, h)` per frame. |
 | `Badge` | `text, color` | — |
 | `Tag` | `text, color` | — |
