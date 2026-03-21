@@ -699,12 +699,18 @@ export class GalleryScene extends SceneNode {
     }
 
     const langRow = new UINode({ width: W - 32, layout: 'row', gap: 8, justifyContent: 'center' });
+    const langBtns: Button[] = [];
     for (const lang of ['en', 'zh', 'ja']) {
       const btn = new Button({ text: lang.toUpperCase(), variant: i18n.locale === lang ? 'primary' : 'outline', width: 70, height: 32 });
       btn.$on('tap', () => {
         i18n.locale = lang;
         updateI18nLabels();
+        // Update button styles
+        for (const b of langBtns) {
+          b.variant = b.text.toLowerCase() === lang ? 'primary' : 'outline';
+        }
       });
+      langBtns.push(btn);
       langRow.addChild(btn);
     }
     i18nCol.addChild(langRow);

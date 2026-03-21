@@ -86,9 +86,29 @@ export class ScrollView extends UINode {
     // hitTestContent uses node positions (content.y = -scrollY handles offset)
     const hit = this._hitTestContent(this.content, localX, localY);
     if (hit && hit !== this) {
-      hit.$emit('touchstart', { localX: 0, localY: 0, worldX: 0, worldY: 0 });
-      hit.$emit('touchend', { localX: 0, localY: 0, worldX: 0, worldY: 0 });
+      // Compute coordinates local to the hit node
+      const nodeLocal = this._toNodeLocal(hit, localX, localY);
+      const event = { localX: nodeLocal.x, localY: nodeLocal.y, worldX: localX, worldY: localY };
+      hit.$emit('touchstart', event);
+      hit.$emit('touchend', event);
     }
+  }
+
+  /** Convert ScrollView-local coords to a descendant node's local coords */
+  private _toNodeLocal(node: UINode, sx: number, sy: number): { x: number; y: number } {
+    // Walk up from node to content, accumulating offsets
+    const chain: UINode[] = [];
+    let n: UINode | null = node;
+    while (n && n !== this) {
+      chain.push(n);
+      n = n.$parent;
+    }
+    let x = sx, y = sy;
+    for (let i = chain.length - 1; i >= 0; i--) {
+      x -= chain[i].x;
+      y -= chain[i].y;
+    }
+    return { x, y };
   }
 
   /** Recursive hitTest within content (local coordinates) */
