@@ -211,15 +211,47 @@ scene.addChild(dialog);
 - All tests are deterministic (SeededRNG, no timers)
 - Run single package: `cd packages/core && npx vitest run`
 
-## Bridge - 与业务方沟通
+## GitHub Issues & PR — 社区协作
 
-通道文件在 `/Users/luochao/ai/workspace/bridge/` 目录下。每次对话开始时，检查是否有新消息需要处理。
+框架通过 GitHub Issues 接收来自业务项目（AI agent）的反馈，通过 PR 接收贡献。
 
-| 通道 | 对方 | 用途 |
-|------|------|------|
-| `star-drift--lucid.md` | star-drift-v2 | 游戏迁移到 Lucid 框架的沟通 |
+### Issue 处理流程
 
-收到问题时在对应消息下追加 `### Reply` 回复，问题解决后把 `[open]` 改为 `[resolved]`。
+每次对话开始时，检查是否有新 issue：
+
+```bash
+gh issue list --repo lucid-2d/lucid --state open
+```
+
+处理步骤：
+1. 读取 issue 内容，评估是否合理
+2. 如果是 bug → 复现、修复、写测试、关闭 issue
+3. 如果是 feature → 评估边界（是否属于框架职责），实现或回复原因
+4. 如果是 question → 回复解答，必要时补充文档
+5. 修复后回复 issue 说明版本号，然后关闭
+
+### PR 审核流程
+
+```bash
+gh pr list --repo lucid-2d/lucid --state open
+```
+
+审核标准：
+1. 是否有对应的 issue 或合理的动机
+2. 代码质量：测试覆盖、命名规范、无副作用
+3. 边界检查：是否属于框架职责（游戏逻辑不进框架）
+4. `pnpm -r test` 必须全部通过
+5. 合入后更新文档和版本号
+
+### 标签
+
+| 标签 | 用途 |
+|------|------|
+| `bug` | 框架 bug |
+| `feature` | 新功能请求 |
+| `question` | 使用问题 |
+| `feedback` | 通用反馈 |
+| `from-star-drift` | 来自 star-drift 项目 |
 
 ## Commit conventions
 
