@@ -143,6 +143,68 @@ describe('createApp', () => {
     expect(receivedDt).toBeCloseTo(0.05);
   });
 
+  it('fixedTimestep triggers $fixedUpdate at fixed intervals', () => {
+    const canvas = createMockCanvas();
+    const app = createApp({ platform: 'web', canvas, fixedTimestep: 0.02 }); // 50Hz
+
+    const fixedDts: number[] = [];
+    const scene = new SceneNode({ id: 'test' });
+    scene.$fixedUpdate = (dt: number) => { fixedDts.push(dt); };
+    app.router.push(scene);
+
+    // 50ms frame → should trigger 2 fixed steps (50ms / 20ms = 2.5, floor = 2)
+    app.tick(50);
+    expect(fixedDts).toHaveLength(2);
+    expect(fixedDts[0]).toBeCloseTo(0.02);
+    expect(fixedDts[1]).toBeCloseTo(0.02);
+  });
+
+  it('fixedTimestep accumulates remainder across frames', () => {
+    const canvas = createMockCanvas();
+    const app = createApp({ platform: 'web', canvas, fixedTimestep: 0.016 });
+
+    let fixedCount = 0;
+    const scene = new SceneNode({ id: 'test' });
+    scene.$fixedUpdate = () => { fixedCount++; };
+    app.router.push(scene);
+
+    // 10ms frame → 0 steps (10ms < 16ms), but accumulates
+    app.tick(10);
+    expect(fixedCount).toBe(0);
+
+    // another 10ms → total 20ms, 1 step (16ms), remainder 4ms
+    app.tick(10);
+    expect(fixedCount).toBe(1);
+  });
+
+  it('fixedTimestep=0 disables $fixedUpdate', () => {
+    const canvas = createMockCanvas();
+    const app = createApp({ platform: 'web', canvas });
+
+    let called = false;
+    const scene = new SceneNode({ id: 'test' });
+    scene.$fixedUpdate = () => { called = true; };
+    app.router.push(scene);
+
+    app.tick(100);
+    expect(called).toBe(false);
+  });
+
+  it('fixedTimestep respects timeScale', () => {
+    const canvas = createMockCanvas();
+    const app = createApp({ platform: 'web', canvas, fixedTimestep: 0.02 }); // 50Hz
+
+    let fixedCount = 0;
+    const scene = new SceneNode({ id: 'test' });
+    scene.$fixedUpdate = () => { fixedCount++; };
+    app.router.push(scene);
+
+    app.timeScale = 0.5;
+    // 100ms * 0.5 = 50ms effective → 2 fixed steps at 20ms each
+    app.tick(100);
+    expect(fixedCount).toBe(2);
+  });
+
   it('timeScale cannot be negative', () => {
     const canvas = createMockCanvas();
     const app = createApp({ platform: 'web', canvas });

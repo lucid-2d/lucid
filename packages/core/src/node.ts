@@ -406,7 +406,7 @@ export class UINode extends EventEmitter {
 
   // ── update ──────────────────────────────────
 
-  /** 框架调用：每帧更新 */
+  /** 框架调用：每帧更新（可变 dt，用于渲染/动画/UI） */
   $update(dt: number): void {
     if (!this.visible) return;
 
@@ -418,6 +418,15 @@ export class UINode extends EventEmitter {
     }
 
     this.onUpdated();
+  }
+
+  /** 固定时间步更新（用于物理/碰撞等需要确定性的逻辑） */
+  $fixedUpdate(fixedDt: number): void {
+    if (!this.visible) return;
+
+    for (const child of this._children) {
+      child.$fixedUpdate(fixedDt);
+    }
   }
 
   // ── hitTest ─────────────────────────────────

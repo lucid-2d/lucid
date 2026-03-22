@@ -80,8 +80,8 @@ import { createApp, SceneNode, SceneRouter, loadImage, WebAdapter, WxAdapter, Tt
 
 | Export | Type | Description |
 |--------|------|-------------|
-| `createApp(opts)` | function | Creates app. Options: `{ platform?, canvas?, adapter?, debug?, debugOverlay?, rngSeed? }`. Returns `App` with `.root`, `.router`, `.screen`, `.rng`, `.debug`, `.debugOverlay`, `.timeScale`, `.start()`, `.stop()`, `.tick(dt)`, `.replay(records, speed)`, `.dumpInteractions()`. `timeScale`: 0=pause, 0.5=slow, 1=normal, 2=fast. |
-| `SceneNode` | class | Extends UINode. Override `onEnter()`, `onExit()`, `onPause()`, `onResume()`. |
+| `createApp(opts)` | function | Creates app. Options: `{ platform?, canvas?, adapter?, debug?, debugOverlay?, rngSeed?, fixedTimestep? }`. Returns `App` with `.root`, `.router`, `.screen`, `.rng`, `.debug`, `.debugOverlay`, `.timeScale` (0=pause, 1=normal), `.fixedTimestep` (seconds, 0=disabled). `.start()`, `.stop()`, `.tick(dt)`, `.replay(records, speed)`, `.dumpInteractions()`. |
+| `SceneNode` | class | Extends UINode. Override `onEnter()`, `onExit()`, `onPause()`, `onResume()`, `$fixedUpdate(dt)` (deterministic physics). |
 | `SceneRouter` | class | `push(scene, transition?)`, `replace(scene, transition?)`, `pop(transition?)`. Transition: `{ type: 'fade'\|'slideLeft'\|'slideRight'\|'slideUp'\|'slideDown'\|'custom', duration, render? }`. `custom` type: `render(ctx, progress, oldScene, newScene)` takes over all rendering. Set `defaultTransition` for global default. |
 | `WebAdapter` | class | Browser platform. Auto-creates from canvas element. |
 | `WxAdapter` | class | WeChat Mini Game platform. Uses `wx.*` globals. |

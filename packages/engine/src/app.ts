@@ -45,6 +45,8 @@ export interface AppOptions {
   debugOverlay?: boolean;
   /** RNG 种子（不指定则自动生成） */
   rngSeed?: number;
+  /** 固定时间步长（秒），启用 $fixedUpdate（例: 0.016 = 62.5Hz） */
+  fixedTimestep?: number;
 }
 
 export interface App {
@@ -58,6 +60,8 @@ export interface App {
   debugOverlay: boolean;
   /** 全局时间缩放（0=暂停, 0.5=慢放, 1=正常, 2=加速） */
   timeScale: number;
+  /** 固定时间步长（秒），0 表示禁用 $fixedUpdate */
+  fixedTimestep: number;
 
   /** 启动游戏循环 */
   start(): void;
@@ -161,6 +165,8 @@ export function createApp(options: AppOptions = {}): App {
   const debugMode = options.debug ?? false;
   let overlayMode = options.debugOverlay ?? false;
   let _timeScale = 1;
+  let _fixedTimestep = options.fixedTimestep ?? 0;
+  let _fixedAccumulator = 0;
   const recorder = new InteractionRecorder({ enabled: debugMode });
   let startTime = 0;
 
@@ -246,6 +252,17 @@ export function createApp(options: AppOptions = {}): App {
 
   function tick(dtMs: number): void {
     const dt = (dtMs / 1000) * _timeScale;
+
+    // Fixed timestep: deterministic physics updates
+    if (_fixedTimestep > 0 && dt > 0) {
+      _fixedAccumulator += dt;
+      while (_fixedAccumulator >= _fixedTimestep) {
+        root.$fixedUpdate(_fixedTimestep);
+        _fixedAccumulator -= _fixedTimestep;
+      }
+    }
+
+    // Variable update: rendering, animations, UI
     root.$update(dt);
 
     // 清屏需要用 save/restore 因为 ctx 被 scale 了
@@ -289,6 +306,9 @@ export function createApp(options: AppOptions = {}): App {
 
     get timeScale() { return _timeScale; },
     set timeScale(v: number) { _timeScale = Math.max(0, v); },
+
+    get fixedTimestep() { return _fixedTimestep; },
+    set fixedTimestep(v: number) { _fixedTimestep = Math.max(0, v); _fixedAccumulator = 0; },
 
     get fps() { return _fps; },
 
