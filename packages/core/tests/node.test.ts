@@ -134,10 +134,16 @@ describe('UINode lifecycle', () => {
 // ── hitTest ───────────────────────────────────────
 
 describe('UINode hitTest', () => {
+  it('constructor accepts interactive/visible/alpha', () => {
+    const node = new UINode({ id: 'a', interactive: true, visible: false, alpha: 0.5 });
+    expect(node.interactive).toBe(true);
+    expect(node.visible).toBe(false);
+    expect(node.alpha).toBe(0.5);
+  });
+
   it('returns interactive node containing point', () => {
     const root = new UINode({ width: 400, height: 800 });
-    const btn = new UINode({ id: 'btn', x: 100, y: 100, width: 80, height: 40 });
-    btn.interactive = true;
+    const btn = new UINode({ id: 'btn', x: 100, y: 100, width: 80, height: 40, interactive: true });
     root.addChild(btn);
     expect(root.hitTest(120, 110)?.id).toBe('btn');
   });

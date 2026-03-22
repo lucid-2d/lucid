@@ -46,6 +46,9 @@ export interface UINodeOptions {
   y?: number;
   width?: number;
   height?: number;
+  visible?: boolean;
+  interactive?: boolean;
+  alpha?: number;
   // Layout container
   layout?: LayoutDirection;
   gap?: number;
@@ -140,6 +143,10 @@ export class UINode extends EventEmitter {
     if (opts?.maxWidth !== undefined) this.maxWidth = opts.maxWidth;
     if (opts?.minHeight !== undefined) this.minHeight = opts.minHeight;
     if (opts?.maxHeight !== undefined) this.maxHeight = opts.maxHeight;
+    // Common properties
+    if (opts?.visible !== undefined) this.visible = opts.visible;
+    if (opts?.interactive !== undefined) this.interactive = opts.interactive;
+    if (opts?.alpha !== undefined) this.alpha = opts.alpha;
   }
 
   // ── 树结构 ──────────────────────────────────

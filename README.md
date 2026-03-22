@@ -433,6 +433,25 @@ Use `batchSimulate` when you need the **full stack** — Scene lifecycle, UI sta
 
 The framework handles the infrastructure. The AI handles the creativity.
 
+## Scope and limitations
+
+Lucid works best for **UI-heavy games** (card games, shops, check-ins, quizzes) where most elements are UINodes — `$inspect`, `$query`, and headless testing work out of the box.
+
+For **physics/action games**, the framework provides the skeleton (app lifecycle, scene routing, particles, vectors, `$fixedUpdate`) but your core game objects (ships, planets, projectiles) will likely live outside the UINode tree, rendered directly via `ctx` in `draw()`. In this case:
+
+- `$inspect()` won't see game objects automatically — expose state via `$inspectInfo()` override
+- Design scenes to separate logic from rendering for headless-friendly architecture
+- Use `$fixedUpdate` for deterministic physics, not `$update`
+- For pure logic validation (reachability, balance), import game modules directly instead of using `batchSimulate`
+
+See the "Pure logic simulation" section under AI-driven level design for the recommended pattern.
+
+## Feedback
+
+Used Lucid in a real project? We'd love to hear about your experience — what worked, what didn't, what's missing. **Your feedback directly shapes the framework's development.**
+
+Open an issue with the `feedback` label: [GitHub Issues](https://github.com/lucid-2d/lucid/issues/new?labels=feedback)
+
 ## License
 
 MIT

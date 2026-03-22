@@ -15,23 +15,49 @@ import { detectPlatform, type PlatformAdapter, type ScreenInfo } from './platfor
 // ── Mock Canvas ──
 
 function createMockCanvas(w = 390, h = 844): any {
-  // Minimal canvas stub — works in any JS environment (Node/browser)
+  // Full Canvas 2D API stub — all methods are no-ops, works in any JS environment
+  const noop = () => {};
+  const gradient = { addColorStop: noop };
   const mockCtx = {
-    save() {}, restore() {}, translate() {}, scale() {},
-    clearRect() {}, setTransform() {},
-    fillRect() {}, fillText() {}, strokeRect() {}, strokeText() {},
-    beginPath() {}, closePath() {}, moveTo() {}, lineTo() {},
-    arc() {}, rect() {}, roundRect() {},
-    fill() {}, stroke() {}, clip() {},
-    createLinearGradient() { return { addColorStop() {} }; },
-    createRadialGradient() { return { addColorStop() {} }; },
-    measureText() { return { width: 0 }; },
-    drawImage() {},
-    setLineDash() {}, getLineDash() { return []; },
+    // State
+    save: noop, restore: noop,
+    // Transform
+    translate: noop, scale: noop, rotate: noop, transform: noop, setTransform: noop,
+    resetTransform: noop, getTransform() { return { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 }; },
+    // Compositing
     globalAlpha: 1, globalCompositeOperation: 'source-over',
-    fillStyle: '', strokeStyle: '', lineWidth: 1, lineCap: 'butt',
-    lineJoin: 'miter', font: '', textAlign: 'start', textBaseline: 'alphabetic',
-    shadowBlur: 0, shadowColor: '', shadowOffsetX: 0, shadowOffsetY: 0,
+    // Drawing
+    clearRect: noop, fillRect: noop, strokeRect: noop,
+    fillText: noop, strokeText: noop, measureText() { return { width: 0, actualBoundingBoxAscent: 0, actualBoundingBoxDescent: 0 }; },
+    drawImage: noop,
+    // Path
+    beginPath: noop, closePath: noop, moveTo: noop, lineTo: noop,
+    bezierCurveTo: noop, quadraticCurveTo: noop,
+    arc: noop, arcTo: noop, ellipse: noop, rect: noop, roundRect: noop,
+    fill: noop, stroke: noop, clip: noop, isPointInPath() { return false; }, isPointInStroke() { return false; },
+    // Gradient / Pattern
+    createLinearGradient() { return gradient; },
+    createRadialGradient() { return gradient; },
+    createConicGradient() { return gradient; },
+    createPattern() { return null; },
+    // Line
+    setLineDash: noop, getLineDash() { return []; }, lineDashOffset: 0,
+    lineWidth: 1, lineCap: 'butt', lineJoin: 'miter', miterLimit: 10,
+    // Text
+    font: '10px sans-serif', textAlign: 'start', textBaseline: 'alphabetic',
+    direction: 'ltr', fontKerning: 'auto',
+    // Shadow
+    shadowBlur: 0, shadowColor: 'rgba(0,0,0,0)', shadowOffsetX: 0, shadowOffsetY: 0,
+    // Fill / Stroke style
+    fillStyle: '#000', strokeStyle: '#000',
+    // Pixel manipulation
+    createImageData(w: number, h: number) { return { width: w, height: h, data: new Uint8ClampedArray(w * h * 4) }; },
+    getImageData(x: number, y: number, w: number, h: number) { return { width: w, height: h, data: new Uint8ClampedArray(w * h * 4) }; },
+    putImageData: noop,
+    // Filter
+    filter: 'none',
+    // Canvas ref
+    canvas: null as any,
   };
 
   return {
