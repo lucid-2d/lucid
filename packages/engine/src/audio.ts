@@ -230,6 +230,11 @@ export class AudioManager {
     this._sounds.set(name, this._adapter.create(src));
   }
 
+  /** Register a custom AudioHandle (e.g. Web Audio API oscillator synth) */
+  register(name: string, handle: AudioHandle): void {
+    this._sounds.set(name, handle);
+  }
+
   /** Check if a sound is loaded */
   has(name: string): boolean {
     return this._sounds.has(name);

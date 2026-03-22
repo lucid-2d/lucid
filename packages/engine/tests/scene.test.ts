@@ -253,6 +253,47 @@ describe('SceneRouter transitions', () => {
     expect(router.$children).not.toContain(b);
   });
 
+  it('custom transition calls render function', () => {
+    const router = new SceneRouter();
+    const a = new SceneNode({ id: 'a', width: 390, height: 844 });
+    const b = new SceneNode({ id: 'b', width: 390, height: 844 });
+    const renderFn = vi.fn();
+
+    router.push(a);
+    router.push(b, { type: 'custom', duration: 1000, render: renderFn });
+
+    expect(router.transitioning).toBe(true);
+
+    // Simulate render by calling $render
+    const ctx = {
+      save: vi.fn(), restore: vi.fn(), translate: vi.fn(),
+      globalAlpha: 1,
+    } as any;
+    router.$update(0.5);
+    router.$render(ctx);
+
+    expect(renderFn).toHaveBeenCalled();
+    const [rCtx, progress, oldScene, newScene] = renderFn.mock.calls[0];
+    expect(rCtx).toBe(ctx);
+    expect(progress).toBeCloseTo(0.5);
+    expect(oldScene).toBe(a);
+    expect(newScene).toBe(b);
+  });
+
+  it('custom transition completes and restores state', () => {
+    const router = new SceneRouter();
+    const a = new SceneNode({ id: 'a', width: 390, height: 844 });
+    const b = new SceneNode({ id: 'b', width: 390, height: 844 });
+
+    router.push(a);
+    router.push(b, { type: 'custom', duration: 500, render: () => {} });
+
+    router.$update(0.6);
+    expect(router.transitioning).toBe(false);
+    expect(b.alpha).toBe(1); // restored
+    expect(a.alpha).toBe(1); // restored
+  });
+
   it('slideUp and slideDown work', () => {
     const router = new SceneRouter();
     const a = new SceneNode({ id: 'a', width: 390, height: 844 });

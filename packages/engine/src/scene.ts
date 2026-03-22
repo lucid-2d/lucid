@@ -27,13 +27,15 @@ export class SceneNode extends UINode {
 
 // ── Transition ──
 
-export type TransitionType = 'none' | 'fade' | 'slideLeft' | 'slideRight' | 'slideUp' | 'slideDown';
+export type TransitionType = 'none' | 'fade' | 'slideLeft' | 'slideRight' | 'slideUp' | 'slideDown' | 'custom';
 
 export interface TransitionOptions {
   /** Transition type (default: 'none') */
   type?: TransitionType;
   /** Duration in milliseconds (default: 300) */
   duration?: number;
+  /** Custom transition render function (used when type='custom') */
+  render?: (ctx: CanvasRenderingContext2D, progress: number, oldScene: SceneNode | null, newScene: SceneNode) => void;
 }
 
 interface ActiveTransition {
@@ -48,6 +50,8 @@ interface ActiveTransition {
   oldOrigAlpha: number;
   /** Callback when transition completes */
   onComplete: () => void;
+  /** Custom render function (for type='custom') */
+  customRender?: (ctx: CanvasRenderingContext2D, progress: number, oldScene: SceneNode | null, newScene: SceneNode) => void;
 }
 
 /**
@@ -186,6 +190,7 @@ export class SceneRouter extends UINode {
       oldOrigY: oldScene?.y ?? 0,
       oldOrigAlpha: oldScene?.alpha ?? 1,
       onComplete,
+      customRender: merged.render,
     };
 
     // Set initial state for new scene
@@ -217,6 +222,7 @@ export class SceneRouter extends UINode {
       onComplete: () => {
         this.removeChild(oldScene);
       },
+      customRender: merged.render,
     };
 
     this._applyTransition(this._transition, 0);
@@ -256,6 +262,24 @@ export class SceneRouter extends UINode {
         t.newScene.y = -h * (1 - ease);
         break;
       }
+      case 'custom': {
+        // Custom render is called during $render via _renderCustomTransition
+        // Hide both scenes from normal rendering — custom render takes over
+        if (t.oldScene) t.oldScene.alpha = 0;
+        t.newScene.alpha = 0;
+        break;
+      }
+    }
+  }
+
+  /** Called after normal render to draw custom transition overlay */
+  $render(ctx: CanvasRenderingContext2D): void {
+    super.$render(ctx);
+
+    if (this._transition?.type === 'custom' && this._transition.customRender) {
+      const t = this._transition;
+      const progress = Math.min(1, t.elapsed / t.duration);
+      t.customRender!(ctx, progress, t.oldScene, t.newScene);
     }
   }
 

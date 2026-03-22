@@ -73,6 +73,7 @@ core (zero deps)
 import { createApp } from '@lucid-2d/engine';
 
 const app = createApp({ platform: 'web', canvas, debug: true });
+app.timeScale = 1;  // 0=pause, 0.5=slow, 1=normal, 2=fast
 app.router.push(new MyScene(app));
 app.start();
 ```
@@ -209,6 +210,16 @@ scene.addChild(dialog);
 - Pattern: `packages/*/tests/*.test.ts`
 - All tests are deterministic (SeededRNG, no timers)
 - Run single package: `cd packages/core && npx vitest run`
+
+## Bridge - 与业务方沟通
+
+通道文件在 `/Users/luochao/ai/workspace/bridge/` 目录下。每次对话开始时，检查是否有新消息需要处理。
+
+| 通道 | 对方 | 用途 |
+|------|------|------|
+| `star-drift--lucid.md` | star-drift-v2 | 游戏迁移到 Lucid 框架的沟通 |
+
+收到问题时在对应消息下追加 `### Reply` 回复，问题解决后把 `[open]` 改为 `[resolved]`。
 
 ## Commit conventions
 

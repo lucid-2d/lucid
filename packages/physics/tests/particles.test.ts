@@ -70,6 +70,29 @@ describe('ParticlePool', () => {
     expect(ctx.arc).toHaveBeenCalledTimes(3);
   });
 
+  it('custom drawParticle overrides default rendering', () => {
+    const drawFn = vi.fn();
+    const pool = new ParticlePool(10, { drawParticle: drawFn });
+    pool.emit(100, 200, { count: 3, lifetime: 1 });
+    const ctx = { globalAlpha: 1 } as any;
+    pool.draw(ctx);
+    expect(drawFn).toHaveBeenCalledTimes(3);
+    // Each call receives (ctx, particle, t)
+    expect(drawFn.mock.calls[0][0]).toBe(ctx);
+    expect(drawFn.mock.calls[0][1].active).toBe(true);
+    expect(typeof drawFn.mock.calls[0][2]).toBe('number');
+  });
+
+  it('active returns only active particles', () => {
+    const pool = new ParticlePool(20);
+    pool.emit(0, 0, { count: 5, lifetime: 1 });
+    const active = pool.active;
+    expect(active).toHaveLength(5);
+    for (const p of active) {
+      expect(p.active).toBe(true);
+    }
+  });
+
   it('draw handles alpha and scale over lifetime', () => {
     const pool = new ParticlePool(10);
     pool.emit(0, 0, { count: 1, lifetime: 1, alpha: 0.8, scaleStart: 2, scaleEnd: 0 });

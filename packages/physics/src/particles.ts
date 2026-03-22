@@ -62,17 +62,29 @@ export interface EmitOptions {
   friction?: number;
 }
 
+export interface ParticlePoolOptions {
+  /** Custom particle renderer (replaces default circle draw) */
+  drawParticle?: (ctx: CanvasRenderingContext2D, p: Particle, t: number) => void;
+}
+
 export class ParticlePool {
   private pool: Particle[];
   private _activeCount = 0;
+  private _drawParticle?: (ctx: CanvasRenderingContext2D, p: Particle, t: number) => void;
 
-  constructor(capacity: number) {
+  constructor(capacity: number, opts?: ParticlePoolOptions) {
     this.pool = Array.from({ length: capacity }, () => this._createParticle());
+    this._drawParticle = opts?.drawParticle;
   }
 
   get activeCount(): number { return this._activeCount; }
   get capacity(): number { return this.pool.length; }
   get particles(): readonly Particle[] { return this.pool; }
+
+  /** Iterator over active particles (for custom rendering) */
+  get active(): Particle[] {
+    return this.pool.filter(p => p.active);
+  }
 
   emit(x: number, y: number, opts: EmitOptions = {}): void {
     const count = opts.count ?? 10;
@@ -143,12 +155,18 @@ export class ParticlePool {
     this._recount();
   }
 
-  /** Built-in circle renderer with fade + scale */
+  /** Built-in circle renderer with fade + scale (or custom drawParticle) */
   draw(ctx: CanvasRenderingContext2D): void {
     for (const p of this.pool) {
       if (!p.active) continue;
 
       const t = 1 - p.life / p.maxLife; // 0 → 1 over lifetime
+
+      if (this._drawParticle) {
+        this._drawParticle(ctx, p, t);
+        continue;
+      }
+
       const currentAlpha = p.alpha * (1 - t);
       const currentScale = p.scaleStart + (p.scaleEnd - p.scaleStart) * t;
       const r = p.radius * currentScale;

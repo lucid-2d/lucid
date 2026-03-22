@@ -1,7 +1,7 @@
 /**
  * Audio system tests — using mock adapter (no real audio playback)
  */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { createMockAudio } from '../src/audio';
 
 describe('AudioManager', () => {
@@ -138,6 +138,42 @@ describe('Volume and mute', () => {
     expect(audio.muted).toBe(true);
     audio.muted = false;
     expect(audio.muted).toBe(false);
+  });
+});
+
+describe('Register custom handle', () => {
+  it('register adds a custom AudioHandle', () => {
+    const audio = createMockAudio();
+    const handle = {
+      play: vi.fn(), stop: vi.fn(), pause: vi.fn(), resume: vi.fn(),
+      volume: 1, loop: false, playing: false, destroy: vi.fn(),
+    };
+    audio.register('synth-sfx', handle);
+    expect(audio.has('synth-sfx')).toBe(true);
+  });
+
+  it('registered handle can be played as SFX', () => {
+    const audio = createMockAudio();
+    const handle = {
+      play: vi.fn(), stop: vi.fn(), pause: vi.fn(), resume: vi.fn(),
+      volume: 1, loop: false, get playing() { return false; }, destroy: vi.fn(),
+    };
+    audio.register('synth-sfx', handle);
+    audio.playSfx('synth-sfx');
+    // SFX clones the handle, so original play is not called directly
+    // but the sound should be registered and playable
+    expect(audio.has('synth-sfx')).toBe(true);
+  });
+
+  it('register overwrites existing sound', () => {
+    const audio = createMockAudio();
+    audio.load('hit', 'assets/hit.mp3');
+    const handle = {
+      play: vi.fn(), stop: vi.fn(), pause: vi.fn(), resume: vi.fn(),
+      volume: 1, loop: false, playing: false, destroy: vi.fn(),
+    };
+    audio.register('hit', handle);
+    expect(audio.has('hit')).toBe(true);
   });
 });
 

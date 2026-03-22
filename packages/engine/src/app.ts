@@ -56,6 +56,8 @@ export interface App {
   debug: boolean;
   /** 显示 debug 叠加层（节点边框/ID/触摸区域） */
   debugOverlay: boolean;
+  /** 全局时间缩放（0=暂停, 0.5=慢放, 1=正常, 2=加速） */
+  timeScale: number;
 
   /** 启动游戏循环 */
   start(): void;
@@ -158,6 +160,7 @@ export function createApp(options: AppOptions = {}): App {
   // 交互录制器
   const debugMode = options.debug ?? false;
   let overlayMode = options.debugOverlay ?? false;
+  let _timeScale = 1;
   const recorder = new InteractionRecorder({ enabled: debugMode });
   let startTime = 0;
 
@@ -242,7 +245,7 @@ export function createApp(options: AppOptions = {}): App {
   }
 
   function tick(dtMs: number): void {
-    const dt = dtMs / 1000;
+    const dt = (dtMs / 1000) * _timeScale;
     root.$update(dt);
 
     // 清屏需要用 save/restore 因为 ctx 被 scale 了
@@ -283,6 +286,9 @@ export function createApp(options: AppOptions = {}): App {
 
     get debugOverlay() { return overlayMode; },
     set debugOverlay(v: boolean) { overlayMode = v; },
+
+    get timeScale() { return _timeScale; },
+    set timeScale(v: number) { _timeScale = Math.max(0, v); },
 
     get fps() { return _fps; },
 

@@ -108,6 +108,48 @@ describe('createApp', () => {
     expect(steps[0].actualPath).not.toBe('root > missing-btn');
   });
 
+  it('timeScale defaults to 1', () => {
+    const canvas = createMockCanvas();
+    const app = createApp({ platform: 'web', canvas });
+    expect(app.timeScale).toBe(1);
+  });
+
+  it('timeScale=0 pauses game updates', () => {
+    const canvas = createMockCanvas();
+    const app = createApp({ platform: 'web', canvas });
+
+    let totalDt = 0;
+    const scene = new SceneNode({ id: 'test' });
+    scene.$update = (dt: number) => { totalDt += dt; };
+    app.router.push(scene);
+
+    app.timeScale = 0;
+    app.tick(16);
+    // router and root still update but dt is 0
+    expect(totalDt).toBe(0);
+  });
+
+  it('timeScale=0.5 halves dt', () => {
+    const canvas = createMockCanvas();
+    const app = createApp({ platform: 'web', canvas });
+
+    let receivedDt = 0;
+    const scene = new SceneNode({ id: 'test' });
+    scene.$update = (dt: number) => { receivedDt = dt; };
+    app.router.push(scene);
+
+    app.timeScale = 0.5;
+    app.tick(100); // 100ms → dt should be 0.05 (0.1 * 0.5)
+    expect(receivedDt).toBeCloseTo(0.05);
+  });
+
+  it('timeScale cannot be negative', () => {
+    const canvas = createMockCanvas();
+    const app = createApp({ platform: 'web', canvas });
+    app.timeScale = -1;
+    expect(app.timeScale).toBe(0);
+  });
+
   it('$inspect shows full game state', () => {
     const canvas = createMockCanvas();
     const app = createApp({ platform: 'web', canvas });

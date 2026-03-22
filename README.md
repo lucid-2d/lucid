@@ -80,9 +80,9 @@ import { createApp, SceneNode, SceneRouter, loadImage, WebAdapter, WxAdapter, Tt
 
 | Export | Type | Description |
 |--------|------|-------------|
-| `createApp(opts)` | function | Creates app. Options: `{ platform?, canvas?, adapter?, debug?, debugOverlay?, rngSeed? }`. Returns `App` with `.root`, `.router`, `.screen`, `.rng`, `.debug`, `.debugOverlay`, `.start()`, `.stop()`, `.tick(dt)`, `.replay(records, speed)`, `.dumpInteractions()`. |
+| `createApp(opts)` | function | Creates app. Options: `{ platform?, canvas?, adapter?, debug?, debugOverlay?, rngSeed? }`. Returns `App` with `.root`, `.router`, `.screen`, `.rng`, `.debug`, `.debugOverlay`, `.timeScale`, `.start()`, `.stop()`, `.tick(dt)`, `.replay(records, speed)`, `.dumpInteractions()`. `timeScale`: 0=pause, 0.5=slow, 1=normal, 2=fast. |
 | `SceneNode` | class | Extends UINode. Override `onEnter()`, `onExit()`, `onPause()`, `onResume()`. |
-| `SceneRouter` | class | `push(scene, transition?)`, `replace(scene, transition?)`, `pop(transition?)`. Transition: `{ type: 'fade'\|'slideLeft'\|'slideRight'\|'slideUp'\|'slideDown', duration }`. Set `defaultTransition` for global default. |
+| `SceneRouter` | class | `push(scene, transition?)`, `replace(scene, transition?)`, `pop(transition?)`. Transition: `{ type: 'fade'\|'slideLeft'\|'slideRight'\|'slideUp'\|'slideDown'\|'custom', duration, render? }`. `custom` type: `render(ctx, progress, oldScene, newScene)` takes over all rendering. Set `defaultTransition` for global default. |
 | `WebAdapter` | class | Browser platform. Auto-creates from canvas element. |
 | `WxAdapter` | class | WeChat Mini Game platform. Uses `wx.*` globals. |
 | `TtAdapter` | class | Douyin Mini Game platform. Uses `tt.*` globals. |
@@ -92,7 +92,7 @@ import { createApp, SceneNode, SceneRouter, loadImage, WebAdapter, WxAdapter, Tt
 | `touch(app, x, y, type?)` | function | Simulate touch at coordinates via hitTest. Type: `'start'` \| `'end'` \| `'move'`, default: full tap. Returns node path. |
 | `assertTree(app, pattern)` | function | Assert `$inspect()` output contains all pattern lines (trimmed, ignoring extra nodes). Throws with diff on failure. |
 | `generateTestCode(records)` | function | Convert `InteractionRecord[]` (from `dumpInteractions()`) to vitest test code string. |
-| `AudioManager` | class | Cross-platform audio. `load(name, src)`, `playSfx(name)`, `playBgm(name, opts?)`, `stopBgm()`, `pauseBgm()`, `resumeBgm()`. Props: `sfxVolume`, `bgmVolume`, `muted`. |
+| `AudioManager` | class | Cross-platform audio. `load(name, src)`, `register(name, handle)` (custom AudioHandle, e.g. Web Audio API synth), `playSfx(name)`, `playBgm(name, opts?)`, `stopBgm()`, `pauseBgm()`, `resumeBgm()`. Props: `sfxVolume`, `bgmVolume`, `muted`. |
 | `createAudio(opts?)` | function | Create AudioManager with auto-detected platform (Web/Wx/Tt). |
 | `createMockAudio()` | function | Mock AudioManager for testing (no real playback). |
 | `Keyboard` | class | PC keyboard input. `bind(target)`, `isDown(key)`, `wasPressed(key)`, `wasReleased(key)`, `update()`. Test: `simulatePress(key)`, `simulateRelease(key)`. |
@@ -177,7 +177,7 @@ import { vec2, add, sub, scale, normalize, distance, pointInRect, circleCircle, 
 |--------|-------------|
 | `vec2(x, y)` | Create Vec2. All vec2 ops are pure functions: `add`, `sub`, `scale`, `normalize`, `dot`, `cross`, `distance`, `angle`, `fromAngle`, `perp`, `lerp`, `reflect`. |
 | `pointInRect`, `pointInCircle`, `circleRect`, `circleCircle`, `lineCircle` | Collision detection. Returns `CollisionResult \| null` with `normal` and `depth`. |
-| `ParticlePool` | Object pool with built-in renderer. `emit(x, y, opts?)`, `update(dt)`, `draw(ctx)`, `clear()`. Supports alpha fade, scale animation, friction. |
+| `ParticlePool` | Object pool with built-in renderer. `new ParticlePool(capacity, opts?)` — `opts.drawParticle?(ctx, p, t)` for custom rendering. `emit(x, y, opts?)`, `update(dt)`, `draw(ctx)`, `clear()`. `pool.active` returns active particles for manual iteration. Supports alpha fade, scale animation, friction. |
 | `ParticleEmitter` | Continuous emitter. `new ParticleEmitter(pool, config)`. Props: `x`, `y`, `active`. Methods: `update(dt)`, `start()`, `stop()`. Config: `rate` (particles/sec) + all EmitOptions. |
 | `ParticlePresets` | 5 presets: `explosion()`, `sparkle()`, `smoke()`, `fire()`, `trail()`. Each returns EmitOptions/EmitterConfig, accepts overrides. |
 | `ScreenShake` | `start(intensity, duration)`, `update(dt)`, `apply(ctx)` / `restore(ctx)`. |
@@ -331,6 +331,7 @@ _app.root.$snapshot()        — structured state snapshot
 _app.router                  — scene router (.push / .replace / .pop)
 _app.rng                     — SeededRNG instance
 _app.debugOverlay            — toggle debug overlay (node borders/IDs)
+_app.timeScale               — time scale (0=pause, 0.5=slow, 1=normal, 2=fast)
 _app.dumpInteractions()      — get recorded touch events
 _app.replay(records, speed)  — replay (async, returns ReplayStep[])
 ```
