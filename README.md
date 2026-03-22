@@ -386,18 +386,60 @@ const best = result.results.sort((a, b) => b.metrics.score - a.metrics.score)[0]
 best.image && fs.writeFileSync('best-level.png', best.image);
 ```
 
+### Entity — AI's eyes during simulation
+
+When AI evaluates a level, it needs to see **game objects**, not just UI elements. `Entity` bridges this gap:
+
+```typescript
+import { Entity } from '@lucid-2d/core';
+
+class GameScene extends SceneNode {
+  onEnter() {
+    // Register game objects for AI visibility
+    for (const planet of this.planets) {
+      this.addChild(Entity.from(planet, {
+        id: `planet-${planet.id}`,
+        props: ['x', 'y', 'radius', 'mass'],
+      }));
+    }
+    for (const dust of this.dusts) {
+      this.addChild(Entity.from(dust, {
+        id: `dust-${dust.id}`,
+        type: dust.isMemory ? 'MemoryDust' : 'Dust',
+        props: ['x', 'y', 'alive'],
+      }));
+    }
+  }
+}
+
+// Now AI can evaluate in batchSimulate:
+evaluate: (app) => ({
+  dustsCollected: app.root.$query('Dust').filter(e => !e.source.alive).length,
+  totalDusts: app.root.$query('Dust').length,
+  shipAlive: app.root.findById('ship')?.source.state !== 'dead',
+  memoryFound: app.root.$query('MemoryDust').some(e => !e.source.alive),
+}),
+```
+
+Without Entity, AI can only see `"GameScene#game score=3/4"` — it can't tell **which** dust was missed or **why**. With Entity, AI sees every game object and can make informed design decisions.
+
+`Entity` + `$fixedUpdate` + `batchSimulate` form the complete AI evaluation pipeline:
+- `$fixedUpdate` → deterministic physics (sim matches game)
+- `Entity` → full game state visibility (AI sees everything)
+- `batchSimulate` → parallel variant comparison (find the best)
+
 ### Why this works with Lucid
 
 | Capability | How AI uses it |
 |-----------|---------------|
 | `createTestApp` | Run game without browser |
 | `tick(16)` | Fast-forward gameplay (1800 ticks = 30s in ~100ms) |
-| `$inspect` / `$query` | Read game state programmatically |
-| `toImage` | Visual verification |
+| `$fixedUpdate` | Deterministic physics (sim = game) |
+| `Entity` | See/query/modify game objects during simulation |
+| `$inspect` / `$query` | Read full game state programmatically |
 | `$patch` | Adjust level parameters at runtime |
 | `batchSimulate` | Compare 50+ variants automatically |
 | `SeededRNG` | Reproducible randomness for each variant |
-| `debugOverlay` | Visualize item placement |
 
 ### Pure logic simulation (no rendering)
 
