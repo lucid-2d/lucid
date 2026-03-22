@@ -399,6 +399,32 @@ best.image && fs.writeFileSync('best-level.png', best.image);
 | `SeededRNG` | Reproducible randomness for each variant |
 | `debugOverlay` | Visualize item placement |
 
+### Pure logic simulation (no rendering)
+
+For validation that doesn't need rendering — physics reachability, collision testing, path planning, economy balance — **import game modules directly** instead of going through createTestApp/batchSimulate:
+
+```typescript
+// level-validator.ts — pure Node.js, no canvas, no framework overhead
+import { updatePhysics, createShip, launch } from './physics.js';
+import { ALL_LEVELS } from './levels.js';
+
+for (const level of ALL_LEVELS) {
+  for (let angle = 0; angle < 360; angle += 10) {
+    const ship = createShip();
+    launch(ship, angle);
+    for (let step = 0; step < 600; step++) {
+      updatePhysics(ship, level.planets, 0.016);
+      // check metrics...
+    }
+  }
+}
+// 50 levels × 36 angles × 600 steps = 1M ticks in < 2 seconds
+```
+
+This works because `@lucid-2d/physics` (Vec2, collision) and your game logic modules are independently importable — no canvas, no Scene, no App required. **Design your game modules this way**: keep physics/logic decoupled from rendering so they can run in both browser and Node.js.
+
+Use `batchSimulate` when you need the **full stack** — Scene lifecycle, UI state, screenshots, `$inspect` trees. Use direct module imports when you only need **logic**.
+
 ### Game code provides
 
 - **Level generator**: How to create level layouts (procedural or template-based)
