@@ -28,5 +28,8 @@ export { wrapText, measureWrappedText, drawText, type TextMetrics, type DrawText
 // 国际化
 export { I18n, type Translations, type LocaleMap } from './i18n.js';
 
+// 实体感知
+export { Entity, type EntityDescriptor } from './entity.js';
+
 // AI 调试
 export { InteractionRecorder, type InteractionRecord, type RecorderOptions } from './recorder.js';

@@ -102,6 +102,9 @@ export class UINode extends EventEmitter {
   interactive = false;
   alpha = 1;
 
+  /** Type name for $inspect/$query/$path (defaults to constructor.name) */
+  get $type(): string { return this.constructor.name; }
+
   // Layout container properties
   layout?: LayoutDirection;
   gap?: number;
@@ -523,7 +526,7 @@ export class UINode extends EventEmitter {
    */
   $snapshot(): NodeSnapshot {
     const snap: NodeSnapshot = {
-      type: this.constructor.name,
+      type: this.$type,
       id: this.id,
       x: this.x,
       y: this.y,
@@ -596,8 +599,8 @@ export class UINode extends EventEmitter {
     const parts: string[] = [];
 
     // 类名#id
-    const className = this.constructor.name;
-    parts.push(this.id ? `${className}#${this.id}` : className);
+    const typeName = this.$type;
+    parts.push(this.id ? `${typeName}#${this.id}` : typeName);
 
     // 尺寸
     if (this.width > 0 || this.height > 0) {
@@ -645,7 +648,7 @@ export class UINode extends EventEmitter {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     let node: UINode | null = this;
     while (node) {
-      chain.push(node.id || node.constructor.name);
+      chain.push(node.id || node.$type);
       node = node.$parent;
     }
     return chain.reverse().join(' > ');
@@ -667,6 +670,6 @@ function _matchSelector(node: UINode, sel: string): boolean {
   if (sel === '.visible') {
     return node.visible;
   }
-  // Class name match
-  return node.constructor.name === sel;
+  // Type name match
+  return node.$type === sel;
 }
