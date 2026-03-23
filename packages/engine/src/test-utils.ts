@@ -292,7 +292,7 @@ export function assertTree(app: App, pattern: string): void {
  */
 export function generateTestCode(records: InteractionRecord[]): string {
   const lines: string[] = [
-    `import { createTestApp, tap, touch } from '@lucid-2d/engine';`,
+    `import { createTestApp, tap, touch } from '@lucid-2d/engine/testing';`,
     ``,
     `test('recorded interaction', () => {`,
     `  const app = createTestApp();`,

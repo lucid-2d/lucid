@@ -9,7 +9,7 @@ export { WebAdapter } from './platform/web.js';
 export { WxAdapter } from './platform/wx.js';
 export { TtAdapter } from './platform/tt.js';
 export { loadImage } from './image-loader.js';
-export { createTestApp, tap, touch, assertTree, generateTestCode, imageDiff, assertImageChanged, type TestApp, type TestAppOptions, type ImageDiffResult } from './test-utils.js';
+// Test utilities moved to '@lucid-2d/engine/testing' to avoid bundling @napi-rs/canvas in production
 export { AudioManager, createAudio, createMockAudio, type AudioManagerOptions, type AudioAdapter, type AudioHandle } from './audio.js';
 export { Keyboard } from './keyboard.js';
 export { AssetLoader, type AssetEntry } from './asset-loader.js';

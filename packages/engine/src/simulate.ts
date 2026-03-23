@@ -29,7 +29,7 @@
  */
 
 import { type App } from './app.js';
-import { createTestApp, type TestApp, type TestAppOptions } from './test-utils.js';
+import { type TestApp, type TestAppOptions } from './test-utils.js';
 
 export interface SimulationConfig<T = any> {
   /** Number of simulations to run */

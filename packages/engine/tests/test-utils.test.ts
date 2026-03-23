@@ -178,7 +178,7 @@ describe('generateTestCode', () => {
     ];
 
     const code = generateTestCode(records as any);
-    expect(code).toContain("import { createTestApp, tap, touch } from '@lucid-2d/engine'");
+    expect(code).toContain("import { createTestApp, tap, touch } from '@lucid-2d/engine/testing'");
     expect(code).toContain("tap(app, 'btn')");
     expect(code).toContain('test(');
   });
