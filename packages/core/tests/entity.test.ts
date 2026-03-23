@@ -160,6 +160,59 @@ describe('Entity', () => {
     entity.$render(ctx); // should be safe
   });
 
+  it('source setter swaps the proxied object', () => {
+    const ball1 = { x: 10, y: 20, color: 'red' };
+    const ball2 = { x: 30, y: 40, color: 'blue' };
+    const entity = Entity.from(ball1, { id: 'ball', type: 'Ball', props: ['x', 'y', 'color'] });
+
+    expect(entity.$inspect()).toContain('x=10');
+    expect(entity.$inspect()).toContain('color=red');
+
+    entity.source = ball2;
+    expect(entity.$inspect()).toContain('x=30');
+    expect(entity.$inspect()).toContain('color=blue');
+    expect(entity.$type).toBe('Ball'); // custom type preserved
+  });
+
+  it('source setter with null shows (empty)', () => {
+    const entity = Entity.from({ x: 1 }, { id: 'e', type: 'Ball', props: ['x'] });
+    entity.source = null;
+    expect(entity.$inspect()).toContain('(empty)');
+  });
+
+  it('source setter without custom type updates type from new source', () => {
+    class Bullet { x = 0; }
+    class Missile { x = 0; }
+    const entity = Entity.from(new Bullet(), { id: 'proj', props: ['x'] });
+    expect(entity.$type).toBe('Bullet');
+
+    entity.source = new Missile();
+    expect(entity.$type).toBe('Missile');
+  });
+
+  it('pooling pattern: reuse entities via source + visible', () => {
+    const root = new UINode({ id: 'root' });
+    const pool = Array.from({ length: 5 }, (_, i) =>
+      Entity.from(null, { id: `ball-${i}`, type: 'Ball', props: ['x', 'y'] })
+    );
+    pool.forEach(e => { e.visible = false; root.addChild(e); });
+
+    // Activate 3 balls
+    const balls = [{ x: 10, y: 20 }, { x: 30, y: 40 }, { x: 50, y: 60 }];
+    balls.forEach((b, i) => { pool[i].source = b; pool[i].visible = true; });
+
+    // $query returns all (including hidden), filter visible manually
+    expect(root.$query('Ball').length).toBe(5);
+    expect(root.$query('Ball').filter(e => e.visible).length).toBe(3);
+    // Active ones show state, inactive ones show hidden
+    expect(root.$inspect()).toContain('Ball#ball-0 x=10');
+    expect(root.$inspect()).toContain('Ball#ball-3 hidden');
+
+    // Ball destroyed: just hide
+    pool[1].visible = false;
+    expect(root.$query('Ball').filter(e => e.visible).length).toBe(2);
+  });
+
   it('nested entities (e.g. ship with child components)', () => {
     const root = new UINode({ id: 'root' });
     const shipObj = new Ship();

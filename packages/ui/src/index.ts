@@ -19,6 +19,6 @@ export { Modal, type ModalProps } from './modal.js';
 export { Toggle, type ToggleProps } from './toggle.js';
 export { TabBar, type TabBarProps, type TabItem } from './tab-bar.js';
 export { ScrollView, type ScrollViewProps } from './scroll-view.js';
-export { ProgressBar, type ProgressBarProps } from './progress-bar.js';
+export { ProgressBar, type ProgressBarProps, type ColorStop } from './progress-bar.js';
 export { Toast, type ToastType } from './toast.js';
 export { RedDot, Badge, type BadgeProps, Tag, type TagProps } from './badge.js';

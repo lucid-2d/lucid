@@ -16,3 +16,4 @@ export {
 
 export { ScreenShake } from './screen-shake.js';
 export { ParticlePool, ParticleEmitter, ParticlePresets, type Particle, type EmitOptions, type EmitterConfig, type ParticlePoolOptions } from './particles.js';
+export { BezierPath, type PathPoint } from './path.js';

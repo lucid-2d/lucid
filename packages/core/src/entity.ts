@@ -43,19 +43,28 @@ export interface EntityDescriptor {
 export class Entity extends UINode {
   private _source: any;
   private _entityType: string;
+  private _customType: boolean;
   private _props: string[];
   private _customInspect?: () => string;
 
   constructor(source: any, desc: EntityDescriptor) {
     super({ id: desc.id });
     this._source = source;
-    this._entityType = desc.type ?? source.constructor?.name ?? 'Entity';
+    this._customType = !!desc.type;
+    this._entityType = desc.type ?? source?.constructor?.name ?? 'Entity';
     this._props = desc.props ?? [];
     this._customInspect = desc.inspect;
   }
 
   /** The proxied game object */
   get source(): any { return this._source; }
+  /** Swap the proxied object (for pooling — avoids addChild/removeChild) */
+  set source(obj: any) {
+    this._source = obj;
+    if (obj && !this._customType) {
+      this._entityType = obj.constructor?.name ?? 'Entity';
+    }
+  }
 
   /** Exposed property names */
   get props(): readonly string[] { return this._props; }
@@ -65,6 +74,7 @@ export class Entity extends UINode {
 
   // Read property values from source for $inspect
   protected $inspectInfo(): string {
+    if (!this._source) return '(empty)';
     if (this._customInspect) return this._customInspect();
     return this._props
       .map(p => {
@@ -77,9 +87,11 @@ export class Entity extends UINode {
 
   // Write properties to source via $patch
   $patch(props: Record<string, any>): this {
-    for (const [key, value] of Object.entries(props)) {
-      if (this._props.includes(key)) {
-        this._source[key] = value;
+    if (this._source) {
+      for (const [key, value] of Object.entries(props)) {
+        if (this._props.includes(key)) {
+          this._source[key] = value;
+        }
       }
     }
     // Also handle UINode's own properties (x, y, visible, etc.)
