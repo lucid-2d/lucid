@@ -129,11 +129,14 @@ function drawGlow(ctx: CanvasRenderingContext2D, fn: IconFn, cx: number, cy: num
   ctx.lineWidth = Math.max(1.5, s * 0.07);
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
-  // 外发光
-  ctx.shadowColor = color;
-  ctx.shadowBlur = s * 0.35;
-  ctx.shadowOffsetX = 0;
-  ctx.shadowOffsetY = 0;
+  // 外发光（iOS 小游戏 shadowBlur 渲染异常，用多层描边替代）
+  const isMinigame = typeof (globalThis as any).wx !== 'undefined' || typeof (globalThis as any).tt !== 'undefined';
+  if (!isMinigame) {
+    ctx.shadowColor = color;
+    ctx.shadowBlur = s * 0.35;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+  }
   fn(ctx, cx, cy, s, color);
   ctx.restore();
 }

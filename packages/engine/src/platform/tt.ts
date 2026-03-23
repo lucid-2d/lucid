@@ -26,10 +26,12 @@ function _polyfillCtx(ctx: any): void {
 
 /** Polyfill missing globals for Douyin Mini Game */
 function _polyfillGlobals(): void {
-  if (typeof (globalThis as any).Image === 'undefined' && typeof tt !== 'undefined') {
-    (globalThis as any).Image = function () {
-      return tt.createImage();
-    };
+  const g = globalThis as any;
+  if (typeof g.Image === 'undefined' && typeof tt !== 'undefined') {
+    g.Image = function () { return tt.createImage(); };
+  }
+  if (typeof g.performance === 'undefined') {
+    g.performance = { now: () => Date.now() };
   }
 }
 

@@ -739,15 +739,23 @@ When targeting WeChat/Douyin Mini Games (`platform: 'wx'` or `'tt'`), the framew
 | Image loading | `loadImage()` | `loadImage()` (uses wx.createImage internally) |
 | roundRect | native | polyfilled with arcTo |
 | Image constructor | native | polyfilled to wx.createImage |
+| performance.now | native | polyfilled to Date.now |
+| Offscreen canvas | document.createElement | `createOffscreenCanvas()` |
 
 **You must avoid these in game code:**
 
 | Don't use | Use instead | Why |
 |-----------|-------------|-----|
 | `new Image()` | `loadImage(src)` from `@lucid-2d/engine` | `Image` doesn't exist in Mini Games (polyfilled but `loadImage` is safer) |
-| `document.createElement('canvas')` | `wx.createCanvas()` or offscreen pattern | No DOM in Mini Games |
+| `document.createElement('canvas')` | `createOffscreenCanvas(w, h)` from `@lucid-2d/engine` | No DOM in Mini Games |
+| `performance.now()` | Safe — framework polyfills it | But prefer framework timers |
 | `navigator.*`, `window.*` | Framework adapters | Not available |
 | `ctx.roundRect()` directly | Safe — framework polyfills it | But be aware when debugging |
+| `ctx.shadowBlur` | Avoid on iOS Mini Games — renders as large bright blocks instead of soft glow. Use multiple semi-transparent strokes for glow effects. | iOS WeChat Canvas shadow implementation differs from standard |
+| `osc.connect(gain).connect(dest)` | `osc.connect(gain); gain.connect(dest)` | iOS WeChat `connect()` returns undefined, breaking chains |
+
+**Known iOS WeChat quirks (not bugs in your code):**
+- `setTimeout` errors in WAGame.js console — safe to ignore, it's a WeChat base library issue
 
 ## Scope and limitations
 

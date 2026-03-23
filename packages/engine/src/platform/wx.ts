@@ -26,10 +26,14 @@ function _polyfillCtx(ctx: any): void {
 
 /** Polyfill missing globals for WeChat Mini Game */
 function _polyfillGlobals(): void {
-  if (typeof (globalThis as any).Image === 'undefined' && typeof wx !== 'undefined') {
-    (globalThis as any).Image = function () {
-      return wx.createImage();
-    };
+  const g = globalThis as any;
+  // Image constructor
+  if (typeof g.Image === 'undefined' && typeof wx !== 'undefined') {
+    g.Image = function () { return wx.createImage(); };
+  }
+  // performance.now (iOS 微信小游戏没有 performance 对象)
+  if (typeof g.performance === 'undefined') {
+    g.performance = { now: () => Date.now() };
   }
 }
 
