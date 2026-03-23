@@ -163,7 +163,7 @@ import { createStorage, CheckinSystem, SkinSystem, AchievementSystem, MissionSys
 | `BattlePassSystem` | `{ storage, config: BattlePassConfig, prefix? }` | `addXP(amount)`, `claimReward(level, track)`, `getState()`. |
 | `AdSystem` | `{ adapter: AdAdapter }` | `showRewarded(placement)`, `showInterstitial()`, `showBanner()`, `preload()`. Built-in adapters: `NoopAdAdapter` (dev), `WxAdAdapter` (WeChat), `TtAdAdapter` (Douyin). |
 | `IAPSystem` | `{ adapter: IAPAdapter, products }` | `purchase(productId)`, `getProducts()`. Built-in adapters: `NoopIAPAdapter` (dev), `WxIAPAdapter` (WeChat Midas), `TtIAPAdapter` (Douyin). |
-| `ShareSystem` | `{ adapter: ShareAdapter }` | `share(data)`. Built-in adapters: `WebShareAdapter`, `WxShareAdapter`, `TtShareAdapter`. |
+| `ShareSystem` | `{ adapter: ShareAdapter }` | `share(data)` (active), `enablePassiveShare(data)` (menu forward), `setDefaultShare(data)` (dynamic update). Built-in adapters: `WebShareAdapter`, `WxShareAdapter` (onShareAppMessage + onShareTimeline + showShareMenu), `TtShareAdapter`. |
 | `AnalyticsSystem` | `{ adapters: AnalyticsAdapter[] }` | `track(event, params?)`, `setUser(id, props?)`. |
 
 ### @lucid-2d/physics
