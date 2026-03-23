@@ -7,6 +7,23 @@
 
 import type { PlatformAdapter, ScreenInfo } from './detect.js';
 
+/** Detect safe area insets via CSS env variables (notch/dynamic island) */
+function _detectSafeArea(): { top: number; bottom: number } {
+  if (typeof document === 'undefined') return { top: 0, bottom: 0 };
+  try {
+    const el = document.createElement('div');
+    el.style.cssText = 'position:fixed;left:-9999px;top:0;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);visibility:hidden';
+    document.body.appendChild(el);
+    const style = getComputedStyle(el);
+    const top = parseInt(style.paddingTop) || 0;
+    const bottom = parseInt(style.paddingBottom) || 0;
+    document.body.removeChild(el);
+    return { top, bottom };
+  } catch {
+    return { top: 0, bottom: 0 };
+  }
+}
+
 export class WebAdapter implements PlatformAdapter {
   readonly name = 'web' as const;
   private canvas: HTMLCanvasElement;
@@ -36,12 +53,13 @@ export class WebAdapter implements PlatformAdapter {
   }
 
   getScreenInfo(): ScreenInfo {
+    const safe = _detectSafeArea();
     return {
       width: this.logicW,
       height: this.logicH,
       dpr: this.dpr,
-      safeTop: 0,
-      safeBottom: this.logicH,
+      safeTop: safe.top,
+      safeBottom: this.logicH - safe.bottom,
     };
   }
 
