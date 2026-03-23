@@ -231,11 +231,29 @@ export class DebugPanel extends UINode {
 
   private _copyToClipboard(): void {
     const text = this.dumpText();
+
+    // Try modern clipboard API first, fallback to execCommand for Safari
+    let copied = false;
     try {
       if (typeof navigator !== 'undefined' && navigator.clipboard) {
-        navigator.clipboard.writeText(text).catch(() => {});
+        navigator.clipboard.writeText(text).then(() => {}, () => {});
+        copied = true;
       }
     } catch {}
+
+    if (!copied && typeof document !== 'undefined') {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
+        document.body.appendChild(ta);
+        ta.select();
+        ta.setSelectionRange(0, text.length); // iOS Safari needs this
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      } catch {}
+    }
+
     this._copied = true;
     this._copiedTimer = 2;
     // Also store on app for programmatic access
