@@ -11,11 +11,11 @@ Lucid is a Canvas 2D game framework designed for AI agents to build, inspect, de
 
 ```
 packages/
-  core/      — UINode, events, animation, Timer, SeededRNG, Sprite, AnimatedSprite, NineSlice, Camera, I18n, text utils
-  engine/    — createApp, SceneRouter (transitions), platform adapters, headless rendering, audio, keyboard, asset loader, test utils
-  ui/        — 11 base components (Button, Label, Modal, Toggle, TabBar, ScrollView, ...)
+  core/      — UINode, Entity, events, animation, Timer, SeededRNG, Sprite, AnimatedSprite, NineSlice, Camera, I18n, text utils
+  engine/    — createApp (timeScale/fixedTimestep), SceneRouter (transitions+custom), platform adapters, headless rendering, audio (register), keyboard, asset loader, test utils
+  ui/        — 11 base components (Button, Label, Modal, Toggle, TabBar, ScrollView, ProgressBar(colorStops/label), ...)
   game-ui/   — 9 business components (CheckinDialog, ShopPanel, SettingsPanel, ...)
-  physics/   — Vec2, collision, ParticlePool/Emitter/Presets, screen shake
+  physics/   — Vec2, collision, ParticlePool/Emitter/Presets, BezierPath, screen shake
   systems/   — 10 operation systems (Storage, Checkin, Skin, Achievement, Mission, ...)
 playground/  — Visual component gallery (vite dev server)
 templates/   — Game templates (starter, quiz)

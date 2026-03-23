@@ -47,15 +47,16 @@ window._app = app; // expose for AI agent
 
 ### @lucid-2d/core
 
-Node tree, events, animation, recording, timers, RNG, sprites, text, camera, nine-slice, i18n.
+Node tree, events, animation, recording, timers, RNG, sprites, text, camera, nine-slice, i18n, entity.
 
 ```typescript
-import { UINode, Sprite, SpriteSheet, AnimatedSprite, NineSlice, Camera, I18n, InteractionRecorder, SeededRNG, Timer, CountdownTimer, wrapText, drawText } from '@lucid-2d/core';
+import { UINode, Entity, Sprite, SpriteSheet, AnimatedSprite, NineSlice, Camera, I18n, InteractionRecorder, SeededRNG, Timer, CountdownTimer, wrapText, drawText } from '@lucid-2d/core';
 ```
 
 | Export | Type | Description |
 |--------|------|-------------|
-| `UINode` | class | Base node. Properties: `x`, `y`, `width`, `height`, `visible`, `alpha`, `interactive`. Layout container: `layout`, `gap`, `padding`, `alignItems`, `justifyContent`, `wrap`, `columns`. Layout child: `flex`, `alignSelf`, `minWidth`, `maxWidth`, `minHeight`, `maxHeight`. Methods: `addChild(node, index?)`, `removeChild(node)`, `removeFromParent()`, `findById(id)`, `hitTest(x, y)`, `$inspect(depth?)`, `$on(event, handler)`, `$emit(event, ...args)`, `$animate(props, duration, easing?)`, `$patch(props)`, `$query(selector)`, `$snapshot()`. Static: `UINode.$diff(before, after)`. Override: `draw(ctx)`, `$update(dt)`, `$render(ctx)`, `$inspectInfo()`. |
+| `UINode` | class | Base node. Constructor accepts `{ id, x, y, width, height, visible, interactive, alpha, ...layout }`. Methods: `addChild(node, index?)`, `removeChild(node)`, `removeFromParent()`, `findById(id)`, `hitTest(x, y)`, `$inspect(depth?)`, `$on(event, handler)`, `$emit(event, ...args)`, `$animate(props, duration, easing?)`, `$patch(props)`, `$query(selector)`, `$snapshot()`. Static: `UINode.$diff(before, after)`. Override: `draw(ctx)`, `$update(dt)`, `$fixedUpdate(dt)`, `$render(ctx)`, `$inspectInfo()`, `$type`. |
+| `Entity` | class | AI-visible proxy for non-UINode game objects. `Entity.from(obj, { id, type?, props? })`. Zero rendering cost. Proxies `$inspect`/`$query`/`$patch`/`$snapshot` to the source object. `source` setter for pooling (swap objects without addChild/removeChild). |
 | `InteractionRecorder` | class | Records touch events with node paths and timestamps. `start()`, `stop()`, `dump()`, `clear()`. |
 | `SeededRNG` | class | Mulberry32 deterministic RNG. `next(): number`, `int(min, max)`, `pick(array)`, `shuffle(array)`, `fork(): SeededRNG`. |
 | `Timer` | class | Elapsed time tracker. `elapsed`, `pause()`, `resume()`, `reset()`. |
@@ -115,7 +116,7 @@ import { Button, Label, Icon, Modal, Toggle, TabBar, ScrollView, ProgressBar, To
 | `Toggle` | `id, label, value: boolean, width, height` | `change(value)`. AI: `$highlighted` = ON state. |
 | `TabBar` | `id, tabs: TabItem[], activeKey, width, height` | `change(key)`. AI: `$inspectInfo` = active key. |
 | `ScrollView` | `id, width, height, contentHeight` | Touch-drag scrolling. Auto-captures touch (scroll vs tap detection). `scrollY`, `maxScrollY`. `$inspectInfo`: scroll position. |
-| `ProgressBar` | `id, width, height, value: 0..1, color?` | — . AI: `$text` = percentage. |
+| `ProgressBar` | `id, width, height, value: 0..1, color?, colorStops?: ColorStop[], label?, labelColor?` | — . `colorStops`: value-based color transitions (e.g. green→yellow→red). `label`: overlay text (e.g. "23/50"). AI: `$text` = percentage + label. |
 | `Toast` | Singleton object | `Toast.show(type, message)`. Needs `Toast.update(dt)` + `Toast.draw(ctx, w, h)` per frame. |
 | `Badge` | `text, color` | — |
 | `Tag` | `text, color` | — |
@@ -167,10 +168,10 @@ import { createStorage, CheckinSystem, SkinSystem, AchievementSystem, MissionSys
 
 ### @lucid-2d/physics
 
-Vectors, collision, particles, screen shake.
+Vectors, collision, particles, screen shake, bezier paths.
 
 ```typescript
-import { vec2, add, sub, scale, normalize, distance, pointInRect, circleCircle, ParticlePool, ParticleEmitter, ParticlePresets, ScreenShake } from '@lucid-2d/physics';
+import { vec2, add, sub, scale, normalize, distance, pointInRect, circleCircle, ParticlePool, ParticleEmitter, ParticlePresets, ScreenShake, BezierPath } from '@lucid-2d/physics';
 ```
 
 | Export | Description |
@@ -181,6 +182,7 @@ import { vec2, add, sub, scale, normalize, distance, pointInRect, circleCircle, 
 | `ParticleEmitter` | Continuous emitter. `new ParticleEmitter(pool, config)`. Props: `x`, `y`, `active`. Methods: `update(dt)`, `start()`, `stop()`. Config: `rate` (particles/sec) + all EmitOptions. |
 | `ParticlePresets` | 5 presets: `explosion()`, `sparkle()`, `smoke()`, `fire()`, `trail()`. Each returns EmitOptions/EmitterConfig, accepts overrides. |
 | `ScreenShake` | `start(intensity, duration)`, `update(dt)`, `apply(ctx)` / `restore(ctx)`. |
+| `BezierPath` | Smooth curve with distance-based point lookup. `addCubic(p0,p1,p2,p3)`, `addQuadratic(p0,p1,p2)`, `addLine(p0,p1)`, `build(samples?)`. Query: `getPointAtDistance(d)`, `getPointAtT(t)` → `{ x, y, angle, distance }`. `length`, `points`, `drawDebug(ctx)`. Fluent API. |
 
 ## Layout system
 
