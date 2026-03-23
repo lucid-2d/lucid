@@ -206,9 +206,8 @@ export class DebugPanel extends UINode {
   hitTest(wx: number, wy: number): UINode | null {
     const sw = this._app.screen.width, sh = this._app.screen.height;
     if (this._open) {
-      const pad = 12, pw = sw - pad * 2, ph = sh * 0.6, px = pad, py = sh - ph - pad;
-      if (wx >= px && wx <= px + pw && wy >= py && wy <= py + ph) return this;
-      return null;
+      // Modal: capture ALL touches when panel is open (prevent penetration)
+      return this;
     }
     const bw = 36, bh = 36, bx = sw - bw - 8, by = sh - bh - 8;
     if (wx >= bx && wx <= bx + bw && wy >= by && wy <= by + bh) return this;
@@ -222,8 +221,18 @@ export class DebugPanel extends UINode {
       this._dump = this.dump();
       return;
     }
-    const pad = 12, pw = sw - pad * 2, py = sh - sh * 0.6 - pad;
+
+    const pad = 12, pw = sw - pad * 2, ph = sh * 0.6, px = pad, py = sh - ph - pad;
+
+    // Tap outside panel → close
+    if (wx < px || wx > px + pw || wy < py || wy > py + ph) {
+      this._open = false;
+      return;
+    }
+
+    // [X] close button
     if (wx >= pad + pw - 40 && wy >= py && wy <= py + 30) { this._open = false; return; }
+    // [Copy] button
     if (wx >= pad + pw - 100 && wx < pad + pw - 40 && wy >= py && wy <= py + 30) { this._copyToClipboard(); return; }
   }
 
