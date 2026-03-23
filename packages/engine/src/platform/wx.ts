@@ -63,10 +63,11 @@ export class WxAdapter implements PlatformAdapter {
   }
 
   requestAnimationFrame(cb: (t: number) => void): number {
-    return this.canvas.requestAnimationFrame(cb);
+    // 微信小游戏的 requestAnimationFrame 是全局函数，不在 canvas 上
+    return (globalThis as any).requestAnimationFrame(cb);
   }
 
   cancelAnimationFrame(id: number): void {
-    this.canvas.cancelAnimationFrame(id);
+    (globalThis as any).cancelAnimationFrame(id);
   }
 }
