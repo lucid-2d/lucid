@@ -67,6 +67,8 @@ export interface App {
   fixedTimestep: number;
   /** 内置调试面板实例（debugPanel: true 时自动创建） */
   readonly debugPanel: DebugPanel | null;
+  /** @internal Touch log for DebugPanel (debug mode only) */
+  readonly __touchLog?: any[];
 
   /** 启动游戏循环 */
   start(): void;
@@ -175,6 +177,13 @@ export function createApp(options: AppOptions = {}): App {
   const recorder = new InteractionRecorder({ enabled: debugMode });
   let startTime = 0;
 
+  // Touch log for debug dump (last 20 touches)
+  interface TouchLogEntry { time: string; x: number; y: number; hit: string; scene: string; }
+  const _touchLog: TouchLogEntry[] = [];
+
+  // Enable SceneRouter debug logging
+  if (debugMode) router.debug = true;
+
   // 触摸桥接（capture 模式：touchstart 确定目标，后续 move/end 始终发往同一节点）
   let capturedNode: UINode | null = null;
 
@@ -182,14 +191,23 @@ export function createApp(options: AppOptions = {}): App {
     onStart: (x, y) => {
       const hit = root.hitTest(x, y);
       capturedNode = hit;
-      if (debugMode && hit) {
-        recorder.record({
-          t: Date.now() - startTime,
-          type: 'touchstart',
-          x, y,
-          path: hit.$path(),
-          snapshot: hit.$inspect(0),
+      if (debugMode) {
+        if (hit) {
+          recorder.record({
+            t: Date.now() - startTime,
+            type: 'touchstart',
+            x, y,
+            path: hit.$path(),
+            snapshot: hit.$inspect(0),
+          });
+        }
+        _touchLog.push({
+          time: new Date().toISOString().split('T')[1].slice(0, 12),
+          x: Math.round(x), y: Math.round(y),
+          hit: hit?.id || hit?.$type || '(miss)',
+          scene: router.current?.id ?? '(none)',
         });
+        if (_touchLog.length > 20) _touchLog.shift();
       }
       if (hit) {
         const local = hit.worldToLocal(x, y);
@@ -407,6 +425,8 @@ export function createApp(options: AppOptions = {}): App {
     },
 
     debugPanel: null as DebugPanel | null,
+    /** @internal Touch log for DebugPanel */
+    get __touchLog() { return _touchLog; },
   };
 
   // Attach debug panel if requested

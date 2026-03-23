@@ -66,15 +66,42 @@ interface ActiveTransition {
  * router.replace(scene, { type: 'slideLeft', duration: 500 });
  * ```
  */
+export interface SceneLogEntry {
+  time: string;
+  action: 'push' | 'pop' | 'replace';
+  scene: string;
+  depth: number;
+}
+
 export class SceneRouter extends UINode {
   private stack: SceneNode[] = [];
   private _transition: ActiveTransition | null = null;
+  private _log: SceneLogEntry[] = [];
+  private _debug = false;
 
   /** Default transition for all operations (can be overridden per-call) */
   defaultTransition: TransitionOptions = { type: 'none' };
 
   constructor() {
     super({ id: 'router' });
+  }
+
+  /** Enable/disable lifecycle logging */
+  set debug(v: boolean) { this._debug = v; }
+
+  /** Scene lifecycle log (debug mode only) */
+  get log(): readonly SceneLogEntry[] { return this._log; }
+
+  private _logAction(action: SceneLogEntry['action'], scene: SceneNode): void {
+    if (!this._debug) return;
+    this._log.push({
+      time: new Date().toISOString().split('T')[1].slice(0, 12),
+      action,
+      scene: scene.id || scene.$type,
+      depth: this.stack.length,
+    });
+    // Keep last 30 entries
+    if (this._log.length > 30) this._log.shift();
   }
 
   /** 当前活跃场景 */
@@ -115,6 +142,7 @@ export class SceneRouter extends UINode {
     this.stack.push(scene);
     this.addChild(scene);
     scene.onEnter();
+    this._logAction('push', scene);
 
     this._startTransition(oldScene, scene, transition, () => {
       // Push transition complete — old scene stays in tree but paused
@@ -127,6 +155,7 @@ export class SceneRouter extends UINode {
 
     const oldScene = this.stack.pop()!;
     oldScene.onExit();
+    this._logAction('pop', oldScene);
     const newScene = this.current;
     newScene?.onResume();
 
@@ -146,6 +175,7 @@ export class SceneRouter extends UINode {
     this.stack.push(scene);
     this.addChild(scene);
     scene.onEnter();
+    this._logAction('replace', scene);
 
     if (this._resolveTransition(oldScene, scene, transition)) {
       return;
