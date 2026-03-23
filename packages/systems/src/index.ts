@@ -21,13 +21,13 @@ export { MissionSystem, type MissionDefinition, type MissionStatus, type Mission
 export { BattlePassSystem, type BattlePassConfig, type BattlePassRewardItem, type BattlePassLevelReward, type BattlePassState, type BattlePassOptions } from './battle-pass.js';
 
 // 广告
-export { AdSystem, NoopAdAdapter, type AdAdapter, type AdOptions } from './ad.js';
+export { AdSystem, NoopAdAdapter, WxAdAdapter, TtAdAdapter, type AdAdapter, type AdOptions } from './ad.js';
 
 // 支付
-export { IAPSystem, NoopIAPAdapter, type IAPAdapter, type IAPProduct, type IAPOptions } from './iap.js';
+export { IAPSystem, NoopIAPAdapter, WxIAPAdapter, TtIAPAdapter, type IAPAdapter, type IAPProduct, type IAPOptions } from './iap.js';
 
 // 分享
-export { ShareSystem, WebShareAdapter, type ShareAdapter, type ShareData, type ShareOptions } from './share.js';
+export { ShareSystem, WebShareAdapter, WxShareAdapter, TtShareAdapter, type ShareAdapter, type ShareData, type ShareOptions } from './share.js';
 
 // 埋点
 export { AnalyticsSystem, ConsoleAnalyticsAdapter, NoopAnalyticsAdapter, type AnalyticsAdapter, type AnalyticsOptions } from './analytics.js';
