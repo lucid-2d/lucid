@@ -33,9 +33,9 @@ export class DebugPanel extends UINode {
   private _copiedTimer = 0;
 
   constructor(app: App) {
-    super({ id: '__debug-panel', width: 0, height: 0 });
+    super({ id: '__debug-panel', width: 0, height: 0, interactive: true });
     this._app = app;
-    this.interactive = true;
+    this._initEvents();
   }
 
   /** Generate a full state dump */
@@ -242,8 +242,8 @@ export class DebugPanel extends UINode {
     (this._app as any).__lastDump = text;
   }
 
-  // Wire up touch events
-  $onMounted(): void {
+  // Wire up touch events in constructor — no need to wait for mount
+  private _initEvents(): void {
     this.$on('touchend', (e: any) => {
       this._handleTap(e.worldX ?? 0, e.worldY ?? 0);
     });
