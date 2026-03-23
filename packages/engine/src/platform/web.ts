@@ -2,6 +2,7 @@
  * Web 浏览器平台适配器
  *
  * 支持 touch（移动端）+ mouse（PC 端 fallback）
+ * 坐标自动处理 CSS→逻辑像素缩放（移动端视口缩放时 rect ≠ logicSize）
  */
 
 import type { PlatformAdapter, ScreenInfo } from './detect.js';
@@ -47,6 +48,14 @@ export class WebAdapter implements PlatformAdapter {
   getCanvas() { return this.canvas; }
   getCtx() { return this.ctx; }
 
+  /** Convert CSS pixel coordinates to logical game coordinates */
+  private _toLogic(cssX: number, cssY: number, rect: DOMRect): { x: number; y: number } {
+    return {
+      x: (cssX - rect.left) * (this.logicW / rect.width),
+      y: (cssY - rect.top) * (this.logicH / rect.height),
+    };
+  }
+
   bindTouchEvents(handlers: {
     onStart: (x: number, y: number) => void;
     onMove: (x: number, y: number) => void;
@@ -57,37 +66,46 @@ export class WebAdapter implements PlatformAdapter {
       e.preventDefault();
       const t = e.touches[0];
       const rect = this.canvas.getBoundingClientRect();
-      handlers.onStart(t.clientX - rect.left, t.clientY - rect.top);
+      const p = this._toLogic(t.clientX, t.clientY, rect);
+      handlers.onStart(p.x, p.y);
     }, { passive: false });
 
     this.canvas.addEventListener('touchmove', (e) => {
       e.preventDefault();
       const t = e.touches[0];
       const rect = this.canvas.getBoundingClientRect();
-      handlers.onMove(t.clientX - rect.left, t.clientY - rect.top);
+      const p = this._toLogic(t.clientX, t.clientY, rect);
+      handlers.onMove(p.x, p.y);
     }, { passive: false });
 
     this.canvas.addEventListener('touchend', (e) => {
       e.preventDefault();
       const t = e.changedTouches[0];
       const rect = this.canvas.getBoundingClientRect();
-      handlers.onEnd(t.clientX - rect.left, t.clientY - rect.top);
+      const p = this._toLogic(t.clientX, t.clientY, rect);
+      handlers.onEnd(p.x, p.y);
     }, { passive: false });
 
     // Mouse events (PC fallback)
     let mouseDown = false;
     this.canvas.addEventListener('mousedown', (e) => {
       mouseDown = true;
-      handlers.onStart(e.offsetX, e.offsetY);
+      const rect = this.canvas.getBoundingClientRect();
+      const p = this._toLogic(e.clientX, e.clientY, rect);
+      handlers.onStart(p.x, p.y);
     });
     this.canvas.addEventListener('mousemove', (e) => {
-      if (mouseDown) handlers.onMove(e.offsetX, e.offsetY);
+      if (!mouseDown) return;
+      const rect = this.canvas.getBoundingClientRect();
+      const p = this._toLogic(e.clientX, e.clientY, rect);
+      handlers.onMove(p.x, p.y);
     });
     this.canvas.addEventListener('mouseup', (e) => {
-      if (mouseDown) {
-        mouseDown = false;
-        handlers.onEnd(e.offsetX, e.offsetY);
-      }
+      if (!mouseDown) return;
+      mouseDown = false;
+      const rect = this.canvas.getBoundingClientRect();
+      const p = this._toLogic(e.clientX, e.clientY, rect);
+      handlers.onEnd(p.x, p.y);
     });
   }
 

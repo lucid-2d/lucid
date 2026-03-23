@@ -59,10 +59,8 @@ describe('WebAdapter', () => {
     const onEnd = vi.fn();
     adapter.bindTouchEvents({ onStart, onMove, onEnd });
 
-    // simulate mouse event
-    const mousedown = new MouseEvent('mousedown', { offsetX: 100, offsetY: 200 } as any);
-    Object.defineProperty(mousedown, 'offsetX', { value: 100 });
-    Object.defineProperty(mousedown, 'offsetY', { value: 200 });
+    // simulate mouse event (use clientX/clientY since WebAdapter converts via getBoundingClientRect)
+    const mousedown = new MouseEvent('mousedown', { clientX: 100, clientY: 200 });
     canvas.dispatchEvent(mousedown);
 
     expect(onStart).toHaveBeenCalledWith(100, 200);

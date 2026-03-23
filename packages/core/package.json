@@ -1,6 +1,6 @@
 {
   "name": "@lucid-2d/core",
-  "version": "0.2.13",
+  "version": "0.2.14",
   "description": "AI-first Canvas 2D game framework — core node tree, events, animation, recording, RNG",
   "type": "module",
   "main": "dist/index.js",

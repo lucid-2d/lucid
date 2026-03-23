@@ -22,11 +22,8 @@ describe('touch coordinate conversion', () => {
     });
 
     // Simulate mouse click at world (160, 260) = panel(100,200) + btn(50,50) + offset(10,10)
-    canvas.dispatchEvent(new MouseEvent('mousedown', {}));
-    const mouseup = new MouseEvent('mouseup', {});
-    Object.defineProperty(mouseup, 'offsetX', { value: 160 });
-    Object.defineProperty(mouseup, 'offsetY', { value: 260 });
-    canvas.dispatchEvent(mouseup);
+    canvas.dispatchEvent(new MouseEvent('mousedown', { clientX: 160, clientY: 260 }));
+    canvas.dispatchEvent(new MouseEvent('mouseup', { clientX: 160, clientY: 260 }));
 
     // localX should be 10 (160 - 100 - 50), localY should be 10 (260 - 200 - 50)
     expect(receivedLocal.x).toBeCloseTo(10);
