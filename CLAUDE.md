@@ -253,6 +253,78 @@ gh pr list --repo lucid-2d/lucid --state open
 | `feedback` | 通用反馈 |
 | `from-star-drift` | 来自 star-drift 项目 |
 
+## 发版自测流程（强制）
+
+每次代码修改发版前，必须按顺序执行以下步骤。**跳过任何步骤都不允许发版。**
+
+### 1. 影响范围评估
+
+改动前先回答：
+- 这个改动影响哪些包？
+- 是否涉及 UI/交互？（是 → 必须走 playground 验证）
+- 是否涉及跨平台？（是 → 必须验证 mock canvas 兼容性）
+- 是否涉及事件系统？（是 → 必须写 tap/touch 交互测试）
+
+### 2. 单元测试
+
+```bash
+pnpm -r test  # 全量通过，零失败
+```
+
+每个新功能/修复必须有对应测试。交互类功能必须测试：
+- hitTest 是否命中正确节点
+- 事件是否正确分发（用 `tap(app, 'id')` 或 `touch(app, x, y)` 验证）
+- 事件是否穿透到不应该接收的节点
+- 模态组件是否阻断下层交互
+
+### 3. TypeScript 编译
+
+```bash
+pnpm -r build  # 零错误
+```
+
+### 4. Playground 验证（UI/交互改动必须）
+
+```bash
+npx vite --config playground/vite.config.ts --port 3456
+```
+
+在浏览器中实际操作验证：
+- 新增/修改的组件是否正常渲染
+- 交互是否正常（点击、滚动、切换）
+- 不同 tab 之间切换是否正常
+- DebugPanel 功能验证：打开、关闭、Copy、穿透测试
+
+### 5. 文档同步
+
+检查以下文件是否需要更新：
+- `README.md` — API 表、示例代码
+- `CLAUDE.md` — 包描述、关键模式
+
+### 6. 发版 checklist
+
+```
+[ ] pnpm -r test 全通过
+[ ] pnpm -r build 零错误
+[ ] playground 验证通过（UI/交互改动）
+[ ] README.md 已更新（新 API/参数/行为变更）
+[ ] CLAUDE.md 已同步
+[ ] 版本号已 bump
+[ ] git commit + push
+[ ] npm publish
+[ ] GitHub Issue 回复 + 关闭
+```
+
+### DebugPanel 教训记录
+
+v0.2.7-v0.2.12 连续 4 个版本修复 DebugPanel 的低级 bug：
+- v0.2.9: `$onMounted()` 方法名写错（不存在），事件处理器从未注册
+- v0.2.10: Safari 剪贴板 API 在 Canvas 事件上下文被拦截
+- v0.2.12: 面板打开时点击穿透到下层游戏
+
+**根因**：新功能发版时没有自测交互行为，只验证了数据正确性。
+**规则**：任何涉及 UI/交互的改动，必须在 playground 中实际操作验证后才能发版。
+
 ## Commit conventions
 
 - `feat:` new features
