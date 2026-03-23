@@ -263,7 +263,7 @@ The debug panel eliminates the need to build custom debug UI in every game. One 
 ### Headless rendering (no browser needed)
 
 ```typescript
-import { createTestApp, tap, assertTree } from '@lucid-2d/engine';
+import { createTestApp, tap, touch, assertTree } from '@lucid-2d/engine/testing';
 
 const app = createTestApp({ render: true }); // real canvas via @napi-rs/canvas
 app.router.push(new MenuScene(app));
@@ -491,6 +491,118 @@ Use `batchSimulate` when you need the **full stack** — Scene lifecycle, UI sta
 - **Quality metrics**: What makes a "good" level for your game type
 
 The framework handles the infrastructure. The AI handles the creativity.
+
+## Testing best practices
+
+Lucid's test utilities (`createTestApp`, `tap`, `touch`, `assertTree`) can test **interaction logic without a browser**. Use them to catch event handling, hitTest, and penetration bugs automatically.
+
+### Basic: verify state after interaction
+
+```typescript
+import { createTestApp, tap, touch, assertTree } from '@lucid-2d/engine/testing';
+
+test('tap play button switches to game scene', () => {
+  const app = createTestApp();
+  app.router.push(new MenuScene(app));
+  app.tick(16);
+
+  tap(app, 'play-btn');
+  app.tick(16);
+
+  assertTree(app, `
+    GameScene#game
+  `);
+});
+```
+
+### Penetration testing: modal blocks interaction
+
+```typescript
+test('modal blocks game button', () => {
+  const app = createTestApp();
+  const scene = new SceneNode({ id: 'game', width: 390, height: 844 });
+  const btn = new UINode({ id: 'btn', x: 100, y: 400, width: 200, height: 50, interactive: true });
+  let tapped = false;
+  btn.$on('tap', () => { tapped = true; });
+  scene.addChild(btn);
+  app.router.push(scene);
+  app.tick(16);
+
+  // Button works before modal
+  touch(app, 200, 425);
+  expect(tapped).toBe(true);
+
+  // Open modal — button should be blocked
+  tapped = false;
+  const modal = new Modal({ title: 'Confirm' });
+  scene.addChild(modal);
+  modal.open();
+  app.tick(16);
+
+  touch(app, 200, 425);
+  expect(tapped).toBe(false); // modal blocks penetration
+});
+```
+
+### ScrollView: scroll vs tap detection
+
+```typescript
+test('small movement = tap, large movement = scroll', () => {
+  const sv = new ScrollView({ width: 300, height: 400 });
+  sv.contentHeight = 1000;
+  const btn = new UINode({ id: 'btn', x: 50, y: 50, width: 100, height: 40, interactive: true });
+  let tapped = false;
+  btn.$on('touchend', () => { tapped = true; });
+  sv.content.addChild(btn);
+
+  // Small move (3px < 5px threshold) → tap forwarded
+  sv.$emit('touchstart', { localX: 100, localY: 70, worldX: 100, worldY: 70 });
+  sv.$emit('touchend', { localX: 100, localY: 67, worldX: 100, worldY: 67 });
+  expect(tapped).toBe(true);
+
+  // Large move (30px > threshold) → scroll, no tap
+  tapped = false;
+  sv.$emit('touchstart', { localX: 100, localY: 70, worldX: 100, worldY: 70 });
+  sv.$emit('touchmove', { localX: 100, localY: 40 });
+  sv.$emit('touchend', { localX: 100, localY: 40, worldX: 100, worldY: 40 });
+  expect(tapped).toBe(false);
+  expect(sv.scrollY).toBe(30);
+});
+```
+
+### Entity: verify AI can see game objects
+
+```typescript
+test('AI can query and patch game objects', () => {
+  const app = createTestApp();
+  const scene = new SceneNode({ id: 'game', width: 390, height: 844 });
+  const ship = { x: 100, y: 200, speed: 5 };
+  scene.addChild(Entity.from(ship, { id: 'ship', props: ['x', 'y', 'speed'] }));
+  app.router.push(scene);
+
+  // AI query
+  const ships = app.root.$query('Ship');
+  expect(ships).toHaveLength(1);
+
+  // AI patch
+  app.root.findById('ship')!.$patch({ speed: 10 });
+  expect(ship.speed).toBe(10);
+
+  // AI inspect
+  expect(app.root.$inspect()).toContain('Ship#ship');
+  expect(app.root.$inspect()).toContain('speed=10');
+});
+```
+
+### What to test for every new UI feature
+
+| Test type | What it catches | Example |
+|-----------|----------------|---------|
+| `tap(app, id)` | Event handler not registered | DebugPanel v0.2.9 ($onMounted typo) |
+| `touch(app, x, y)` + hitTest | Wrong node receives event | DebugPanel v0.2.12 (penetration) |
+| Modal + `touch` at bg node | Click penetration through overlay | SceneRouter v0.2.6 (paused scene) |
+| `$emit('touchmove')` threshold | Scroll vs tap misdetection | ScrollView gesture handling |
+| `$inspect()` content check | AI visibility regression | Entity state not updating |
 
 ## Scope and limitations
 
