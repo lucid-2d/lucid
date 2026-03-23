@@ -98,6 +98,8 @@ import { createApp, SceneNode, SceneRouter, loadImage, WebAdapter, WxAdapter, Tt
 | `createMockAudio()` | function | Mock AudioManager for testing (no real playback). |
 | `Keyboard` | class | PC keyboard input. `bind(target)`, `isDown(key)`, `wasPressed(key)`, `wasReleased(key)`, `update()`. Test: `simulatePress(key)`, `simulateRelease(key)`. |
 | `AssetLoader` | class | Batch asset loading. `add(name, src)`, `load(): Promise<Map>`, `onProgress`, `progress`, `get(name)`. Auto-detects image/audio/json. |
+| `timeSlice(opts)` | function | Split heavy computation across frames. `{ total, batch?, work(i), onProgress? }`. Yields via rAF between batches to keep UI responsive. |
+| `createOffscreenCanvas(w, h)` | function | Cross-platform offscreen canvas (Web: OffscreenCanvas/createElement, WX: wx.createOffscreenCanvas, TT: tt.createOffscreenCanvas). |
 
 ### @lucid-2d/ui
 
@@ -150,7 +152,7 @@ import { CheckinDialog, ShopPanel, SettingsPanel, ResultPanel, LeaderboardPanel,
 10 operation systems. All use `Storage` interface for persistence.
 
 ```typescript
-import { createStorage, CheckinSystem, SkinSystem, AchievementSystem, MissionSystem, BattlePassSystem, AdSystem, IAPSystem, ShareSystem, AnalyticsSystem } from '@lucid-2d/systems';
+import { createStorage, createPreferences, CheckinSystem, SkinSystem, AchievementSystem, MissionSystem, BattlePassSystem, AdSystem, IAPSystem, ShareSystem, AnalyticsSystem } from '@lucid-2d/systems';
 ```
 
 | System | Constructor | Key Methods |
@@ -165,6 +167,7 @@ import { createStorage, CheckinSystem, SkinSystem, AchievementSystem, MissionSys
 | `IAPSystem` | `{ adapter: IAPAdapter, products }` | `purchase(productId)`, `getProducts()`. Built-in adapters: `NoopIAPAdapter` (dev), `WxIAPAdapter` (WeChat Midas), `TtIAPAdapter` (Douyin). |
 | `ShareSystem` | `{ adapter: ShareAdapter }` | `share(data)` (active), `enablePassiveShare(data)` (menu forward), `setDefaultShare(data)` (dynamic update). Built-in adapters: `WebShareAdapter`, `WxShareAdapter` (onShareAppMessage + onShareTimeline + showShareMenu), `TtShareAdapter`. |
 | `AnalyticsSystem` | `{ adapters: AnalyticsAdapter[] }` | `track(event, params?)`, `setUser(id, props?)`. |
+| `createPreferences(opts)` | `{ storage, defaults, prefix? }` | `get(key)`, `set(key, value)` (auto-persists), `onChange(key, handler)`, `reset(key)`, `resetAll()`, `getAll()`. |
 
 ### @lucid-2d/physics
 

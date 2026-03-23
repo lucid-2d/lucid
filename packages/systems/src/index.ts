@@ -29,5 +29,8 @@ export { IAPSystem, NoopIAPAdapter, WxIAPAdapter, TtIAPAdapter, type IAPAdapter,
 // 分享
 export { ShareSystem, WebShareAdapter, WxShareAdapter, TtShareAdapter, type ShareAdapter, type ShareData, type ShareOptions } from './share.js';
 
+// 用户设置
+export { Preferences, createPreferences, type PreferencesOptions } from './preferences.js';
+
 // 埋点
 export { AnalyticsSystem, ConsoleAnalyticsAdapter, NoopAnalyticsAdapter, type AnalyticsAdapter, type AnalyticsOptions } from './analytics.js';
