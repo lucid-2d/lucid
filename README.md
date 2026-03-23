@@ -594,7 +594,119 @@ test('AI can query and patch game objects', () => {
 });
 ```
 
-### What to test for every new UI feature
+### Scene-level testing
+
+#### SceneRouter penetration (push blocks paused scene)
+
+```typescript
+test('paused scene buttons do not receive tap', () => {
+  const app = createTestApp();
+  const menu = new SceneNode({ id: 'menu', width: 390, height: 844 });
+  const btn = new UINode({ id: 'play', x: 100, y: 400, width: 200, height: 50, interactive: true });
+  let tapped = false;
+  btn.$on('tap', () => { tapped = true; });
+  menu.addChild(btn);
+  app.router.push(menu);
+  app.tick(16);
+
+  touch(app, 200, 425);
+  expect(tapped).toBe(true);  // works before push
+
+  tapped = false;
+  app.router.push(new SceneNode({ id: 'game', width: 390, height: 844 }));
+  app.tick(16);
+
+  touch(app, 200, 425);
+  expect(tapped).toBe(false); // blocked by new scene
+});
+```
+
+#### Lifecycle sequence (push/pop)
+
+```typescript
+test('push/pop triggers correct lifecycle', () => {
+  const app = createTestApp();
+  const calls: string[] = [];
+
+  class TrackScene extends SceneNode {
+    onEnter() { calls.push(`${this.id}:enter`); }
+    onPause() { calls.push(`${this.id}:pause`); }
+    onResume() { calls.push(`${this.id}:resume`); }
+    onExit() { calls.push(`${this.id}:exit`); }
+  }
+
+  app.router.push(new TrackScene({ id: 'map' }));
+  app.router.push(new TrackScene({ id: 'battle' }));
+  app.router.pop();
+
+  expect(calls).toEqual([
+    'map:enter', 'map:pause',
+    'battle:enter',
+    'battle:exit', 'map:resume',
+  ]);
+});
+```
+
+#### Deterministic physics ($fixedUpdate)
+
+```typescript
+test('same seed + same ticks = same state', () => {
+  function runSim(seed: number) {
+    const app = createTestApp({ rngSeed: seed, fixedTimestep: 1/60 });
+    app.router.push(new GameScene()); // your game scene
+    for (let i = 0; i < 300; i++) app.tick(16);
+    return app.root.$inspect();
+  }
+
+  expect(runSim(42)).toBe(runSim(42));   // deterministic
+  expect(runSim(42)).not.toBe(runSim(99)); // different seed = different result
+});
+```
+
+### Physics game testing (no UINode needed)
+
+For physics validation (reachability, balance, trajectories), import game modules directly — no canvas, no Scene, no framework overhead:
+
+```typescript
+import { updatePhysics, createShip, launch } from './systems/physics';
+
+test('ship escapes planet gravity at boost=1.6', () => {
+  const ship = createShip();
+  const planet = { x: 200, y: 200, radius: 30, mass: 1 };
+  placeOnOrbit(ship, planet);
+  launch(ship);
+
+  for (let i = 0; i < 600; i++) {
+    updatePhysics(ship, [planet], 0.016, 390, 844);
+  }
+
+  const escaped = ship.x < 0 || ship.x > 390 || ship.y < 0 || ship.y > 844;
+  expect(escaped).toBe(true);
+});
+```
+
+### Audio in headless tests
+
+Use `createMockAudio()` for tests. If your game code uses raw Web Audio API, add a headless guard:
+
+```typescript
+import { createMockAudio } from '@lucid-2d/engine/testing';
+
+// In tests:
+const audio = createMockAudio();
+audio.register('hit', myCustomHandle);
+audio.playSfx('hit'); // no real sound, no crash
+
+// In game code with raw Web Audio:
+const hasAudio = typeof window !== 'undefined' && typeof AudioContext !== 'undefined';
+export function sfxPlay() {
+  if (!hasAudio) return; // silent in headless
+}
+```
+
+### What to test — complete checklist
+
+**UI component level:**
 
 | Test type | What it catches | Example |
 |-----------|----------------|---------|
@@ -603,6 +715,16 @@ test('AI can query and patch game objects', () => {
 | Modal + `touch` at bg node | Click penetration through overlay | SceneRouter v0.2.6 (paused scene) |
 | `$emit('touchmove')` threshold | Scroll vs tap misdetection | ScrollView gesture handling |
 | `$inspect()` content check | AI visibility regression | Entity state not updating |
+| CSS-scaled canvas touch | Coordinate mapping broken | WebAdapter v0.2.14 (CSS→logic scaling) |
+
+**Scene level:**
+
+| Test type | What it catches | Example |
+|-----------|----------------|---------|
+| SceneRouter push + `touch` at old scene | Paused scene receives events | Issue #6 (hitTest穿透) |
+| Lifecycle sequence tracking | onResume/onPause missing logic | Roguelike map state not refreshed |
+| `$fixedUpdate` deterministic replay | Physics divergence between sim and game | Autopilot trajectory mismatch |
+| Direct module import tests | Physics reachability / balance | Star Drift 50-level validation |
 
 ## Scope and limitations
 
