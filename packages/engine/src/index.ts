@@ -14,3 +14,4 @@ export { AudioManager, createAudio, createMockAudio, type AudioManagerOptions, t
 export { Keyboard } from './keyboard.js';
 export { AssetLoader, type AssetEntry } from './asset-loader.js';
 export { batchSimulate, type SimulationConfig, type SimulationResult, type BatchResult } from './simulate.js';
+export { DebugPanel, attachDebugPanel } from './debug-panel.js';

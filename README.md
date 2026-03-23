@@ -81,7 +81,7 @@ import { createApp, SceneNode, SceneRouter, loadImage, WebAdapter, WxAdapter, Tt
 
 | Export | Type | Description |
 |--------|------|-------------|
-| `createApp(opts)` | function | Creates app. Options: `{ platform?, canvas?, adapter?, debug?, debugOverlay?, rngSeed?, fixedTimestep? }`. Returns `App` with `.root`, `.router`, `.screen`, `.rng`, `.debug`, `.debugOverlay`, `.timeScale` (0=pause, 1=normal), `.fixedTimestep` (seconds, 0=disabled). `.start()`, `.stop()`, `.tick(dt)`, `.replay(records, speed)`, `.dumpInteractions()`. |
+| `createApp(opts)` | function | Creates app. Options: `{ platform?, canvas?, adapter?, debug?, debugOverlay?, debugPanel?, rngSeed?, fixedTimestep? }`. Returns `App` with `.root`, `.router`, `.screen`, `.rng`, `.debug`, `.debugOverlay`, `.timeScale`, `.fixedTimestep`, `.debugPanel`. `debugPanel: true` adds a floating debug button — tap to see full game state dump, one-click copy for AI analysis. |
 | `SceneNode` | class | Extends UINode. Override `onEnter()`, `onExit()`, `onPause()`, `onResume()`, `$fixedUpdate(dt)` (deterministic physics). |
 | `SceneRouter` | class | `push(scene, transition?)`, `replace(scene, transition?)`, `pop(transition?)`. Transition: `{ type: 'fade'\|'slideLeft'\|'slideRight'\|'slideUp'\|'slideDown'\|'custom', duration, render? }`. `custom` type: `render(ctx, progress, oldScene, newScene)` takes over all rendering. Set `defaultTransition` for global default. |
 | `WebAdapter` | class | Browser platform. Auto-creates from canvas element. |
@@ -244,6 +244,21 @@ Each template includes:
 - Example test file with `createTestApp` + `assertTree`
 
 ## AI agent integration
+
+### Built-in debug panel
+
+```typescript
+const app = createApp({ debug: true, debugPanel: true });
+// Floating "D" button appears in bottom-right corner
+// Tap → panel shows: scene tree, FPS, router depth, timeScale
+// "Copy" → full state dump to clipboard, paste to AI for analysis
+
+// Programmatic access:
+const dump = app.debugPanel.dump();     // structured object
+const text = app.debugPanel.dumpText(); // AI-friendly text format
+```
+
+The debug panel eliminates the need to build custom debug UI in every game. One line of config gives AI full visibility into runtime state.
 
 ### Headless rendering (no browser needed)
 

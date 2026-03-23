@@ -6,6 +6,7 @@
 
 import { UINode, InteractionRecorder, SeededRNG, type InteractionRecord } from '@lucid-2d/core';
 import { SceneRouter } from './scene.js';
+import { attachDebugPanel, type DebugPanel } from './debug-panel.js';
 import { detectPlatform, type PlatformAdapter, type ScreenInfo } from './platform/detect.js';
 import { WebAdapter } from './platform/web.js';
 import { WxAdapter } from './platform/wx.js';
@@ -47,6 +48,8 @@ export interface AppOptions {
   rngSeed?: number;
   /** 固定时间步长（秒），启用 $fixedUpdate（例: 0.016 = 62.5Hz） */
   fixedTimestep?: number;
+  /** 显示内置调试面板（浮动按钮 → 状态 dump → 复制给 AI） */
+  debugPanel?: boolean;
 }
 
 export interface App {
@@ -62,6 +65,8 @@ export interface App {
   timeScale: number;
   /** 固定时间步长（秒），0 表示禁用 $fixedUpdate */
   fixedTimestep: number;
+  /** 内置调试面板实例（debugPanel: true 时自动创建） */
+  readonly debugPanel: DebugPanel | null;
 
   /** 启动游戏循环 */
   start(): void;
@@ -400,7 +405,14 @@ export function createApp(options: AppOptions = {}): App {
 
       return steps;
     },
+
+    debugPanel: null as DebugPanel | null,
   };
+
+  // Attach debug panel if requested
+  if (options.debugPanel) {
+    (app as any).debugPanel = attachDebugPanel(app);
+  }
 
   return app;
 }
