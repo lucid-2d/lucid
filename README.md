@@ -726,6 +726,29 @@ export function sfxPlay() {
 | `$fixedUpdate` deterministic replay | Physics divergence between sim and game | Autopilot trajectory mismatch |
 | Direct module import tests | Physics reachability / balance | Star Drift 50-level validation |
 
+## Cross-platform guidelines
+
+When targeting WeChat/Douyin Mini Games (`platform: 'wx'` or `'tt'`), the framework handles these automatically:
+
+| Handled by framework | Web | Mini Game |
+|---------------------|-----|-----------|
+| Touch events | addEventListener | wx.onTouchStart |
+| Storage | localStorage | wx.setStorageSync |
+| Audio (file) | HTMLAudioElement | wx.createInnerAudioContext |
+| requestAnimationFrame | window.rAF | global rAF |
+| Image loading | `loadImage()` | `loadImage()` (uses wx.createImage internally) |
+| roundRect | native | polyfilled with arcTo |
+| Image constructor | native | polyfilled to wx.createImage |
+
+**You must avoid these in game code:**
+
+| Don't use | Use instead | Why |
+|-----------|-------------|-----|
+| `new Image()` | `loadImage(src)` from `@lucid-2d/engine` | `Image` doesn't exist in Mini Games (polyfilled but `loadImage` is safer) |
+| `document.createElement('canvas')` | `wx.createCanvas()` or offscreen pattern | No DOM in Mini Games |
+| `navigator.*`, `window.*` | Framework adapters | Not available |
+| `ctx.roundRect()` directly | Safe — framework polyfills it | But be aware when debugging |
+
 ## Scope and limitations
 
 Lucid works best for **UI-heavy games** (card games, shops, check-ins, quizzes) where most elements are UINodes — `$inspect`, `$query`, and headless testing work out of the box.

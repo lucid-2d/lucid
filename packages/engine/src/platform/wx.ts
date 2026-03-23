@@ -8,6 +8,31 @@ import type { PlatformAdapter, ScreenInfo } from './detect.js';
 
 declare const wx: any;
 
+/** Polyfill missing Canvas 2D methods */
+function _polyfillCtx(ctx: any): void {
+  if (!ctx.roundRect) {
+    ctx.roundRect = function (x: number, y: number, w: number, h: number, radii?: number | number[]) {
+      const r = typeof radii === 'number' ? radii : Array.isArray(radii) ? radii[0] ?? 0 : 0;
+      const radius = Math.min(r, w / 2, h / 2);
+      ctx.moveTo(x + radius, y);
+      ctx.arcTo(x + w, y, x + w, y + h, radius);
+      ctx.arcTo(x + w, y + h, x, y + h, radius);
+      ctx.arcTo(x, y + h, x, y, radius);
+      ctx.arcTo(x, y, x + w, y, radius);
+      ctx.closePath();
+    };
+  }
+}
+
+/** Polyfill missing globals for WeChat Mini Game */
+function _polyfillGlobals(): void {
+  if (typeof (globalThis as any).Image === 'undefined' && typeof wx !== 'undefined') {
+    (globalThis as any).Image = function () {
+      return wx.createImage();
+    };
+  }
+}
+
 export class WxAdapter implements PlatformAdapter {
   readonly name = 'wx' as const;
   private canvas: any;
@@ -27,6 +52,10 @@ export class WxAdapter implements PlatformAdapter {
 
     this.ctx = this.canvas.getContext('2d')!;
     this.ctx.scale(dpr, dpr);
+
+    // Canvas 2D API polyfills for WeChat Mini Game
+    _polyfillCtx(this.ctx);
+    _polyfillGlobals();
 
     // 安全区域
     const safeArea = info.safeArea || { top: 0, bottom: logicH };
