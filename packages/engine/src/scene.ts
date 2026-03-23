@@ -92,6 +92,14 @@ export class SceneRouter extends UINode {
     return this._transition !== null;
   }
 
+  /** hitTest only targets the top scene (paused scenes don't receive events) */
+  hitTest(wx: number, wy: number): UINode | null {
+    if (!this.visible) return null;
+    const scene = this.current;
+    if (!scene) return null;
+    return scene.hitTest(wx - this.x, wy - this.y);
+  }
+
   protected $inspectInfo(): string {
     const parts: string[] = [];
     if (this._transition) {

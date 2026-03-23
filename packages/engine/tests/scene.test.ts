@@ -130,6 +130,58 @@ describe('SceneRouter', () => {
   });
 });
 
+// ── hitTest isolation ──
+
+describe('SceneRouter hitTest isolation', () => {
+  it('hitTest only targets top scene', () => {
+    const router = new SceneRouter();
+    const a = new SceneNode({ id: 'menu', width: 390, height: 844 });
+    const b = new SceneNode({ id: 'map', width: 390, height: 844 });
+
+    const btn = new UINode({ id: 'start', x: 100, y: 100, width: 100, height: 50, interactive: true });
+    a.addChild(btn);
+
+    router.push(a);
+    // btn is hittable in scene A
+    expect(router.hitTest(150, 125)?.id).toBe('start');
+
+    // Push scene B on top — scene A is paused
+    router.push(b);
+    // btn should NOT be hittable through scene B
+    expect(router.hitTest(150, 125)).toBeNull();
+  });
+
+  it('hitTest finds nodes in top scene', () => {
+    const router = new SceneRouter();
+    const a = new SceneNode({ id: 'menu', width: 390, height: 844 });
+    const b = new SceneNode({ id: 'map', width: 390, height: 844 });
+
+    const mapBtn = new UINode({ id: 'node-1', x: 50, y: 50, width: 80, height: 80, interactive: true });
+    b.addChild(mapBtn);
+
+    router.push(a);
+    router.push(b);
+
+    expect(router.hitTest(70, 70)?.id).toBe('node-1');
+  });
+
+  it('pop restores hitTest to previous scene', () => {
+    const router = new SceneRouter();
+    const a = new SceneNode({ id: 'menu', width: 390, height: 844 });
+    const b = new SceneNode({ id: 'map', width: 390, height: 844 });
+
+    const btn = new UINode({ id: 'start', x: 100, y: 100, width: 100, height: 50, interactive: true });
+    a.addChild(btn);
+
+    router.push(a);
+    router.push(b);
+    expect(router.hitTest(150, 125)).toBeNull(); // blocked
+
+    router.pop();
+    expect(router.hitTest(150, 125)?.id).toBe('start'); // restored
+  });
+});
+
 // ── Transitions ──
 
 describe('SceneRouter transitions', () => {
