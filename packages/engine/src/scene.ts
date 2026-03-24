@@ -13,8 +13,8 @@ import { UINode, type UINodeOptions } from '@lucid-2d/core';
 export interface ScenePreset<T extends SceneNode = SceneNode> {
   /** Human-readable description (shown in $inspect) */
   label?: string;
-  /** Setup function — mutate the scene to reach this state */
-  setup: (scene: T) => void;
+  /** Setup function — mutate the scene to reach this state (method syntax for bivariant type checking) */
+  setup(scene: T): void;
 }
 
 export class SceneNode extends UINode {
