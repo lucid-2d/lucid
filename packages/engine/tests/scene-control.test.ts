@@ -272,6 +272,35 @@ describe('App.settle', () => {
 
 // ── createOffscreenCanvas headless ──
 
+// ── Non-render preload with loadImage ──
+
+describe('Non-render mode preload', () => {
+  it('scene with async preload using loadImage works in logic-only mode', async () => {
+    const app = createTestApp(); // no render — logic only
+
+    class PreloadScene extends SceneNode {
+      loaded = false;
+      constructor() { super({ id: 'preload-test', width: 390, height: 844 }); }
+      async preload() {
+        // This would crash without Image stub
+        const img = new (globalThis as any).Image();
+        await new Promise<void>((resolve) => {
+          img.onload = () => { this.loaded = true; resolve(); };
+          img.src = 'test.png';
+        });
+      }
+      onEnter() {
+        this.addChild(new UINode({ id: 'content', width: 100, height: 100 }));
+      }
+    }
+
+    await app.router.push(new PreloadScene());
+    expect(app.router.current?.id).toBe('preload-test');
+    expect((app.router.current as any).loaded).toBe(true);
+    expect(app.root.findById('content')).toBeTruthy();
+  });
+});
+
 describe('createOffscreenCanvas headless', () => {
   it('works in Node.js with @napi-rs/canvas', () => {
     // createTestApp registers the headless canvas factory

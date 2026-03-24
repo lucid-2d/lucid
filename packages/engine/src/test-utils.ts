@@ -18,15 +18,29 @@ import { registerHeadlessCanvas } from './canvas-utils.js';
 let _napiCanvas: any = null;
 function getNapiCanvas(): any {
   if (!_napiCanvas) {
-    // Try normal require first (works when @napi-rs/canvas is in this package's deps)
+    // Build a CJS require function that works in both CJS and ESM contexts
+    let _require: NodeRequire;
     try {
-      _napiCanvas = require('@napi-rs/canvas');
+      _require = require;
+    } catch {
+      // ESM context (vitest ESM mode, tsx --loader, etc.) — require is not defined
+      const { createRequire } = require('module') ?? {};
+      if (createRequire) {
+        _require = createRequire(typeof __filename !== 'undefined' ? __filename : process.cwd() + '/__test.js');
+      } else {
+        throw new Error('[lucid] @napi-rs/canvas is required for headless rendering.\nInstall it: pnpm add -D @napi-rs/canvas');
+      }
+    }
+
+    // Try normal require first
+    try {
+      _napiCanvas = _require('@napi-rs/canvas');
     } catch {
       // Fallback: resolve from the game project's cwd (for tsx/ts-node scripts
       // where tsconfig paths point to Lucid source but @napi-rs/canvas is in the game's node_modules)
       try {
-        const resolved = require.resolve('@napi-rs/canvas', { paths: [process.cwd()] });
-        _napiCanvas = require(resolved);
+        const resolved = _require.resolve('@napi-rs/canvas', { paths: [process.cwd()] });
+        _napiCanvas = _require(resolved);
       } catch {
         throw new Error(
           '[lucid] @napi-rs/canvas is required for headless rendering.\n' +
@@ -357,6 +371,27 @@ export function createTestApp(opts?: TestAppOptions): TestApp {
     });
   } else {
     const canvas = createMockCanvas(w, h);
+
+    // Stub globalThis.Image for non-render mode so game code using
+    // `new Image()` or `loadImage()` in preload() doesn't crash.
+    // Returns a mock image that immediately triggers onload.
+    // Always install (even if jsdom provides Image, it can't load from filesystem).
+    {
+      (globalThis as any).Image = function MockImage() {
+        const img: any = { width: 1, height: 1, src: '', onload: null, onerror: null };
+        return new Proxy(img, {
+          set(target, prop, value) {
+            target[prop] = value;
+            if (prop === 'src' && value) {
+              // Auto-trigger onload on next microtask (simulates async image load)
+              Promise.resolve().then(() => target.onload?.());
+            }
+            return true;
+          },
+        });
+      };
+    }
+
     app = createApp({
       platform: 'web',
       canvas,
