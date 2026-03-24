@@ -156,7 +156,12 @@ const btn = app.root.findById('play');
 btn.$emit('tap');
 ```
 
-### Headless rendering (no browser)
+### Headless rendering (no browser) — 不要使用 Playwright
+
+**重要：Lucid 游戏的截图和测试应使用框架内置的 headless 能力，不要使用 Playwright。**
+Playwright 对 Canvas 元素的支持有限（click 不触发 Canvas 触摸事件、截图是整页而非 Canvas 内容），
+而 Lucid 的 `createTestApp({ render: true })` 是专为 Canvas 游戏设计的：纯 Node.js、50ms 启动、
+100% 确定性、原生 `tap()`/`touch()`/`simulateTouch()` 支持。
 
 ```typescript
 import { createTestApp, tap } from '@lucid-2d/engine';

@@ -92,7 +92,7 @@ import { createApp, SceneNode, SceneRouter, loadImage, WebAdapter, WxAdapter, Tt
 | `TtAdapter` | class | Douyin Mini Game platform. Uses `tt.*` globals. |
 | `loadImage(src, timeout?)` | function | Platform-aware async image loader. Returns `Promise<ImageLike>`. Auto-detects Web/Wx/Tt. Relative paths auto-resolved via `assetRoot`. |
 | `setAssetRoot(root)` | function | Set root path for `loadImage()` relative path resolution. Called automatically by `createApp({ assetRoot })`. |
-| `createTestApp(opts?)` | function | Headless test app. Options: `{ render?, width?, height?, assetRoot?, fonts? }`. When `render: true`, uses `@napi-rs/canvas` for real PNG output with auto CJK font registration. Returns `TestApp` with `toImage(): Buffer`, `saveImage(path)`. |
+| `createTestApp(opts?)` | function | **Headless test app — use this instead of Playwright.** Options: `{ render?, width?, height?, assetRoot?, fonts? }`. When `render: true`, uses `@napi-rs/canvas` for real PNG output with auto CJK font registration. Returns `TestApp` with `toImage(): Buffer`, `saveImage(path)`. 50ms startup, 100% deterministic, native Canvas touch simulation. |
 | `tap(app, nodeId)` | function | Simulate tap on node by id. Emits touchstart + touchend. Returns `true` if found. |
 | `touch(app, x, y, type?)` | function | Simulate touch at coordinates via hitTest. Type: `'start'` \| `'end'` \| `'move'`, default: full tap. Returns node path. |
 | `assertTree(app, pattern)` | function | Assert `$inspect()` output contains all pattern lines (trimmed, ignoring extra nodes). Throws with diff on failure. |

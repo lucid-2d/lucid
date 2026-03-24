@@ -107,6 +107,43 @@ await app.settle();
 app.saveImage('screenshot.png');
 ```
 
+## 重要：不要使用 Playwright
+
+**本项目使用 Lucid 框架内置的 headless 渲染能力进行截图和测试，不需要 Playwright。**
+
+Lucid 内置的 `createTestApp({ render: true })` 比 Playwright 更快、更稳定、更适合 Canvas 游戏：
+
+| | Playwright | Lucid Headless |
+|---|---|---|
+| 启动时间 | ~3-5 秒（启动浏览器） | ~50ms（纯 Node.js） |
+| 确定性 | 需要 waitFor、setTimeout | 100%（tick 精确控制） |
+| 触摸事件 | canvas click 不通 | `simulateTouch()` / `tap()` 原生支持 |
+| 截图 | 整页截图 | `saveImage()` 精确 Canvas 输出 |
+| 依赖 | Chromium ~400MB | @napi-rs/canvas ~20MB |
+
+**正确方式**：
+```typescript
+import { createTestApp, tap, touch } from '@lucid-2d/engine/testing';
+
+// 逻辑测试（无渲染，极快）
+const app = createTestApp();
+app.router.push(new MenuScene(app));
+app.tick(16);
+tap(app, 'play');
+
+// 截图测试（headless 渲染）
+const app = createTestApp({ render: true, assetRoot: 'public/' });
+await app.settle(60);
+app.saveImage('screenshot.png');
+
+// 像素对比
+const before = app.toImage();
+tap(app, 'btn');
+app.tick(16);
+const after = app.toImage();
+const diff = await imageDiff(before, after);
+```
+
 ## 注意事项
 
 - HTML 中 canvas 的 `width/height` 是**逻辑像素**（如 390×844），DPR 缩放由框架自动处理
