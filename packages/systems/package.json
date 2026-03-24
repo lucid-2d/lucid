@@ -1,6 +1,6 @@
 {
   "name": "@lucid-2d/systems",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "description": "Lucid operation systems — Storage, Checkin, Skin, Achievement, Mission, BattlePass, Ad, IAP, Share, Analytics",
   "type": "module",
   "main": "dist/index.js",

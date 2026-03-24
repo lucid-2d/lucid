@@ -50,7 +50,7 @@ window._app = app; // expose for AI agent
 Node tree, events, animation, recording, timers, RNG, sprites, text, camera, nine-slice, i18n, entity.
 
 ```typescript
-import { UINode, Entity, Sprite, SpriteSheet, AnimatedSprite, NineSlice, Camera, I18n, InteractionRecorder, SeededRNG, Timer, CountdownTimer, wrapText, drawText } from '@lucid-2d/core';
+import { UINode, Entity, Sprite, SpriteSheet, AnimatedSprite, NineSlice, Camera, I18n, InteractionRecorder, SeededRNG, Timer, CountdownTimer, wrapText, drawText, drawRoundRect } from '@lucid-2d/core';
 ```
 
 | Export | Type | Description |
@@ -70,6 +70,7 @@ import { UINode, Entity, Sprite, SpriteSheet, AnimatedSprite, NineSlice, Camera,
 | `Camera` | class | Viewport for scrolling/zooming worlds. Props: `viewWidth`, `viewHeight`, `worldWidth?`, `worldHeight?`. Methods: `moveTo(x,y)`, `moveBy(dx,dy)`, `follow(target, opts?)`, `update(dt)`, `apply(ctx)`, `restore(ctx)`, `screenToWorld(sx,sy)`, `worldToScreen(wx,wy)`, `isVisible(x,y,w,h)`. |
 | `NineSlice` | class | Nine-slice scaling UINode for panels/buttons. Props: `image`, `insets: [top, right, bottom, left]`. Corners stay fixed, edges stretch single-axis, center stretches both. |
 | `I18n` | class | Internationalization. `new I18n({ en: {...}, zh: {...} })`. Methods: `t(key, ...args)` (positional params `{0}`, `{1}`), `locale` getter/setter, `add(locale, translations)`, `has(key)`, `locales`. Fallback: current → first locale → key. |
+| `drawRoundRect(ctx, x, y, w, h, r)` | function | Cross-browser rounded rectangle path. Uses native `ctx.roundRect()` when available, falls back to `quadraticCurveTo`. Only creates path — call `fill()` or `stroke()` after. |
 
 ### @lucid-2d/engine
 

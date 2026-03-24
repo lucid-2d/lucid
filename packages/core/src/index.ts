@@ -12,6 +12,9 @@ export { computeLayout, type LayoutDirection, type LayoutAlign, type LayoutJusti
 // 精灵
 export { Sprite, SpriteSheet, AnimatedSprite, type SpriteProps, type SourceRect, type SpriteSheetRegions, type AnimatedSpriteProps, type FrameDef, type PlayMode } from './sprite.js';
 
+// Canvas 工具
+export { drawRoundRect } from './canvas.js';
+
 // 工具
 export { Timer, CountdownTimer, type CountdownOptions } from './timer.js';
 export { SeededRNG } from './rng.js';
