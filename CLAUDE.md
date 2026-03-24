@@ -311,7 +311,7 @@ npx vite --config playground/vite.config.ts --port 3456
 [ ] CLAUDE.md 已同步
 [ ] 版本号已 bump
 [ ] git commit + push
-[ ] npm publish
+[ ] GITHUB_TOKEN=xxx ./scripts/publish.sh（自动替换 workspace:*，不要手动 npm publish）
 [ ] GitHub Issue 回复 + 关闭
 ```
 
