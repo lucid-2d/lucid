@@ -108,6 +108,8 @@ function patchCtxCJKFallback(ctx: any): void {
 
 function createMockCanvas(w = 390, h = 844): any {
   // Full Canvas 2D API stub — all methods are no-ops, works in any JS environment
+  // width/height use LOGICAL pixels (matching real canvas element behavior).
+  // WebAdapter reads canvas.width as logical size and multiplies by DPR for physical buffer.
   const noop = () => {};
   const gradient = { addColorStop: noop };
   const mockCtx = {
@@ -153,8 +155,8 @@ function createMockCanvas(w = 390, h = 844): any {
   };
 
   return {
-    width: w * 2,
-    height: h * 2,
+    width: w,
+    height: h,
     style: { width: '', height: '' },
     getContext: () => mockCtx,
     getBoundingClientRect: () => ({
