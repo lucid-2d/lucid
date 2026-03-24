@@ -107,6 +107,18 @@ export class Entity extends UINode {
     return snap;
   }
 
+  // Restore source properties + UINode structural props from snapshot
+  $restore(snapshot: import('./node.js').NodeSnapshot): this {
+    if (this._source) {
+      for (const p of this._props) {
+        if (p in snapshot) {
+          this._source[p] = (snapshot as any)[p];
+        }
+      }
+    }
+    return super.$restore(snapshot);
+  }
+
   // Zero rendering cost — skip all canvas operations
   protected draw(): void {}
   $render(ctx: CanvasRenderingContext2D): void {

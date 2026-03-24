@@ -510,3 +510,71 @@ function createMockCtx(): CanvasRenderingContext2D {
     globalAlpha: 1,
   } as unknown as CanvasRenderingContext2D;
 }
+
+// ── $restore ────────────────────────────────────
+
+describe('UINode $restore', () => {
+  it('restores structural properties from snapshot', () => {
+    const node = new UINode({ id: 'test', x: 10, y: 20, width: 100, height: 50 });
+    const snap = node.$snapshot();
+
+    node.x = 999; node.y = 888; node.width = 1; node.height = 1;
+    node.visible = false; node.alpha = 0.1;
+
+    node.$restore(snap);
+    expect(node.x).toBe(10);
+    expect(node.y).toBe(20);
+    expect(node.width).toBe(100);
+    expect(node.height).toBe(50);
+    expect(node.visible).toBe(true);
+    expect(node.alpha).toBe(1);
+  });
+
+  it('does not restore type or id', () => {
+    const node = new UINode({ id: 'original', width: 50, height: 50 });
+    const snap = node.$snapshot();
+    // id is read-only via constructor, but verify it doesn't change
+    expect(node.id).toBe('original');
+    node.$restore(snap);
+    expect(node.id).toBe('original');
+  });
+
+  it('does not affect children', () => {
+    const parent = new UINode({ id: 'parent', width: 100, height: 100 });
+    const child = new UINode({ id: 'child', x: 10, y: 10, width: 30, height: 30 });
+    parent.addChild(child);
+
+    const snap = parent.$snapshot();
+    child.x = 999;
+    parent.$restore(snap);
+
+    // Parent restored, child NOT restored
+    expect(parent.x).toBe(0);
+    expect(child.x).toBe(999);
+  });
+
+  it('returns this for chaining', () => {
+    const node = new UINode({ id: 'test', width: 50, height: 50 });
+    const snap = node.$snapshot();
+    const result = node.$restore(snap);
+    expect(result).toBe(node);
+  });
+
+  it('round-trip: snapshot → mutate → restore', () => {
+    const node = new UINode({ id: 'n', x: 42, y: 84, width: 200, height: 300, alpha: 0.5 });
+    node.interactive = true;
+    const snap = node.$snapshot();
+
+    node.x = 0; node.y = 0; node.width = 0; node.height = 0;
+    node.alpha = 1; node.interactive = false; node.visible = false;
+
+    node.$restore(snap);
+    expect(node.x).toBe(42);
+    expect(node.y).toBe(84);
+    expect(node.width).toBe(200);
+    expect(node.height).toBe(300);
+    expect(node.alpha).toBe(0.5);
+    expect(node.interactive).toBe(true);
+    expect(node.visible).toBe(true);
+  });
+});

@@ -547,6 +547,30 @@ export class UINode extends EventEmitter {
   }
 
   /**
+   * Restore structural properties from a snapshot.
+   * Restores x, y, width, height, visible, interactive, alpha.
+   * Does NOT restore type, id (identity), text, info (computed), or children (tree structure).
+   *
+   * Used for AI bot forward search (Expectimax/MCTS):
+   * ```typescript
+   * const snap = node.$snapshot();
+   * // ... simulate actions ...
+   * node.$restore(snap);  // revert to saved state
+   * ```
+   */
+  $restore(snapshot: NodeSnapshot): this {
+    this.x = snapshot.x;
+    this.y = snapshot.y;
+    this.width = snapshot.width;
+    this.height = snapshot.height;
+    this.visible = snapshot.visible;
+    this.interactive = snapshot.interactive;
+    this.alpha = snapshot.alpha;
+    this._dirty = true;
+    return this;
+  }
+
+  /**
    * Compare two snapshots, return property-level changes.
    *
    * ```typescript

@@ -231,3 +231,81 @@ describe('Entity', () => {
     expect(root.$query('Shield')).toHaveLength(1);
   });
 });
+
+// ── $restore ──
+
+describe('Entity $restore', () => {
+  it('restores source properties from snapshot', () => {
+    const ship = new Ship();
+    const entity = Entity.from(ship, { id: 'ship', props: ['x', 'y', 'speed', 'angle', 'state'] });
+
+    const snap = entity.$snapshot();
+    ship.x = 999; ship.y = 888; ship.speed = 0; ship.state = 'flying';
+
+    entity.$restore(snap);
+    expect(ship.x).toBe(100);
+    expect(ship.y).toBe(200);
+    expect(ship.speed).toBe(5);
+    expect(ship.state).toBe('orbiting');
+  });
+
+  it('restores UINode structural props too', () => {
+    const obj = { hp: 100 };
+    const entity = Entity.from(obj, { id: 'unit', props: ['hp'] });
+    entity.alpha = 0.5; entity.visible = false;
+
+    const snap = entity.$snapshot();
+    entity.alpha = 0.1; entity.visible = true;
+
+    entity.$restore(snap);
+    expect(entity.alpha).toBe(0.5);
+    expect(entity.visible).toBe(false);
+    expect(obj.hp).toBe(100); // source prop also restored
+  });
+
+  it('ignores non-exposed properties in snapshot', () => {
+    const ship = new Ship();
+    const entity = Entity.from(ship, { id: 'ship', props: ['x', 'y'] });
+    const snap = entity.$snapshot();
+    // Manually inject extra property
+    (snap as any).speed = 999;
+
+    entity.$restore(snap);
+    // speed is NOT in _props, so it should NOT be restored
+    expect(ship.speed).toBe(5); // original value
+  });
+
+  it('does not throw with null source', () => {
+    const ship = new Ship();
+    const entity = Entity.from(ship, { id: 'ship', props: ['x', 'y'] });
+    const snap = entity.$snapshot();
+
+    entity.source = null as any;
+    expect(() => entity.$restore(snap)).not.toThrow();
+  });
+
+  it('round-trip: snapshot → simulate → restore (OracleBot pattern)', () => {
+    const chain = { length: 25, speed: 20, pushing: true, frozen: false, totalRemoved: 0 };
+    const entity = Entity.from(chain, {
+      id: 'chain',
+      type: 'Chain',
+      props: ['length', 'speed', 'pushing', 'frozen', 'totalRemoved'],
+    });
+
+    const saved = entity.$snapshot();
+
+    // Simulate: chain shrinks, speeds up, removes balls
+    chain.length = 18;
+    chain.speed = 25;
+    chain.pushing = false;
+    chain.totalRemoved = 7;
+
+    // Restore
+    entity.$restore(saved);
+    expect(chain.length).toBe(25);
+    expect(chain.speed).toBe(20);
+    expect(chain.pushing).toBe(true);
+    expect(chain.frozen).toBe(false);
+    expect(chain.totalRemoved).toBe(0);
+  });
+});
