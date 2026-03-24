@@ -12,6 +12,23 @@ import { createApp, type App, type AppOptions } from './app.js';
 import type { InteractionRecord } from '@lucid-2d/core';
 import { detectPlatform, type PlatformAdapter, type ScreenInfo } from './platform/detect.js';
 
+// Cache @napi-rs/canvas module — native binary load is expensive (~5-8s cold),
+// caching ensures it's only paid once per worker process.
+let _napiCanvas: any = null;
+function getNapiCanvas(): any {
+  if (!_napiCanvas) {
+    try {
+      _napiCanvas = require('@napi-rs/canvas');
+    } catch {
+      throw new Error(
+        '[lucid] @napi-rs/canvas is required for headless rendering.\n' +
+        'Install it: pnpm add -D @napi-rs/canvas'
+      );
+    }
+  }
+  return _napiCanvas;
+}
+
 // ── Mock Canvas ──
 
 function createMockCanvas(w = 390, h = 844): any {
@@ -146,15 +163,7 @@ export function createTestApp(opts?: TestAppOptions): TestApp {
   let app: App;
 
   if (renderMode) {
-    let napiCanvas: any;
-    try {
-      napiCanvas = require('@napi-rs/canvas');
-    } catch {
-      throw new Error(
-        '[lucid] @napi-rs/canvas is required for headless rendering.\n' +
-        'Install it: pnpm add -D @napi-rs/canvas'
-      );
-    }
+    const napiCanvas = getNapiCanvas();
     const adapter = new HeadlessAdapter(w, h, napiCanvas);
     canvasRef = adapter.getCanvas();
     app = createApp({
@@ -368,12 +377,7 @@ export interface ImageDiffResult {
  * ```
  */
 export async function imageDiff(a: Buffer, b: Buffer, threshold = 0): Promise<ImageDiffResult> {
-  let napiCanvas: any;
-  try {
-    napiCanvas = require('@napi-rs/canvas');
-  } catch {
-    throw new Error('[lucid] imageDiff requires @napi-rs/canvas. Install: pnpm add -D @napi-rs/canvas');
-  }
+  const napiCanvas = getNapiCanvas();
 
   const [imgA, imgB] = await Promise.all([
     napiCanvas.loadImage(a),
