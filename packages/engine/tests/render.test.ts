@@ -63,6 +63,14 @@ describe('Headless rendering', () => {
     expect(typeof app.saveImage).toBe('function');
   });
 
+  it('polyfills globalThis.Image in render mode', () => {
+    createTestApp({ render: true });
+    // @napi-rs/canvas Image should be available globally
+    expect(typeof (globalThis as any).Image).not.toBe('undefined');
+    const img = new (globalThis as any).Image();
+    expect(img).toBeDefined();
+  });
+
   it('toImage returns a valid PNG buffer', () => {
     const app = createTestApp({ render: true });
     app.router.push(new ColorScene({ id: 'color' }));

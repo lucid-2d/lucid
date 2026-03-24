@@ -109,6 +109,12 @@ class HeadlessAdapter implements PlatformAdapter {
     this.canvas = napiCanvas.createCanvas(w * 2, h * 2);
     this.ctx = this.canvas.getContext('2d');
     this.ctx.scale(2, 2); // DPR=2
+
+    // Polyfill globalThis.Image for headless — mirrors wx/tt polyfill pattern
+    // so game code using `new Image()` or `loadImage()` works without changes
+    if (typeof (globalThis as any).Image === 'undefined' && napiCanvas.Image) {
+      (globalThis as any).Image = napiCanvas.Image;
+    }
   }
 
   getScreenInfo(): ScreenInfo {

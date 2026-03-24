@@ -25,7 +25,7 @@ templates/   — Game templates (starter, quiz)
 
 ```bash
 pnpm install                    # install dependencies
-pnpm -r test                    # run all 598 tests
+pnpm -r test                    # run all 723 tests
 pnpm -r build                   # build all packages
 npx vite --config playground/vite.config.ts --port 3456  # run playground
 ```
@@ -240,6 +240,25 @@ const state = checkin.getState();
 const dialog = new CheckinDialog({ rewards: state.rewards, currentDay: state.currentDay, claimed: state.claimed });
 dialog.$on('claim', () => { const reward = checkin.claim(); });
 scene.addChild(dialog);
+```
+
+## Local development (alias setup)
+
+When developing a game that depends on local Lucid source:
+
+```typescript
+// vite.config.ts
+import { lucidAliases } from '../path/to/lucid/dev-aliases.js';
+
+export default defineConfig({
+  resolve: { alias: lucidAliases() },
+  // Generates all aliases including subpath exports:
+  // '@lucid-2d/core'           → packages/core/src/index.ts
+  // '@lucid-2d/engine'         → packages/engine/src/index.ts
+  // '@lucid-2d/engine/testing' → packages/engine/src/testing.ts
+  // '@lucid-2d/ui'             → packages/ui/src/index.ts
+  // ...
+});
 ```
 
 ## Test conventions
