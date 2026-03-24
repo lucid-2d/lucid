@@ -1,6 +1,6 @@
 {
   "name": "@lucid-2d/game-ui",
-  "version": "0.2.20",
+  "version": "0.2.21",
   "description": "Lucid game UI — 9 business components (CheckinDialog, ShopPanel, SettingsPanel, etc.)",
   "type": "module",
   "main": "dist/index.js",
@@ -22,8 +22,8 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@lucid-2d/core": "workspace:*",
-    "@lucid-2d/ui": "workspace:*"
+    "@lucid-2d/core": "^0.2.21",
+    "@lucid-2d/ui": "^0.2.21"
   },
   "devDependencies": {
     "vitest": "^3.1.0"
