@@ -11,6 +11,7 @@
 import { createApp, type App, type AppOptions } from './app.js';
 import type { InteractionRecord } from '@lucid-2d/core';
 import { detectPlatform, type PlatformAdapter, type ScreenInfo } from './platform/detect.js';
+import { registerHeadlessCanvas } from './canvas-utils.js';
 
 // Cache @napi-rs/canvas module — native binary load is expensive (~5-8s cold),
 // caching ensures it's only paid once per worker process.
@@ -283,6 +284,14 @@ export function createTestApp(opts?: TestAppOptions): TestApp {
         GlobalFonts.registerFromPath(path, family);
       }
     }
+
+    // Register headless canvas factory for createOffscreenCanvas
+    // (injected here so @napi-rs/canvas never appears in main engine code)
+    registerHeadlessCanvas((cw, ch) => {
+      const canvas = napiCanvas.createCanvas(cw, ch);
+      patchCtxCJKFallback(canvas.getContext('2d'));
+      return canvas;
+    });
 
     const adapter = new HeadlessAdapter(w, h, napiCanvas);
     canvasRef = adapter.getCanvas();

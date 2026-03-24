@@ -274,6 +274,8 @@ describe('App.settle', () => {
 
 describe('createOffscreenCanvas headless', () => {
   it('works in Node.js with @napi-rs/canvas', () => {
+    // createTestApp registers the headless canvas factory
+    createTestApp({ render: true });
     const canvas = createOffscreenCanvas(200, 100);
     expect(canvas).toBeDefined();
     const ctx = canvas.getContext('2d');

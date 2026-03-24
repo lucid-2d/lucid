@@ -6,11 +6,23 @@
  *
  * const offscreen = createOffscreenCanvas(200, 200);
  * const ctx = offscreen.getContext('2d');
- * // works on Web, WeChat, and Douyin
+ * // works on Web, WeChat, Douyin, and headless (via registerHeadlessCanvas)
  * ```
  */
 
 import { detectPlatform } from './platform/detect.js';
+
+// ── Headless canvas factory (injected by testing entry, never bundled in production) ──
+
+let _headlessCanvasFactory: ((w: number, h: number) => any) | null = null;
+
+/**
+ * Register a factory for creating offscreen canvases in headless (Node.js) mode.
+ * Called by `createTestApp()` in `@lucid-2d/engine/testing` — never imported by production code.
+ */
+export function registerHeadlessCanvas(factory: (w: number, h: number) => any): void {
+  _headlessCanvasFactory = factory;
+}
 
 /**
  * Create an offscreen canvas for pre-rendering (textures, thumbnails, etc.)
@@ -47,30 +59,10 @@ export function createOffscreenCanvas(width: number, height: number): any {
     return new OffscreenCanvas(width, height);
   }
 
-  // Headless (Node.js with @napi-rs/canvas)
-  try {
-    const napi = require('@napi-rs/canvas');
-    if (napi.createCanvas) {
-      const canvas = napi.createCanvas(width, height);
-      // Patch ctx for CJK fallback (if LucidCJK was registered by createTestApp)
-      const ctx = canvas.getContext('2d');
-      const proto = Object.getPrototypeOf(ctx);
-      const fontDesc = Object.getOwnPropertyDescriptor(proto, 'font');
-      if (fontDesc?.set) {
-        Object.defineProperty(ctx, 'font', {
-          get() { return fontDesc.get!.call(this); },
-          set(value: string) {
-            if (typeof value === 'string' && !value.includes('LucidCJK')) {
-              value = value + ', LucidCJK';
-            }
-            fontDesc.set!.call(this, value);
-          },
-          configurable: true,
-        });
-      }
-      return canvas;
-    }
-  } catch { /* @napi-rs/canvas not available */ }
+  // Headless (factory registered by createTestApp via testing entry)
+  if (_headlessCanvasFactory) {
+    return _headlessCanvasFactory(width, height);
+  }
 
   // Browser fallback
   if (typeof document !== 'undefined') {
