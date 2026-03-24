@@ -70,26 +70,21 @@ describe('Headless rendering', () => {
     expect(img).toBeDefined();
   });
 
-  it('auto-registers CJK fonts for Chinese text rendering', () => {
+  it('CJK text renders with any font-family (including Courier New)', () => {
     const app = createTestApp({ render: true });
 
-    // Create a scene that draws Chinese text
+    // Use "Courier New" — a built-in font without CJK glyphs.
+    // LucidCJK fallback should kick in for Chinese characters.
     class CJKScene extends SceneNode {
       protected draw(ctx: CanvasRenderingContext2D) {
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, 390, 844);
         ctx.fillStyle = '#000000';
-        ctx.font = '20px sans-serif';
+        ctx.font = '20px "Courier New"';
         ctx.fillText('你穿越了五个星域', 10, 50);
       }
     }
 
-    app.router.push(new CJKScene({ id: 'cjk', width: 390, height: 844 }));
-    app.tick(16);
-
-    const withText = app.toImage();
-
-    // Create a blank white scene for comparison
     class BlankScene extends SceneNode {
       protected draw(ctx: CanvasRenderingContext2D) {
         ctx.fillStyle = '#ffffff';
@@ -97,11 +92,14 @@ describe('Headless rendering', () => {
       }
     }
 
+    app.router.push(new CJKScene({ id: 'cjk', width: 390, height: 844 }));
+    app.tick(16);
+    const withText = app.toImage();
+
     app.router.replace(new BlankScene({ id: 'blank', width: 390, height: 844 }));
     app.tick(16);
     const blank = app.toImage();
 
-    // If CJK fonts are registered, the text scene should differ from blank
     expect(Buffer.compare(withText, blank)).not.toBe(0);
   });
 

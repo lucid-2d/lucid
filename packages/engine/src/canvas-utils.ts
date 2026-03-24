@@ -51,7 +51,24 @@ export function createOffscreenCanvas(width: number, height: number): any {
   try {
     const napi = require('@napi-rs/canvas');
     if (napi.createCanvas) {
-      return napi.createCanvas(width, height);
+      const canvas = napi.createCanvas(width, height);
+      // Patch ctx for CJK fallback (if LucidCJK was registered by createTestApp)
+      const ctx = canvas.getContext('2d');
+      const proto = Object.getPrototypeOf(ctx);
+      const fontDesc = Object.getOwnPropertyDescriptor(proto, 'font');
+      if (fontDesc?.set) {
+        Object.defineProperty(ctx, 'font', {
+          get() { return fontDesc.get!.call(this); },
+          set(value: string) {
+            if (typeof value === 'string' && !value.includes('LucidCJK')) {
+              value = value + ', LucidCJK';
+            }
+            fontDesc.set!.call(this, value);
+          },
+          configurable: true,
+        });
+      }
+      return canvas;
     }
   } catch { /* @napi-rs/canvas not available */ }
 

@@ -360,8 +360,8 @@ export function createApp(options: AppOptions = {}): App {
       renderDebugOverlay(ctx, root);
     }
 
-    // Debug 模式：绘制 FPS
-    if (debugMode) {
+    // Debug 模式：绘制 FPS（仅在 rAF 游戏循环运行时，手动 tick/settle 不显示）
+    if (debugMode && rafId !== null) {
       ctx.save();
       ctx.fillStyle = 'rgba(0,0,0,0.5)';
       ctx.fillRect(screen.width - 60, 4, 56, 20);

@@ -50,6 +50,8 @@ const CJK_FONT_CANDIDATES: Array<{ path: string; family: string }> = [
   { path: 'C:\\Windows\\Fonts\\simhei.ttf', family: 'sans-serif' },
 ];
 
+const LUCID_CJK_FAMILY = 'LucidCJK';
+
 function registerSystemCJKFonts(napiCanvas: any): void {
   if (_cjkFontsRegistered) return;
   _cjkFontsRegistered = true;
@@ -58,13 +60,39 @@ function registerSystemCJKFonts(napiCanvas: any): void {
   const GlobalFonts = napiCanvas.GlobalFonts;
   if (!GlobalFonts?.registerFromPath) return;
 
-  for (const { path, family } of CJK_FONT_CANDIDATES) {
+  for (const { path } of CJK_FONT_CANDIDATES) {
     try {
       if (fs.existsSync(path)) {
-        GlobalFonts.registerFromPath(path, family);
+        // Register as dedicated family — avoids conflicts with built-in fonts
+        // (e.g. built-in "Courier New" has no CJK, registering over it won't help)
+        GlobalFonts.registerFromPath(path, LUCID_CJK_FAMILY);
+        break;
       }
-    } catch { /* skip inaccessible fonts */ }
+    } catch { /* skip */ }
   }
+}
+
+/**
+ * Patch ctx.font setter to auto-append CJK fallback.
+ * @napi-rs/canvas has no browser-like automatic font fallback,
+ * so `ctx.font = '20px "Courier New"'` would show □□□ for Chinese.
+ * This patches it to `'20px "Courier New", LucidCJK'`.
+ */
+function patchCtxCJKFallback(ctx: any): void {
+  const proto = Object.getPrototypeOf(ctx);
+  const origDesc = Object.getOwnPropertyDescriptor(proto, 'font');
+  if (!origDesc?.set) return;
+
+  Object.defineProperty(ctx, 'font', {
+    get() { return origDesc.get!.call(this); },
+    set(value: string) {
+      if (typeof value === 'string' && !value.includes(LUCID_CJK_FAMILY)) {
+        value = value + ', ' + LUCID_CJK_FAMILY;
+      }
+      origDesc.set!.call(this, value);
+    },
+    configurable: true,
+  });
 }
 
 // ── Mock Canvas ──
@@ -147,6 +175,9 @@ class HeadlessAdapter implements PlatformAdapter {
     this.canvas = napiCanvas.createCanvas(w * 2, h * 2);
     this.ctx = this.canvas.getContext('2d');
     this.ctx.scale(2, 2); // DPR=2
+
+    // Patch main ctx for CJK fallback
+    patchCtxCJKFallback(this.ctx);
 
     // Polyfill globalThis.Image for headless — mirrors wx/tt polyfill pattern
     // so game code using `new Image()` or `loadImage()` works without changes
