@@ -150,7 +150,7 @@ class HeadlessAdapter implements PlatformAdapter {
 
     // Polyfill globalThis.Image for headless — mirrors wx/tt polyfill pattern
     // so game code using `new Image()` or `loadImage()` works without changes
-    if (typeof (globalThis as any).Image === 'undefined' && napiCanvas.Image) {
+    if (napiCanvas.Image) {
       (globalThis as any).Image = napiCanvas.Image;
     }
   }
@@ -195,6 +195,19 @@ export interface TestAppOptions extends Partial<AppOptions> {
    * ```
    */
   fonts?: FontConfig[];
+  /**
+   * Root directory for resolving relative asset paths in headless mode.
+   * When set, `new Image().src = 'sprites/ship.png'` auto-resolves to
+   * `{assetRoot}/sprites/ship.png` so @napi-rs/canvas can load from filesystem.
+   *
+   * ```typescript
+   * createTestApp({
+   *   render: true,
+   *   assetRoot: path.join(__dirname, '../public'),
+   * });
+   * ```
+   */
+  assetRoot?: string;
 }
 
 export interface TestApp extends App {
@@ -242,6 +255,30 @@ export function createTestApp(opts?: TestAppOptions): TestApp {
 
     const adapter = new HeadlessAdapter(w, h, napiCanvas);
     canvasRef = adapter.getCanvas();
+
+    // assetRoot: patch globalThis.Image to resolve relative paths
+    // Must be AFTER HeadlessAdapter (which sets the base Image polyfill)
+    const assetRoot = opts?.assetRoot;
+    if (assetRoot) {
+      const nodePath = require('path');
+      const NapiImage = napiCanvas.Image;
+      (globalThis as any).Image = function HeadlessImage(w?: number, h?: number) {
+        const img = w != null ? new NapiImage(w, h) : new NapiImage();
+        const srcDesc = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(img), 'src')!;
+        Object.defineProperty(img, 'src', {
+          get() { return srcDesc.get!.call(img); },
+          set(value: string | Buffer) {
+            if (typeof value === 'string' && !nodePath.isAbsolute(value) && !value.startsWith('data:') && !value.startsWith('http')) {
+              value = nodePath.resolve(assetRoot, value);
+            }
+            srcDesc.set!.call(img, value);
+          },
+          configurable: true,
+        });
+        return img;
+      };
+    }
+
     app = createApp({
       adapter,
       debug: true,

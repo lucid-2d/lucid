@@ -105,6 +105,42 @@ describe('Headless rendering', () => {
     expect(Buffer.compare(withText, blank)).not.toBe(0);
   });
 
+  it('assetRoot resolves relative image paths', async () => {
+    const app = createTestApp({
+      render: true,
+      assetRoot: '/tmp/lucid-test-assets',
+    });
+
+    // new Image() with relative path should resolve to assetRoot
+    const img = new (globalThis as any).Image();
+    const loaded = new Promise<void>((resolve, reject) => {
+      img.onload = () => resolve();
+      img.onerror = () => reject(new Error('Image load failed'));
+    });
+    img.src = 'sprites/test.png'; // relative path → /tmp/lucid-test-assets/sprites/test.png
+    await loaded;
+
+    expect(img.width).toBeGreaterThan(0);
+    expect(img.height).toBeGreaterThan(0);
+  });
+
+  it('assetRoot does not modify absolute paths', async () => {
+    createTestApp({
+      render: true,
+      assetRoot: '/tmp/lucid-test-assets',
+    });
+
+    const img = new (globalThis as any).Image();
+    const loaded = new Promise<void>((resolve, reject) => {
+      img.onload = () => resolve();
+      img.onerror = () => reject(new Error('Image load failed'));
+    });
+    img.src = '/tmp/lucid-test-assets/sprites/test.png'; // absolute path, unchanged
+    await loaded;
+
+    expect(img.width).toBeGreaterThan(0);
+  });
+
   it('toImage returns a valid PNG buffer', () => {
     const app = createTestApp({ render: true });
     app.router.push(new ColorScene({ id: 'color' }));
