@@ -17,3 +17,4 @@ export { AssetLoader, type AssetEntry } from './asset-loader.js';
 export { batchSimulate, type SimulationConfig, type SimulationResult, type BatchResult } from './simulate.js';
 export { DebugPanel, attachDebugPanel } from './debug-panel.js';
 export { timeSlice, type TimeSliceOptions } from './time-slice.js';
+export { boot, type BootOptions } from './boot.js';
