@@ -65,10 +65,44 @@ describe('Headless rendering', () => {
 
   it('polyfills globalThis.Image in render mode', () => {
     createTestApp({ render: true });
-    // @napi-rs/canvas Image should be available globally
     expect(typeof (globalThis as any).Image).not.toBe('undefined');
     const img = new (globalThis as any).Image();
     expect(img).toBeDefined();
+  });
+
+  it('auto-registers CJK fonts for Chinese text rendering', () => {
+    const app = createTestApp({ render: true });
+
+    // Create a scene that draws Chinese text
+    class CJKScene extends SceneNode {
+      protected draw(ctx: CanvasRenderingContext2D) {
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, 390, 844);
+        ctx.fillStyle = '#000000';
+        ctx.font = '20px sans-serif';
+        ctx.fillText('你穿越了五个星域', 10, 50);
+      }
+    }
+
+    app.router.push(new CJKScene({ id: 'cjk', width: 390, height: 844 }));
+    app.tick(16);
+
+    const withText = app.toImage();
+
+    // Create a blank white scene for comparison
+    class BlankScene extends SceneNode {
+      protected draw(ctx: CanvasRenderingContext2D) {
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, 390, 844);
+      }
+    }
+
+    app.router.replace(new BlankScene({ id: 'blank', width: 390, height: 844 }));
+    app.tick(16);
+    const blank = app.toImage();
+
+    // If CJK fonts are registered, the text scene should differ from blank
+    expect(Buffer.compare(withText, blank)).not.toBe(0);
   });
 
   it('toImage returns a valid PNG buffer', () => {

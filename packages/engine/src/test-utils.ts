@@ -29,6 +29,44 @@ function getNapiCanvas(): any {
   return _napiCanvas;
 }
 
+// ── System CJK font auto-detection ──
+
+let _cjkFontsRegistered = false;
+
+/** Well-known CJK font paths per platform */
+const CJK_FONT_CANDIDATES: Array<{ path: string; family: string }> = [
+  // macOS
+  { path: '/System/Library/Fonts/STHeiti Medium.ttc', family: 'sans-serif' },
+  { path: '/System/Library/Fonts/Hiragino Sans GB.ttc', family: 'sans-serif' },
+  { path: '/System/Library/Fonts/Supplemental/Songti.ttc', family: 'serif' },
+  { path: '/Library/Fonts/Arial Unicode.ttf', family: 'sans-serif' },
+  // Linux (common distro paths)
+  { path: '/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc', family: 'sans-serif' },
+  { path: '/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc', family: 'sans-serif' },
+  { path: '/usr/share/fonts/noto-cjk/NotoSansCJK-Regular.ttc', family: 'sans-serif' },
+  { path: '/usr/share/fonts/google-noto-cjk/NotoSansCJK-Regular.ttc', family: 'sans-serif' },
+  // Windows
+  { path: 'C:\\Windows\\Fonts\\msyh.ttc', family: 'sans-serif' },
+  { path: 'C:\\Windows\\Fonts\\simhei.ttf', family: 'sans-serif' },
+];
+
+function registerSystemCJKFonts(napiCanvas: any): void {
+  if (_cjkFontsRegistered) return;
+  _cjkFontsRegistered = true;
+
+  const fs = require('fs');
+  const GlobalFonts = napiCanvas.GlobalFonts;
+  if (!GlobalFonts?.registerFromPath) return;
+
+  for (const { path, family } of CJK_FONT_CANDIDATES) {
+    try {
+      if (fs.existsSync(path)) {
+        GlobalFonts.registerFromPath(path, family);
+      }
+    } catch { /* skip inaccessible fonts */ }
+  }
+}
+
 // ── Mock Canvas ──
 
 function createMockCanvas(w = 390, h = 844): any {
@@ -130,6 +168,13 @@ class HeadlessAdapter implements PlatformAdapter {
 
 // ── createTestApp ──
 
+export interface FontConfig {
+  /** Font family name (e.g. 'sans-serif', 'MyFont') */
+  family: string;
+  /** Absolute path to the font file (.ttf/.ttc/.otf) */
+  path: string;
+}
+
 export interface TestAppOptions extends Partial<AppOptions> {
   /** Enable headless canvas rendering (requires @napi-rs/canvas) */
   render?: boolean;
@@ -137,6 +182,19 @@ export interface TestAppOptions extends Partial<AppOptions> {
   width?: number;
   /** Canvas height in logical pixels (default: 844) */
   height?: number;
+  /**
+   * Register custom fonts for headless rendering.
+   * System CJK fonts (PingFang/STHeiti/Noto) are auto-detected;
+   * use this for custom game fonts.
+   *
+   * ```typescript
+   * createTestApp({
+   *   render: true,
+   *   fonts: [{ family: 'GameFont', path: './assets/fonts/myfont.ttf' }],
+   * });
+   * ```
+   */
+  fonts?: FontConfig[];
 }
 
 export interface TestApp extends App {
@@ -170,6 +228,18 @@ export function createTestApp(opts?: TestAppOptions): TestApp {
 
   if (renderMode) {
     const napiCanvas = getNapiCanvas();
+
+    // Auto-register system CJK fonts (once per process)
+    registerSystemCJKFonts(napiCanvas);
+
+    // Register custom fonts
+    if (opts?.fonts) {
+      const GlobalFonts = napiCanvas.GlobalFonts;
+      for (const { family, path } of opts.fonts) {
+        GlobalFonts.registerFromPath(path, family);
+      }
+    }
+
     const adapter = new HeadlessAdapter(w, h, napiCanvas);
     canvasRef = adapter.getCanvas();
     app = createApp({

@@ -6,4 +6,4 @@
  * ```
  */
 
-export { createTestApp, tap, touch, assertTree, generateTestCode, imageDiff, assertImageChanged, type TestApp, type TestAppOptions, type ImageDiffResult } from './test-utils.js';
+export { createTestApp, tap, touch, assertTree, generateTestCode, imageDiff, assertImageChanged, type TestApp, type TestAppOptions, type FontConfig, type ImageDiffResult } from './test-utils.js';
