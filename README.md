@@ -81,14 +81,15 @@ import { createApp, SceneNode, SceneRouter, loadImage, WebAdapter, WxAdapter, Tt
 
 | Export | Type | Description |
 |--------|------|-------------|
-| `createApp(opts)` | function | Creates app. Options: `{ platform?, canvas?, adapter?, debug?, debugOverlay?, debugPanel?, rngSeed?, fixedTimestep? }`. Returns `App` with `.root`, `.router`, `.screen`, `.rng`, `.debug`, `.debugOverlay`, `.timeScale`, `.fixedTimestep`, `.debugPanel`. `debugPanel: true` adds a floating debug button — tap to see full game state dump, one-click copy for AI analysis. |
-| `SceneNode` | class | Extends UINode. Override `onEnter()`, `onExit()`, `onPause()`, `onResume()`, `$fixedUpdate(dt)` (deterministic physics). |
+| `createApp(opts)` | function | Creates app. Options: `{ platform?, canvas?, adapter?, debug?, debugOverlay?, debugPanel?, rngSeed?, fixedTimestep?, assetRoot? }`. Returns `App` with `.root`, `.router`, `.screen`, `.rng`, `.debug`, `.debugOverlay`, `.timeScale`, `.fixedTimestep`, `.debugPanel`, `.renderOneFrame()`, `.simulateTouch(x,y)`, `.applyPreset(name)`, `.listPresets()`, `.settle(frames?, intervalMs?)`. `assetRoot` auto-configures `loadImage()` path resolution for cross-platform builds. |
+| `SceneNode` | class | Extends UINode. Override `onEnter()`, `onExit()`, `onPause()`, `onResume()`, `$fixedUpdate(dt)`, `$presets()` (declare screenshot-able states). |
 | `SceneRouter` | class | `push(scene, transition?)`, `replace(scene, transition?)`, `pop(transition?)`. Transition: `{ type: 'fade'\|'slideLeft'\|'slideRight'\|'slideUp'\|'slideDown'\|'custom', duration, render? }`. `custom` type: `render(ctx, progress, oldScene, newScene)` takes over all rendering. Set `defaultTransition` for global default. |
 | `WebAdapter` | class | Browser platform. Auto-creates from canvas element. |
 | `WxAdapter` | class | WeChat Mini Game platform. Uses `wx.*` globals. |
 | `TtAdapter` | class | Douyin Mini Game platform. Uses `tt.*` globals. |
-| `loadImage(src, timeout?)` | function | Platform-aware async image loader. Returns Promise. Auto-detects Web/Wx/Tt. Use with `Sprite`. |
-| `createTestApp(opts?)` | function | Headless test app. Options: `{ render?: boolean, width?, height? }`. When `render: true`, uses `@napi-rs/canvas` for real PNG output. Returns `TestApp` with `toImage(): Buffer` and `saveImage(path)`. |
+| `loadImage(src, timeout?)` | function | Platform-aware async image loader. Returns `Promise<ImageLike>`. Auto-detects Web/Wx/Tt. Relative paths auto-resolved via `assetRoot`. |
+| `setAssetRoot(root)` | function | Set root path for `loadImage()` relative path resolution. Called automatically by `createApp({ assetRoot })`. |
+| `createTestApp(opts?)` | function | Headless test app. Options: `{ render?, width?, height?, assetRoot?, fonts? }`. When `render: true`, uses `@napi-rs/canvas` for real PNG output with auto CJK font registration. Returns `TestApp` with `toImage(): Buffer`, `saveImage(path)`. |
 | `tap(app, nodeId)` | function | Simulate tap on node by id. Emits touchstart + touchend. Returns `true` if found. |
 | `touch(app, x, y, type?)` | function | Simulate touch at coordinates via hitTest. Type: `'start'` \| `'end'` \| `'move'`, default: full tap. Returns node path. |
 | `assertTree(app, pattern)` | function | Assert `$inspect()` output contains all pattern lines (trimmed, ignoring extra nodes). Throws with diff on failure. |
@@ -99,7 +100,7 @@ import { createApp, SceneNode, SceneRouter, loadImage, WebAdapter, WxAdapter, Tt
 | `Keyboard` | class | PC keyboard input. `bind(target)`, `isDown(key)`, `wasPressed(key)`, `wasReleased(key)`, `update()`. Test: `simulatePress(key)`, `simulateRelease(key)`. |
 | `AssetLoader` | class | Batch asset loading. `add(name, src)`, `load(): Promise<Map>`, `onProgress`, `progress`, `get(name)`. Auto-detects image/audio/json. |
 | `timeSlice(opts)` | function | Split heavy computation across frames. `{ total, batch?, work(i), onProgress? }`. Yields via rAF between batches to keep UI responsive. |
-| `createOffscreenCanvas(w, h)` | function | Cross-platform offscreen canvas (Web: OffscreenCanvas/createElement, WX: wx.createOffscreenCanvas, TT: tt.createOffscreenCanvas). |
+| `createOffscreenCanvas(w, h)` | function | Cross-platform offscreen canvas (Web: OffscreenCanvas/createElement, WX: wx.createOffscreenCanvas, TT: tt.createOffscreenCanvas, Headless: via registered factory). |
 
 ### @lucid-2d/ui
 

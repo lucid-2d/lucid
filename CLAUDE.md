@@ -12,20 +12,20 @@ Lucid is a Canvas 2D game framework designed for AI agents to build, inspect, de
 ```
 packages/
   core/      — UINode, Entity, events, animation, Timer, SeededRNG, Sprite, AnimatedSprite, NineSlice, Camera, I18n, text utils
-  engine/    — createApp (timeScale/fixedTimestep/debugPanel/renderOneFrame/simulateTouch/applyPreset), SceneRouter (transitions+custom+hitTest隔离), SceneNode ($presets), platform adapters, headless rendering, audio (register), keyboard, asset loader, DebugPanel, test utils
+  engine/    — createApp (timeScale/fixedTimestep/debugPanel/renderOneFrame/simulateTouch/applyPreset/settle/assetRoot), SceneRouter (transitions+custom+hitTest隔离), SceneNode ($presets), platform adapters, headless rendering (CJK/Image/assetRoot polyfill), loadImage (assetRoot), audio (register), keyboard, asset loader, DebugPanel, test utils
   ui/        — 11 base components (Button, Label, Modal, Toggle, TabBar, ScrollView, ProgressBar(colorStops/label), ...)
   game-ui/   — 9 business components (CheckinDialog, ShopPanel, SettingsPanel, ...)
   physics/   — Vec2, collision, ParticlePool/Emitter/Presets, BezierPath, screen shake
   systems/   — 10 operation systems (Storage, Checkin, Skin, Achievement, Mission, ...)
 playground/  — Visual component gallery (vite dev server)
-templates/   — Game templates (starter, quiz)
+templates/   — Game templates (starter, quiz, wx-build)
 ```
 
 ## Commands
 
 ```bash
 pnpm install                    # install dependencies
-pnpm -r test                    # run all 723 tests
+pnpm -r test                    # run all 735 tests
 pnpm -r build                   # build all packages
 npx vite --config playground/vite.config.ts --port 3456  # run playground
 ```
@@ -72,7 +72,15 @@ core (zero deps)
 ```typescript
 import { createApp } from '@lucid-2d/engine';
 
+// Web
 const app = createApp({ platform: 'web', canvas, debug: true });
+
+// WeChat Mini Game
+const app = createApp({ platform: 'wx', assetRoot: 'img/' });
+
+// assetRoot makes loadImage() auto-resolve relative paths:
+// loadImage('bg.png') → 'img/bg.png' on WX, 'bg.png' on Web
+
 app.timeScale = 1;  // 0=pause, 0.5=slow, 1=normal, 2=fast
 app.router.push(new MyScene(app));
 app.start();
@@ -181,9 +189,14 @@ class GameScene extends SceneNode {
 Use with headless rendering for automated screenshots:
 
 ```typescript
-const app = createTestApp({ render: true });
+const app = createTestApp({
+  render: true,
+  assetRoot: path.join(__dirname, '../public'),  // resolve relative image paths
+  fonts: [{ family: 'GameFont', path: './assets/fonts/custom.ttf' }],  // optional custom fonts
+});
+
 app.router.push(new GameScene(app));
-app.tick(16);
+await app.settle(120);  // async tick loop — lets image loading / async onEnter complete
 
 // Discover available presets
 console.log(app.listPresets()); // ['gameplay', 'paused', 'death', 'transition']
