@@ -79,6 +79,8 @@ export interface NodeSnapshot {
   text?: string;
   info?: string;
   children?: NodeSnapshot[];
+  /** Entity custom props from Entity.from({ props: [...] }) */
+  [key: string]: any;
 }
 
 export interface PropChange {
@@ -583,7 +585,7 @@ export class UINode extends EventEmitter {
     const path = parentPath ? `${parentPath} > ${before.id || before.type}` : (before.id || before.type);
 
     // Compare scalar props
-    const keys: (keyof NodeSnapshot)[] = ['x', 'y', 'width', 'height', 'visible', 'interactive', 'alpha', 'text', 'info'];
+    const keys = ['x', 'y', 'width', 'height', 'visible', 'interactive', 'alpha', 'text', 'info'] as const;
     for (const key of keys) {
       if (before[key] !== after[key]) {
         changes.push({ path, prop: key, from: before[key], to: after[key] });

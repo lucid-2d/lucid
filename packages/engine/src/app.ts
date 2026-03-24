@@ -65,6 +65,8 @@ export interface App {
   readonly root: UINode;
   readonly router: SceneRouter;
   readonly screen: ScreenInfo;
+  /** Platform canvas (Web: HTMLCanvasElement, WX/TT: platform canvas object) */
+  readonly canvas: any;
   /** 全局可复现随机数生成器 */
   readonly rng: SeededRNG;
   debug: boolean;
@@ -393,6 +395,7 @@ export function createApp(options: AppOptions = {}): App {
     router,
     screen,
     rng,
+    canvas: adapter.getCanvas(),
 
     get debug() { return recorder.enabled; },
     set debug(v: boolean) { recorder.enabled = v; },

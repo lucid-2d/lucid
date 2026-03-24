@@ -8,10 +8,10 @@
  * import { boot } from '@lucid-2d/engine';
  *
  * boot({
- *   debug: import.meta.env.DEV,
+ *   debug: true,
  *   assetRoot: 'img/',
  *   async onReady(app) {
- *     app.router.push(new MenuScene(app));
+ *     await app.router.push(new MenuScene(app)); // await if scene has preload()
  *   },
  * });
  * ```
@@ -82,16 +82,18 @@ export async function boot(options: BootOptions = {}): Promise<App> {
     ...rest,
   });
 
-  app.start();
-
   // Expose for AI agent / Playwright debugging
   if (platform === 'web' && typeof window !== 'undefined') {
     (window as any)._app = app;
   }
 
+  // onReady BEFORE start — so preload/push complete before first render frame
+  // (avoids first-frame blank when initial scene has async preload)
   if (onReady) {
     await onReady(app);
   }
+
+  app.start();
 
   return app;
 }

@@ -74,10 +74,10 @@ core (zero deps)
 import { boot } from '@lucid-2d/engine';
 
 boot({
-  debug: import.meta.env.DEV,
+  debug: true, // or import.meta.env.DEV (requires "types": ["vite/client"] in tsconfig)
   assetRoot: 'img/',
   async onReady(app) {
-    app.router.push(new MyScene(app));
+    await app.router.push(new MyScene(app)); // await if scene has preload()
   },
 });
 
@@ -231,6 +231,12 @@ const before = app.root.$snapshot();
 // ... make changes ...
 const after = app.root.$snapshot();
 const changes = UINode.$diff(before, after);
+
+// Entity snapshot/restore for AI bot forward search (Expectimax/MCTS)
+const entity = Entity.from(chain, { id: 'chain', props: ['length', 'speed', 'totalRemoved'] });
+const snap = entity.$snapshot();  // captures Entity props + UINode structural state
+chain.speed = 0; chain.totalRemoved = 15;  // simulate action
+entity.$restore(snap);  // restore all declared props
 ```
 
 ### Recording and replay
