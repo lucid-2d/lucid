@@ -3,7 +3,8 @@
  */
 import { describe, it, expect } from 'vitest';
 import {
-  circleRect, circleCircle, lineCircle, pointInRect, pointInCircle,
+  circleRect, circleCircle, lineCircle, lineCircleDetailed, raycast,
+  pointInRect, pointInCircle,
 } from '../src/collision';
 import { vec2 } from '../src/vec2';
 
@@ -96,5 +97,75 @@ describe('lineCircle', () => {
     expect(lineCircle(vec2(0, 0), vec2(0, 0), vec2(0, 0), 10)).toBe(true);
     // Point outside circle
     expect(lineCircle(vec2(50, 50), vec2(50, 50), vec2(0, 0), 10)).toBe(false);
+  });
+});
+
+describe('lineCircleDetailed', () => {
+  it('returns hit point and distance', () => {
+    const hit = lineCircleDetailed(vec2(-100, 0), vec2(100, 0), vec2(0, 0), 10);
+    expect(hit.hit).toBe(true);
+    expect(hit.point.x).toBeCloseTo(-10);
+    expect(hit.point.y).toBeCloseTo(0);
+    expect(hit.distance).toBeCloseTo(90);
+    expect(hit.t).toBeCloseTo(0.45); // (-100 + 90) / 200
+  });
+
+  it('returns outward normal', () => {
+    const hit = lineCircleDetailed(vec2(-100, 0), vec2(100, 0), vec2(0, 0), 10);
+    expect(hit.hit).toBe(true);
+    expect(hit.normal.x).toBeCloseTo(-1);
+    expect(hit.normal.y).toBeCloseTo(0);
+  });
+
+  it('no hit when line misses', () => {
+    const hit = lineCircleDetailed(vec2(-100, 50), vec2(100, 50), vec2(0, 0), 10);
+    expect(hit.hit).toBe(false);
+  });
+
+  it('no hit when circle is past segment', () => {
+    const hit = lineCircleDetailed(vec2(-200, 0), vec2(-100, 0), vec2(0, 0), 10);
+    expect(hit.hit).toBe(false);
+  });
+
+  it('diagonal line hitting circle', () => {
+    const hit = lineCircleDetailed(vec2(0, 0), vec2(100, 100), vec2(50, 50), 10);
+    expect(hit.hit).toBe(true);
+    expect(hit.distance).toBeGreaterThan(0);
+    expect(hit.distance).toBeLessThan(100);
+  });
+});
+
+describe('raycast', () => {
+  const targets = [
+    { x: 0, y: -50, radius: 10, id: 'near' },
+    { x: 0, y: -150, radius: 10, id: 'far' },
+    { x: 100, y: 0, radius: 10, id: 'aside' },
+  ];
+
+  it('finds nearest hit along ray', () => {
+    const hit = raycast(vec2(0, 0), vec2(0, -1), targets);
+    expect(hit).not.toBeNull();
+    expect(hit!.target.id).toBe('near');
+    expect(hit!.distance).toBeCloseTo(40); // 50 - radius 10
+  });
+
+  it('ignores targets not in ray direction', () => {
+    const hit = raycast(vec2(0, 0), vec2(0, 1), targets); // shooting downward
+    expect(hit).toBeNull();
+  });
+
+  it('respects maxDistance', () => {
+    const hit = raycast(vec2(0, 0), vec2(0, -1), targets, 30);
+    expect(hit).toBeNull(); // nearest is at distance 40
+  });
+
+  it('returns null for empty targets', () => {
+    expect(raycast(vec2(0, 0), vec2(0, -1), [])).toBeNull();
+  });
+
+  it('returns hit point and normal', () => {
+    const hit = raycast(vec2(0, 0), vec2(0, -1), targets);
+    expect(hit!.point.y).toBeCloseTo(-40);
+    expect(hit!.normal.y).toBeCloseTo(1); // normal points toward ray origin
   });
 });

@@ -15,7 +15,7 @@ packages/
   engine/    — createApp (timeScale/fixedTimestep/debugPanel/renderOneFrame/simulateTouch/applyPreset/settle/assetRoot), SceneRouter (transitions+custom+hitTest隔离), SceneNode ($presets), platform adapters, headless rendering (CJK/Image/assetRoot polyfill), loadImage (assetRoot), audio (register), keyboard, asset loader, DebugPanel, test utils
   ui/        — 11 base components (Button, Label, Modal, Toggle, TabBar, ScrollView, ProgressBar(colorStops/label), ...)
   game-ui/   — 9 business components (CheckinDialog, ShopPanel, SettingsPanel, ...)
-  physics/   — Vec2, collision, ParticlePool/Emitter/Presets, BezierPath, screen shake
+  physics/   — Vec2, collision (lineCircleDetailed/raycast), ParticlePool/Emitter/Presets, BezierPath, screen shake
   systems/   — 10 operation systems (Storage, Checkin, Skin, Achievement, Mission, ...)
 playground/  — Visual component gallery (vite dev server)
 templates/   — Game templates (starter, quiz, wx-build)
@@ -25,7 +25,7 @@ templates/   — Game templates (starter, quiz, wx-build)
 
 ```bash
 pnpm install                    # install dependencies
-pnpm -r test                    # run all 735 tests
+pnpm -r test                    # run all 745 tests
 pnpm -r build                   # build all packages
 npx vite --config playground/vite.config.ts --port 3456  # run playground
 ```

@@ -181,7 +181,9 @@ import { vec2, add, sub, scale, normalize, distance, pointInRect, circleCircle, 
 | Export | Description |
 |--------|-------------|
 | `vec2(x, y)` | Create Vec2. All vec2 ops are pure functions: `add`, `sub`, `scale`, `normalize`, `dot`, `cross`, `distance`, `angle`, `fromAngle`, `perp`, `lerp`, `reflect`. |
-| `pointInRect`, `pointInCircle`, `circleRect`, `circleCircle`, `lineCircle` | Collision detection. Returns `CollisionResult \| null` with `normal` and `depth`. |
+| `pointInRect`, `pointInCircle`, `circleRect`, `circleCircle`, `lineCircle` | Collision detection. Returns `CollisionResult` with `normal` and `overlap`. |
+| `lineCircleDetailed(a, b, center, r)` | Line-circle intersection with hit point, distance, normal, t parameter. For projectile tracing and bot aiming. |
+| `raycast(origin, dir, targets, maxDist?)` | Cast ray against circle targets, find nearest hit. `targets: { x, y, radius, id? }[]`. Returns `RaycastHit \| null` with target, point, distance, normal. |
 | `ParticlePool` | Object pool with built-in renderer. `new ParticlePool(capacity, opts?)` — `opts.drawParticle?(ctx, p, t)` for custom rendering. `emit(x, y, opts?)`, `update(dt)`, `draw(ctx)`, `clear()`. `pool.active` returns active particles for manual iteration. Supports alpha fade, scale animation, friction. |
 | `ParticleEmitter` | Continuous emitter. `new ParticleEmitter(pool, config)`. Props: `x`, `y`, `active`. Methods: `update(dt)`, `start()`, `stop()`. Config: `rate` (particles/sec) + all EmitOptions. |
 | `ParticlePresets` | 5 presets: `explosion()`, `sparkle()`, `smoke()`, `fire()`, `trail()`. Each returns EmitOptions/EmitterConfig, accepts overrides. |

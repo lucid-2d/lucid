@@ -9,9 +9,9 @@ export {
 } from './vec2.js';
 
 export {
-  type CollisionResult,
+  type CollisionResult, type LineCircleHit, type RaycastTarget, type RaycastHit,
   pointInRect, pointInCircle,
-  circleRect, circleCircle, lineCircle,
+  circleRect, circleCircle, lineCircle, lineCircleDetailed, raycast,
 } from './collision.js';
 
 export { ScreenShake } from './screen-shake.js';
