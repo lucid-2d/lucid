@@ -11,7 +11,7 @@ import type { UINode } from './node.js';
 
 export type LayoutDirection = 'row' | 'column';
 export type LayoutAlign = 'start' | 'center' | 'end';
-export type LayoutJustify = 'start' | 'center' | 'end' | 'space-between';
+export type LayoutJustify = 'start' | 'center' | 'end' | 'space-between' | 'space-around' | 'space-evenly';
 export type Padding = number | [number, number, number, number];
 
 // ── Helpers ──
@@ -126,6 +126,23 @@ export function computeLayout(node: UINode): void {
         ? (mainSize - sizes.reduce((a, b) => a + b, 0)) / (children.length - 1)
         : 0;
       break;
+    case 'space-around': {
+      const totalItems = sizes.reduce((a, b) => a + b, 0);
+      const itemSpacing = children.length > 0
+        ? (mainSize - totalItems) / children.length
+        : 0;
+      pos = mainStart + itemSpacing / 2;
+      spacing = itemSpacing;
+      break;
+    }
+    case 'space-evenly': {
+      const totalItemsE = sizes.reduce((a, b) => a + b, 0);
+      spacing = children.length > 0
+        ? (mainSize - totalItemsE) / (children.length + 1)
+        : 0;
+      pos = mainStart + spacing;
+      break;
+    }
     default:
       pos = mainStart;
   }

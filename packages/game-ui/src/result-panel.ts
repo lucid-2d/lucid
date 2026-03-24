@@ -41,6 +41,28 @@ export interface ResultPanelProps {
   adButton?: { label: string };
 }
 
+/**
+ * ResultPanel — 游戏结算面板
+ *
+ * ## Node IDs (stable, for testing)
+ * - `result` — panel root
+ * - `close-btn` — 关闭按钮
+ * - `stat-{index}` — 统计卡片（从 0 开始）
+ * - `btn-{id}` — 操作按钮（id 来自 props.buttons[].id）
+ * - `result-buttons` — 按钮容器
+ *
+ * ## Events
+ * - `action(buttonId: string)` — 按钮被点击，buttonId 来自 props.buttons[].id
+ *   - 关闭按钮: `action('close')`
+ *   - 自定义按钮: `action(button.id)`
+ *
+ * ## Testing
+ * ```typescript
+ * const panel = new ResultPanel({ ..., buttons: [{ id: 'again', label: '再来', variant: 'primary' }] });
+ * // 查找按钮: findById('btn-again') 或 $query('Button')
+ * // 监听事件: panel.$on('action', (id) => { if (id === 'again') ... })
+ * ```
+ */
 export class ResultPanel extends UINode {
   private _title: string;
   private _score: number;

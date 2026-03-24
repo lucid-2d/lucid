@@ -8,6 +8,7 @@ export interface ButtonProps extends UINodeOptions {
   variant?: ButtonVariant;
   disabled?: boolean;
   icon?: string;
+  fontSize?: number;
 }
 
 export class Button extends UINode {
@@ -16,6 +17,7 @@ export class Button extends UINode {
   private _disabled: boolean;
   pressed = false;
   icon?: string;
+  fontSize?: number;
 
   constructor(props: ButtonProps) {
     super({ ...props, width: props.width ?? 160, height: props.height ?? 44 });
@@ -23,6 +25,7 @@ export class Button extends UINode {
     this.variant = props.variant ?? 'primary';
     this._disabled = props.disabled ?? false;
     this.icon = props.icon;
+    this.fontSize = props.fontSize;
     this.interactive = true;
 
     this.$on('touchstart', () => {
@@ -127,7 +130,8 @@ export class Button extends UINode {
     };
 
     ctx.fillStyle = textColors[this.variant];
-    ctx.font = `bold ${h >= 44 ? 16 : 14}px sans-serif`;
+    const fs = this.fontSize ?? (h >= 44 ? 16 : 14);
+    ctx.font = `bold ${fs}px sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(this._text, w / 2, h / 2);

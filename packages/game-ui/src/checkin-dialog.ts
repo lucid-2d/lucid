@@ -56,6 +56,23 @@ export interface CheckinDialogProps {
   claimed: boolean;
 }
 
+/**
+ * CheckinDialog — 每日签到弹窗
+ *
+ * ## Node IDs (stable, for testing)
+ * - `checkin` — 弹窗根节点
+ * - `claim-btn` — 签到领取按钮
+ * - `day-{index}` — 第 index 天的签到格子（0-based）
+ *
+ * ## Events
+ * - `claim(day, reward)` — 点击签到按钮，day 为当前天数，reward 为奖励数值
+ *
+ * ## Testing
+ * ```ts
+ * tap(app, 'claim-btn');  // 触发 claim(currentDay, reward) 事件
+ * const d = app.root.findById('day-2');  // 查询第 3 天格子状态
+ * ```
+ */
 export class CheckinDialog extends Modal {
   constructor(props: CheckinDialogProps) {
     const cols = 3;

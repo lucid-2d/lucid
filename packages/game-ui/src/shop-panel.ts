@@ -72,6 +72,31 @@ export interface ShopPanelProps extends Record<string, any> {
   renderPreview?: (ctx: CanvasRenderingContext2D, item: ShopItem) => void;
 }
 
+/**
+ * ShopPanel — 商店面板
+ *
+ * ## Node IDs (stable, for testing)
+ * - `shop` — panel root
+ * - `close-btn` — 返回按钮
+ * - `tab-bar` — 分类标签栏
+ * - `cards` — 卡片容器
+ * - `action-btn` — 购买/装备操作按钮
+ * - `card-{index}` — 商品卡片（index 为 ShopItem.id）
+ *
+ * ## Events
+ * - `close()` — 关闭按钮
+ * - `select(item)` — 选中商品卡片
+ * - `purchase(item)` — 购买未拥有的商品
+ * - `equip(item)` — 装备已拥有的商品
+ * - `tabChange(key)` — 切换分类标签（由内部 TabBar 'change' 触发）
+ *
+ * ## Testing
+ * ```ts
+ * tap(app, 'close-btn');     // 触发 close 事件
+ * tap(app, 'card-skin1');    // 选中商品 → select 事件
+ * tap(app, 'action-btn');    // 购买或装备 → purchase / equip 事件
+ * ```
+ */
 export class ShopPanel extends UINode {
   private _items: ShopItem[];
   private _selectedItem: ShopItem | null = null;

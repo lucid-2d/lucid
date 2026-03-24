@@ -6,7 +6,8 @@
  */
 
 export interface Storage {
-  get<T = any>(key: string, defaultValue?: T): T | undefined;
+  get<T = any>(key: string): T | undefined;
+  get<T = any>(key: string, defaultValue: T): T;
   set(key: string, value: any): void;
   remove(key: string): void;
   has(key: string): boolean;

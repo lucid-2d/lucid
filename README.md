@@ -112,7 +112,7 @@ import { Button, Label, Icon, Modal, Toggle, TabBar, ScrollView, ProgressBar, To
 
 | Component | Key Props | Events |
 |-----------|-----------|--------|
-| `Button` | `id, text, variant: 'primary'\|'outline'\|'ghost'\|'gold', width, height, disabled` | `tap`. AI: `$inspectInfo` = variant, `$highlighted` = pressed, `$disabled`. |
+| `Button` | `id, text, variant: 'primary'\|'outline'\|'ghost'\|'gold', width, height, disabled, fontSize?` | `tap`. AI: `$inspectInfo` = variant, `$highlighted` = pressed, `$disabled`. |
 | `Label` | `text, fontSize, fontWeight, color, align, wrap?, maxLines?, lineHeight?, verticalAlign?` | — . AI: `lineCount`, `truncated`, `renderedLines`. `$inspectInfo`: `3lines truncated`. |
 | `Icon` | `name: IconName, size, color` | — . AI: `$text` = icon name. |
 | `Modal` | `title, id, width, height, screenWidth, screenHeight` | `close`. Methods: `open()`, `close()`, `fitContent(bottomPad?)`. AI: `$inspectInfo` = open/closing/closed. |
@@ -202,7 +202,7 @@ Flexbox subset. Set `layout` on any UINode to auto-position children.
 | `gap` | `number` | Spacing between children |
 | `padding` | `number` \| `[top, right, bottom, left]` | Inner padding |
 | `alignItems` | `'start'` \| `'center'` \| `'end'` | Cross-axis alignment |
-| `justifyContent` | `'start'` \| `'center'` \| `'end'` \| `'space-between'` | Main-axis distribution |
+| `justifyContent` | `'start'` \| `'center'` \| `'end'` \| `'space-between'` \| `'space-around'` \| `'space-evenly'` | Main-axis distribution |
 | `wrap` | `boolean` | Enable row wrapping |
 | `columns` | `number` | Force N items per row (auto-calculates width) |
 

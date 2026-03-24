@@ -91,6 +91,36 @@ describe('Row layout', () => {
     expect(c.findById('b')!.x).toBe(125);
   });
 
+  it('justifyContent: space-around', () => {
+    const c = container(300, 100, { layout: 'row', justifyContent: 'space-around' });
+    c.addChild(box('a', 50, 30));
+    c.addChild(box('b', 50, 30));
+    c.addChild(box('c', 50, 30));
+    layout(c);
+
+    // space-around: each item gets equal space, half-space at edges
+    // totalItems = 150, remaining = 150, spacing = 150/3 = 50
+    // positions: 25, 25+50+50=125, 125+50+50=225
+    expect(c.findById('a')!.x).toBe(25);
+    expect(c.findById('b')!.x).toBe(125);
+    expect(c.findById('c')!.x).toBe(225);
+  });
+
+  it('justifyContent: space-evenly', () => {
+    const c = container(300, 100, { layout: 'row', justifyContent: 'space-evenly' });
+    c.addChild(box('a', 50, 30));
+    c.addChild(box('b', 50, 30));
+    c.addChild(box('c', 50, 30));
+    layout(c);
+
+    // space-evenly: equal gaps including edges
+    // totalItems = 150, remaining = 150, spacing = 150/4 = 37.5
+    // positions: 37.5, 37.5+50+37.5=125, 125+50+37.5=212.5
+    expect(c.findById('a')!.x).toBeCloseTo(37.5);
+    expect(c.findById('b')!.x).toBe(125);
+    expect(c.findById('c')!.x).toBeCloseTo(212.5);
+  });
+
   it('alignItems: center', () => {
     const c = container(300, 100, { layout: 'row', alignItems: 'center' });
     c.addChild(box('a', 50, 30));

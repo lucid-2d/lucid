@@ -7,6 +7,25 @@ export interface SettingsPanelProps {
   version?: string;
 }
 
+/**
+ * SettingsPanel — 设置面板
+ *
+ * ## Node IDs (stable, for testing)
+ * - `settings` — 面板根节点
+ * - `version` — 版本号标签
+ * - `toggle-{id}` — 开关控件（id 来自 props.toggles[].id）
+ * - `link-{id}` — 链接按钮（id 来自 props.links[].id）
+ *
+ * ## Events
+ * - `toggle(id, value)` — 切换开关，id 为开关标识，value 为新布尔值
+ * - `link(id)` — 点击链接按钮，id 为链接标识
+ *
+ * ## Testing
+ * ```ts
+ * tap(app, 'toggle-sound');  // 切换音效 → toggle('sound', newValue)
+ * tap(app, 'link-privacy');  // 点击隐私链接 → link('privacy')
+ * ```
+ */
 export class SettingsPanel extends Modal {
   private _version?: string;
 
