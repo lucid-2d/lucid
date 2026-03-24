@@ -273,7 +273,7 @@ The debug panel eliminates the need to build custom debug UI in every game. One 
 import { createTestApp, tap, touch, assertTree } from '@lucid-2d/engine/testing';
 
 const app = createTestApp({ render: true }); // real canvas via @napi-rs/canvas
-app.router.push(new MenuScene(app));
+await app.router.push(new MenuScene(app)); // await if scene has preload()
 app.tick(16);
 
 app.saveImage('menu.png');           // save screenshot
@@ -763,6 +763,40 @@ When targeting WeChat/Douyin Mini Games (`platform: 'wx'` or `'tt'`), the framew
 
 **Known iOS WeChat quirks (not bugs in your code):**
 - `setTimeout` errors in WAGame.js console — safe to ignore, it's a WeChat base library issue
+
+## Upgrading to v0.3
+
+### `router.push()` is now async when scene has `preload()`
+
+In v0.3, `SceneNode` gained an optional `preload()` lifecycle hook for async resource loading. If your scene overrides `preload()` and returns a Promise, `router.push()` / `router.replace()` now returns a `Promise<void>` instead of `void`.
+
+**Impact**: Headless tests using `createTestApp` + `app.tick()` may break if the scene has `preload()` — the scene won't be initialized by the time `tick()` runs.
+
+```typescript
+// Before (v0.2.x) — synchronous push, tick works immediately
+app.router.push(new GameScene(app));
+app.tick(16); // GameScene.onEnter already called
+
+// After (v0.3.x) — must await if scene has preload()
+await app.router.push(new GameScene(app));
+app.tick(16); // now safe — preload + onEnter completed
+
+// Or use settle() which handles async automatically
+app.router.push(new GameScene(app));
+await app.settle(); // ticks until stable (awaits preload internally)
+```
+
+**No change needed if**: your scene doesn't override `preload()` — push remains synchronous and existing code works as-is.
+
+### v0.3.2: Scene no longer receives `$update` during async preload
+
+In v0.3.0–v0.3.1, scenes with async `preload()` were added to the render tree *before* preload completed. This meant the game loop could call `$update()` on a scene whose `onEnter()` hadn't run yet, causing crashes on uninitialized state.
+
+**v0.3.2 fix**: The scene is NOT added to the render tree until preload completes. During preload, the old scene continues rendering (visual continuity) and interaction is frozen. You can safely remove any `if (!this.xxx) return` guards that were workarounds for this issue.
+
+### `boot()` replaces manual platform setup
+
+See [Quick start](#quick-start) for the new `boot()` entry point. Manual `createApp()` + `app.start()` still works.
 
 ## Scope and limitations
 

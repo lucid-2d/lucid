@@ -409,9 +409,9 @@ describe('Scene preload', () => {
     expect(order).toEqual(['preload', 'onEnter']);
   });
 
-  it('scene is in tree during preload', async () => {
+  it('scene is NOT in tree during async preload (prevents $update on uninitialized state)', async () => {
     const router = new SceneRouter();
-    let parentDuringPreload: any = null;
+    let parentDuringPreload: any = 'not-set';
 
     class CheckScene extends SceneNode {
       async preload() {
@@ -420,7 +420,78 @@ describe('Scene preload', () => {
     }
 
     await router.push(new CheckScene({ id: 'check' }));
-    expect(parentDuringPreload).toBe(router);
+    expect(parentDuringPreload).toBeNull();
+    // After preload, scene should be in tree
+    expect(router.current!.$parent).toBe(router);
+  });
+
+  it('$update is NOT called on scene during async preload', async () => {
+    const router = new SceneRouter();
+    const rootNode = new UINode({ id: 'root', width: 390, height: 844 });
+    rootNode.addChild(router);
+
+    // Push a menu scene first
+    const menu = new SceneNode({ id: 'menu', width: 390, height: 844 });
+    router.push(menu);
+
+    let updateCalledDuringPreload = false;
+    let preloadResolve: () => void;
+    const preloadPromise = new Promise<void>(r => { preloadResolve = r; });
+
+    class PlayScene extends SceneNode {
+      async preload() {
+        await preloadPromise;
+      }
+      $update(dt: number) {
+        super.$update(dt);
+        updateCalledDuringPreload = true;
+      }
+    }
+
+    const pushPromise = router.push(new PlayScene({ id: 'play', width: 390, height: 844 }));
+
+    // Simulate game loop ticking during preload
+    rootNode.$update(0.016);
+    rootNode.$update(0.016);
+    expect(updateCalledDuringPreload).toBe(false);
+
+    // Resolve preload
+    preloadResolve!();
+    await pushPromise;
+
+    // Now $update should work
+    rootNode.$update(0.016);
+    expect(updateCalledDuringPreload).toBe(true);
+  });
+
+  it('old scene continues rendering during async preload', async () => {
+    const router = new SceneRouter();
+    const rootNode = new UINode({ id: 'root', width: 390, height: 844 });
+    rootNode.addChild(router);
+
+    const menu = new SceneNode({ id: 'menu', width: 390, height: 844 });
+    let menuUpdateCount = 0;
+    menu.$update = function(dt: number) { menuUpdateCount++; };
+    router.push(menu);
+
+    let preloadResolve: () => void;
+
+    class PlayScene extends SceneNode {
+      async preload() {
+        await new Promise<void>(r => { preloadResolve = r; });
+      }
+    }
+
+    const pushPromise = router.push(new PlayScene({ id: 'play', width: 390, height: 844 }));
+
+    // Old scene should still receive $update during preload
+    menuUpdateCount = 0;
+    rootNode.$update(0.016);
+    rootNode.$update(0.016);
+    expect(menuUpdateCount).toBe(2);
+
+    preloadResolve!();
+    await pushPromise;
   });
 
   it('preload can set properties used by onEnter', async () => {

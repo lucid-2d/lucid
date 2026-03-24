@@ -28,7 +28,9 @@ export class SceneNode extends UINode {
   onResume(): void {}
 
   /**
-   * Async resource loading hook. Called after scene is added to tree but before onEnter().
+   * Async resource loading hook. Called before onEnter().
+   * If async, the scene is NOT in the render tree during preload
+   * (preventing $update/$render on uninitialized state).
    * Override to load images, audio, or data files.
    *
    * ```typescript
@@ -184,22 +186,22 @@ export class SceneRouter extends UINode {
     const oldScene = this.current ?? null;
     oldScene?.onPause();
     this.stack.push(scene);
-    this.addChild(scene);
+
+    const afterPreload = () => {
+      this.addChild(scene);
+      scene.onEnter();
+      this._logAction('push', scene);
+      this._startTransition(oldScene, scene, transition, () => {});
+    };
 
     const result = scene.preload();
     if (result && typeof (result as any).then === 'function') {
-      // Async preload — await then continue
-      return (result as Promise<void>).then(() => {
-        scene.onEnter();
-        this._logAction('push', scene);
-        this._startTransition(oldScene, scene, transition, () => {});
-      });
+      // Async: scene NOT in tree during preload (prevents $update on uninitialized state)
+      return (result as Promise<void>).then(afterPreload);
     }
 
-    // Sync preload (default) — continue immediately
-    scene.onEnter();
-    this._logAction('push', scene);
-    this._startTransition(oldScene, scene, transition, () => {});
+    // Sync preload (default) — add to tree immediately
+    afterPreload();
   }
 
   /** 弹出栈顶场景（退出当前，恢复前一个） */
@@ -226,9 +228,9 @@ export class SceneRouter extends UINode {
     if (oldScene) oldScene.onExit();
 
     this.stack.push(scene);
-    this.addChild(scene);
 
     const finalize = () => {
+      this.addChild(scene);
       scene.onEnter();
       this._logAction('replace', scene);
       if (this._resolveTransition(oldScene, scene, transition)) return;
@@ -237,6 +239,7 @@ export class SceneRouter extends UINode {
 
     const result = scene.preload();
     if (result && typeof (result as any).then === 'function') {
+      // Async: scene NOT in tree during preload
       return (result as Promise<void>).then(finalize);
     }
 
