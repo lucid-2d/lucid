@@ -1,0 +1,25 @@
+{
+  "miniprogramRoot": "./",
+  "setting": {
+    "es6": false,
+    "enhance": false,
+    "minified": true,
+    "newFeature": true,
+    "coverView": true,
+    "autoAudits": false,
+    "showShadowRootInWxmlPanel": true,
+    "scopeDataCheck": false,
+    "checkInvalidKey": true,
+    "checkSiteMap": false,
+    "uploadWithSourceMap": true,
+    "babelSetting": {
+      "ignore": [],
+      "disablePlugins": [],
+      "outputPath": ""
+    }
+  },
+  "compileType": "game",
+  "appid": "YOUR_APPID",
+  "projectname": "my-lucid-game",
+  "condition": {}
+}

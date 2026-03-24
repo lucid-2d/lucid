@@ -8,7 +8,7 @@ export { detectPlatform, type PlatformName, type PlatformAdapter, type ScreenInf
 export { WebAdapter } from './platform/web.js';
 export { WxAdapter } from './platform/wx.js';
 export { TtAdapter } from './platform/tt.js';
-export { loadImage } from './image-loader.js';
+export { loadImage, setAssetRoot, getAssetRoot, type ImageLike } from './image-loader.js';
 export { createOffscreenCanvas } from './canvas-utils.js';
 // Test utilities moved to '@lucid-2d/engine/testing' to avoid bundling @napi-rs/canvas in production
 export { AudioManager, createAudio, createMockAudio, type AudioManagerOptions, type AudioAdapter, type AudioHandle } from './audio.js';

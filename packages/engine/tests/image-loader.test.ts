@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { loadImage } from '../src/image-loader';
+import { loadImage, setAssetRoot, getAssetRoot } from '../src/image-loader';
 
 describe('loadImage', () => {
   let origImage: any;
@@ -87,5 +87,76 @@ describe('loadImage', () => {
 
     if (origWx !== undefined) (globalThis as any).wx = origWx;
     else delete (globalThis as any).wx;
+  });
+});
+
+describe('assetRoot', () => {
+  let origImage: any;
+
+  beforeEach(() => {
+    origImage = (globalThis as any).Image;
+    setAssetRoot('');
+  });
+
+  afterEach(() => {
+    if (origImage !== undefined) {
+      (globalThis as any).Image = origImage;
+    } else {
+      delete (globalThis as any).Image;
+    }
+    setAssetRoot('');
+  });
+
+  function mockImage() {
+    (globalThis as any).Image = vi.fn(() => {
+      const obj: any = { src: '', onload: null, onerror: null };
+      return new Proxy(obj, {
+        set(target, prop, value) {
+          target[prop] = value;
+          if (prop === 'src') setTimeout(() => target.onload?.(), 0);
+          return true;
+        },
+      });
+    });
+  }
+
+  it('setAssetRoot/getAssetRoot', () => {
+    expect(getAssetRoot()).toBe('');
+    setAssetRoot('img/');
+    expect(getAssetRoot()).toBe('img/');
+  });
+
+  it('prefixes relative paths with assetRoot', async () => {
+    mockImage();
+    setAssetRoot('img/');
+    const img = await loadImage('bg.png');
+    expect(img.src).toBe('img/bg.png');
+  });
+
+  it('does not prefix absolute paths', async () => {
+    mockImage();
+    setAssetRoot('img/');
+    const img = await loadImage('/assets/bg.png');
+    expect(img.src).toBe('/assets/bg.png');
+  });
+
+  it('does not prefix http URLs', async () => {
+    mockImage();
+    setAssetRoot('img/');
+    const img = await loadImage('https://example.com/bg.png');
+    expect(img.src).toBe('https://example.com/bg.png');
+  });
+
+  it('does not prefix data URIs', async () => {
+    mockImage();
+    setAssetRoot('img/');
+    const img = await loadImage('data:image/png;base64,abc');
+    expect(img.src).toBe('data:image/png;base64,abc');
+  });
+
+  it('works with empty assetRoot (default)', async () => {
+    mockImage();
+    const img = await loadImage('bg.png');
+    expect(img.src).toBe('bg.png');
   });
 });

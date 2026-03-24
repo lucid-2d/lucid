@@ -11,6 +11,7 @@ import { detectPlatform, type PlatformAdapter, type ScreenInfo } from './platfor
 import { WebAdapter } from './platform/web.js';
 import { WxAdapter } from './platform/wx.js';
 import { TtAdapter } from './platform/tt.js';
+import { setAssetRoot } from './image-loader.js';
 
 export interface ReplayStep {
   /** 第几步 */
@@ -50,6 +51,14 @@ export interface AppOptions {
   fixedTimestep?: number;
   /** 显示内置调试面板（浮动按钮 → 状态 dump → 复制给 AI） */
   debugPanel?: boolean;
+  /**
+   * Root path for resolving relative image paths in loadImage().
+   * Useful for cross-platform builds where asset paths differ:
+   * - Web: '' (Vite dev server handles /img/bg.png)
+   * - WX/TT: 'img/' (relative to mini game package root)
+   * - Headless: '/absolute/path/to/assets/'
+   */
+  assetRoot?: string;
 }
 
 export interface App {
@@ -218,6 +227,11 @@ export function createApp(options: AppOptions = {}): App {
 
   const screen = adapter.getScreenInfo();
   const ctx = adapter.getCtx();
+
+  // Asset root for loadImage() path resolution
+  if (options.assetRoot != null) {
+    setAssetRoot(options.assetRoot);
+  }
 
   // 构建节点树
   const root = new UINode({ id: 'root', width: screen.width, height: screen.height });
