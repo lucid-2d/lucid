@@ -96,6 +96,8 @@ import { createApp, SceneNode, SceneRouter, loadImage, WebAdapter, WxAdapter, Tt
 | `tap(app, nodeId)` | function | Simulate tap on node by id. Emits touchstart + touchend. Returns `true` if found. |
 | `touch(app, x, y, type?)` | function | Simulate touch at coordinates via hitTest. Type: `'start'` \| `'end'` \| `'move'`, default: full tap. Returns node path. |
 | `assertTree(app, pattern)` | function | Assert `$inspect()` output contains all pattern lines (trimmed, ignoring extra nodes). Throws with diff on failure. |
+| `auditUX(app, opts?)` | function | **UX audit engine.** Runs 26 built-in rules (touch targets, safe area, navigation, overlap, emoji, components, etc.). Returns `{ pass, issues, summary, layout }`. Use `defineRule()` for custom rules. Options: `{ ignore?, rules? }`. |
+| `defineRule(rule)` | function | Register custom audit rule. `{ id, severity, test(app, screen) => AuditIssue[] }`. |
 | `generateTestCode(records)` | function | Convert `InteractionRecord[]` (from `dumpInteractions()`) to vitest test code string. |
 | `AudioManager` | class | Cross-platform audio. `load(name, src)`, `register(name, handle)` (custom AudioHandle, e.g. Web Audio API synth), `playSfx(name)`, `playBgm(name, opts?)`, `stopBgm()`, `pauseBgm()`, `resumeBgm()`. Props: `sfxVolume`, `bgmVolume`, `muted`. |
 | `createAudio(opts?)` | function | Create AudioManager with auto-detected platform (Web/Wx/Tt). |
