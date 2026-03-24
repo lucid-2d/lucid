@@ -12,7 +12,7 @@ Lucid is a Canvas 2D game framework designed for AI agents to build, inspect, de
 ```
 packages/
   core/      — UINode, Entity, events, animation, Timer, SeededRNG, Sprite, AnimatedSprite, NineSlice, Camera, I18n, text utils
-  engine/    — createApp (timeScale/fixedTimestep/debugPanel/renderOneFrame/simulateTouch/applyPreset/settle/assetRoot), SceneRouter (transitions+custom+hitTest隔离), SceneNode ($presets), platform adapters, headless rendering (CJK/Image/assetRoot polyfill), loadImage (assetRoot), audio (register), keyboard, asset loader, DebugPanel, test utils
+  engine/    — createApp/boot (timeScale/fixedTimestep/debugPanel/renderOneFrame/simulateTouch/applyPreset/settle/assetRoot), SceneRouter (transitions+custom+hitTest隔离+async preload), SceneNode (preload/$presets), platform adapters, headless rendering (CJK/Image/assetRoot polyfill), loadImage (assetRoot), audio (register), keyboard, asset loader, DebugPanel, test utils
   ui/        — 11 base components (Button, Label, Modal, Toggle, TabBar, ScrollView, ProgressBar(colorStops/label), ...)
   game-ui/   — 9 business components (CheckinDialog, ShopPanel, SettingsPanel, ...)
   physics/   — Vec2, collision (lineCircleDetailed/raycast), ParticlePool/Emitter/Presets, BezierPath, screen shake
@@ -25,7 +25,7 @@ templates/   — Game templates (starter, quiz, wx-build)
 
 ```bash
 pnpm install                    # install dependencies
-pnpm -r test                    # run all 747 tests
+pnpm -r test                    # run all 773 tests
 pnpm -r build                   # build all packages
 npx vite --config playground/vite.config.ts --port 3456  # run playground
 ```
@@ -70,18 +70,20 @@ core (zero deps)
 ### Creating an app
 
 ```typescript
+// Recommended: boot() — auto-detects platform, single entry for Web/WX/TT
+import { boot } from '@lucid-2d/engine';
+
+boot({
+  debug: import.meta.env.DEV,
+  assetRoot: 'img/',
+  async onReady(app) {
+    app.router.push(new MyScene(app));
+  },
+});
+
+// Or manual: createApp() — full control
 import { createApp } from '@lucid-2d/engine';
-
-// Web
-const app = createApp({ platform: 'web', canvas, debug: true });
-
-// WeChat Mini Game
-const app = createApp({ platform: 'wx', assetRoot: 'img/' });
-
-// assetRoot makes loadImage() auto-resolve relative paths:
-// loadImage('bg.png') → 'img/bg.png' on WX, 'bg.png' on Web
-
-app.timeScale = 1;  // 0=pause, 0.5=slow, 1=normal, 2=fast
+const app = createApp({ platform: 'web', canvas, debug: true, assetRoot: 'img/' });
 app.router.push(new MyScene(app));
 app.start();
 ```

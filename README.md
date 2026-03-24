@@ -56,7 +56,7 @@ import { UINode, Entity, Sprite, SpriteSheet, AnimatedSprite, NineSlice, Camera,
 | Export | Type | Description |
 |--------|------|-------------|
 | `UINode` | class | Base node. Constructor accepts `{ id, x, y, width, height, visible, interactive, alpha, ...layout }`. Methods: `addChild(node, index?)`, `removeChild(node)`, `removeFromParent()`, `findById(id)`, `hitTest(x, y)`, `$inspect(depth?)`, `$on(event, handler)`, `$emit(event, ...args)`, `$animate(props, duration, easing?)`, `$patch(props)`, `$query(selector)`, `$snapshot()`. Static: `UINode.$diff(before, after)`. Override: `draw(ctx)`, `$update(dt)`, `$fixedUpdate(dt)`, `$render(ctx)`, `$inspectInfo()`, `$type`. |
-| `Entity` | class | AI-visible proxy for non-UINode game objects. `Entity.from(obj, { id, type?, props? })`. Zero rendering cost. Proxies `$inspect`/`$query`/`$patch`/`$snapshot` to the source object. `source` setter for pooling (swap objects without addChild/removeChild). |
+| `Entity` | class | AI-visible proxy for non-UINode game objects. `Entity.from(obj, { id, type?, props? })`. Zero rendering cost. Proxies `$inspect`/`$query`/`$patch`/`$snapshot`/`$restore` to the source object. `$restore(snapshot)` restores props for AI bot forward search (Expectimax/MCTS). `source` setter for pooling. |
 | `InteractionRecorder` | class | Records touch events with node paths and timestamps. `start()`, `stop()`, `dump()`, `clear()`. |
 | `SeededRNG` | class | Mulberry32 deterministic RNG. `next(): number`, `int(min, max)`, `pick(array)`, `shuffle(array)`, `fork(): SeededRNG`. |
 | `Timer` | class | Elapsed time tracker. `elapsed`, `pause()`, `resume()`, `reset()`. |
@@ -82,7 +82,8 @@ import { createApp, SceneNode, SceneRouter, loadImage, WebAdapter, WxAdapter, Tt
 | Export | Type | Description |
 |--------|------|-------------|
 | `createApp(opts)` | function | Creates app. Options: `{ platform?, canvas?, adapter?, debug?, debugOverlay?, debugPanel?, rngSeed?, fixedTimestep?, assetRoot? }`. Returns `App` with `.root`, `.router`, `.screen`, `.rng`, `.debug`, `.debugOverlay`, `.timeScale`, `.fixedTimestep`, `.debugPanel`, `.renderOneFrame()`, `.simulateTouch(x,y)`, `.applyPreset(name)`, `.listPresets()`, `.settle(frames?, intervalMs?)`. `assetRoot` auto-configures `loadImage()` path resolution for cross-platform builds. |
-| `SceneNode` | class | Extends UINode. Override `onEnter()`, `onExit()`, `onPause()`, `onResume()`, `$fixedUpdate(dt)`, `$presets()` (declare screenshot-able states). |
+| `SceneNode` | class | Extends UINode. Override `onEnter()`, `onExit()`, `onPause()`, `onResume()`, `preload()` (async resource loading before onEnter), `$fixedUpdate(dt)`, `$presets()` (declare screenshot-able states). |
+| `boot(opts)` | function | Universal entry point. Auto-detects platform, finds/creates canvas, starts app. Options: `{ canvas?, canvasId?, autoCanvas?, onReady?, ...AppOptions }`. Returns `Promise<App>`. |
 | `SceneRouter` | class | `push(scene, transition?)`, `replace(scene, transition?)`, `pop(transition?)`. Transition: `{ type: 'fade'\|'slideLeft'\|'slideRight'\|'slideUp'\|'slideDown'\|'custom', duration, render? }`. `custom` type: `render(ctx, progress, oldScene, newScene)` takes over all rendering. Set `defaultTransition` for global default. |
 | `WebAdapter` | class | Browser platform. Auto-creates from canvas element. |
 | `WxAdapter` | class | WeChat Mini Game platform. Uses `wx.*` globals. |
