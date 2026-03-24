@@ -85,7 +85,8 @@ import { createApp, SceneNode, SceneRouter, loadImage, WebAdapter, WxAdapter, Tt
 | `SceneNode` | class | Extends UINode. Override `onEnter()`, `onExit()`, `onPause()`, `onResume()`, `preload()` (async resource loading before onEnter), `$fixedUpdate(dt)`, `$presets()` (declare screenshot-able states). |
 | `boot(opts)` | function | Universal entry point. Auto-detects platform, finds/creates canvas, starts app. Options: `{ canvas?, canvasId?, autoCanvas?, onReady?, ...AppOptions }`. Returns `Promise<App>`. |
 | `SceneRouter` | class | `push(scene, transition?)`, `replace(scene, transition?)`, `pop(transition?)`. Transition: `{ type: 'fade'\|'slideLeft'\|'slideRight'\|'slideUp'\|'slideDown'\|'custom', duration, render? }`. `custom` type: `render(ctx, progress, oldScene, newScene)` takes over all rendering. Set `defaultTransition` for global default. |
-| `WebAdapter` | class | Browser platform. Auto-creates from canvas element. |
+| `LucidTouchEvent` | interface | Touch event data: `{ x, y, localX, localY, worldX, worldY }`. `x/y` are world coordinates (aliases for `worldX/worldY`). |
+| `WebAdapter` | class | Browser platform. Auto-creates from canvas element. Does NOT set inline CSS — developer controls display sizing. |
 | `WxAdapter` | class | WeChat Mini Game platform. Uses `wx.*` globals. |
 | `TtAdapter` | class | Douyin Mini Game platform. Uses `tt.*` globals. |
 | `loadImage(src, timeout?)` | function | Platform-aware async image loader. Returns `Promise<ImageLike>`. Auto-detects Web/Wx/Tt. Relative paths auto-resolved via `assetRoot`. |
@@ -563,13 +564,13 @@ test('small movement = tap, large movement = scroll', () => {
   sv.content.addChild(btn);
 
   // Small move (3px < 5px threshold) → tap forwarded
-  sv.$emit('touchstart', { localX: 100, localY: 70, worldX: 100, worldY: 70 });
+  sv.$emit('touchstart', { x: 100, y: 70, localX: 100, localY: 70, worldX: 100, worldY: 70 });
   sv.$emit('touchend', { localX: 100, localY: 67, worldX: 100, worldY: 67 });
   expect(tapped).toBe(true);
 
   // Large move (30px > threshold) → scroll, no tap
   tapped = false;
-  sv.$emit('touchstart', { localX: 100, localY: 70, worldX: 100, worldY: 70 });
+  sv.$emit('touchstart', { x: 100, y: 70, localX: 100, localY: 70, worldX: 100, worldY: 70 });
   sv.$emit('touchmove', { localX: 100, localY: 40 });
   sv.$emit('touchend', { localX: 100, localY: 40, worldX: 100, worldY: 40 });
   expect(tapped).toBe(false);

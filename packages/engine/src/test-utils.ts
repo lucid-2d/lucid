@@ -394,7 +394,7 @@ export function tap(app: App, nodeId: string): boolean {
   const node = app.root.findById(nodeId);
   if (!node) return false;
 
-  const event = { localX: 0, localY: 0, worldX: 0, worldY: 0 };
+  const event = { x: 0, y: 0, localX: 0, localY: 0, worldX: 0, worldY: 0 };
   node.$emit('touchstart', event);
   node.$emit('touchend', event);
   return true;
@@ -415,7 +415,7 @@ export function touch(app: App, x: number, y: number, type?: 'start' | 'end' | '
   if (!node) return null;
 
   const local = node.worldToLocal(x, y);
-  const event = { localX: local.x, localY: local.y, worldX: x, worldY: y };
+  const event = { x, y, localX: local.x, localY: local.y, worldX: x, worldY: y };
 
   if (!type || type === 'start') {
     node.$emit('touchstart', event);

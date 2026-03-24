@@ -43,9 +43,8 @@ export class WebAdapter implements PlatformAdapter {
     // 物理像素 = 逻辑 × DPR（高清适配核心）
     canvas.width = this.logicW * this.dpr;
     canvas.height = this.logicH * this.dpr;
-    // CSS 尺寸保持逻辑像素
-    canvas.style.width = this.logicW + 'px';
-    canvas.style.height = this.logicH + 'px';
+    // CSS 尺寸由开发者控制（响应式 CSS / boot 自动创建时设置）
+    // 不设置 inline style，避免覆盖开发者的 CSS 规则
 
     this.ctx = canvas.getContext('2d')!;
     // 缩放坐标系，后续所有绘制使用逻辑像素

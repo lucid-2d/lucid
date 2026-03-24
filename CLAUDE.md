@@ -25,7 +25,7 @@ templates/   — Game templates (starter, quiz, wx-build)
 
 ```bash
 pnpm install                    # install dependencies
-pnpm -r test                    # run all 776 tests
+pnpm -r test                    # run all 776+ tests
 pnpm -r build                   # build all packages
 npx vite --config playground/vite.config.ts --port 3456  # run playground
 ```

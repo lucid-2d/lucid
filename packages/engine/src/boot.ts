@@ -66,6 +66,9 @@ export async function boot(options: BootOptions = {}): Promise<App> {
       canvas.id = canvasId;
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
+      // Auto-created canvas: set CSS size (WebAdapter won't override)
+      canvas.style.width = window.innerWidth + 'px';
+      canvas.style.height = window.innerHeight + 'px';
       canvas.style.display = 'block';
       canvas.style.margin = '0';
       document.body.style.margin = '0';

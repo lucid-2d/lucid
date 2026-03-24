@@ -13,6 +13,22 @@ import { WxAdapter } from './platform/wx.js';
 import { TtAdapter } from './platform/tt.js';
 import { setAssetRoot } from './image-loader.js';
 
+/** Touch event data passed to touchstart/touchmove/touchend handlers */
+export interface LucidTouchEvent {
+  /** World X coordinate (alias for worldX) */
+  x: number;
+  /** World Y coordinate (alias for worldY) */
+  y: number;
+  /** Local X relative to the hit node */
+  localX: number;
+  /** Local Y relative to the hit node */
+  localY: number;
+  /** World X coordinate */
+  worldX: number;
+  /** World Y coordinate */
+  worldY: number;
+}
+
 export interface ReplayStep {
   /** 第几步 */
   step: number;
@@ -286,7 +302,7 @@ export function createApp(options: AppOptions = {}): App {
       }
       if (hit) {
         const local = hit.worldToLocal(x, y);
-        hit.$emit('touchstart', { localX: local.x, localY: local.y, worldX: x, worldY: y });
+        hit.$emit('touchstart', { x, y, localX: local.x, localY: local.y, worldX: x, worldY: y });
       }
     },
     onMove: (x, y) => {
@@ -297,7 +313,7 @@ export function createApp(options: AppOptions = {}): App {
       }
       if (capturedNode) {
         const local = capturedNode.worldToLocal(x, y);
-        capturedNode.$emit('touchmove', { localX: local.x, localY: local.y, worldX: x, worldY: y });
+        capturedNode.$emit('touchmove', { x, y, localX: local.x, localY: local.y, worldX: x, worldY: y });
       }
     },
     onEnd: (x, y) => {
@@ -314,7 +330,7 @@ export function createApp(options: AppOptions = {}): App {
       }
       if (node) {
         const local = node.worldToLocal(x, y);
-        node.$emit('touchend', { localX: local.x, localY: local.y, worldX: x, worldY: y });
+        node.$emit('touchend', { x, y, localX: local.x, localY: local.y, worldX: x, worldY: y });
       }
     },
   });
@@ -458,7 +474,7 @@ export function createApp(options: AppOptions = {}): App {
       const hit = root.hitTest(x, y);
       if (!hit) return null;
       const local = hit.worldToLocal(x, y);
-      const event = { localX: local.x, localY: local.y, worldX: x, worldY: y };
+      const event = { x, y, localX: local.x, localY: local.y, worldX: x, worldY: y };
       hit.$emit('touchstart', event);
       hit.$emit('touchend', event);
       return hit;
