@@ -18,13 +18,21 @@ import { registerHeadlessCanvas } from './canvas-utils.js';
 let _napiCanvas: any = null;
 function getNapiCanvas(): any {
   if (!_napiCanvas) {
+    // Try normal require first (works when @napi-rs/canvas is in this package's deps)
     try {
       _napiCanvas = require('@napi-rs/canvas');
     } catch {
-      throw new Error(
-        '[lucid] @napi-rs/canvas is required for headless rendering.\n' +
-        'Install it: pnpm add -D @napi-rs/canvas'
-      );
+      // Fallback: resolve from the game project's cwd (for tsx/ts-node scripts
+      // where tsconfig paths point to Lucid source but @napi-rs/canvas is in the game's node_modules)
+      try {
+        const resolved = require.resolve('@napi-rs/canvas', { paths: [process.cwd()] });
+        _napiCanvas = require(resolved);
+      } catch {
+        throw new Error(
+          '[lucid] @napi-rs/canvas is required for headless rendering.\n' +
+          'Install it: pnpm add -D @napi-rs/canvas'
+        );
+      }
     }
   }
   return _napiCanvas;
@@ -163,6 +171,30 @@ function createMockCanvas(w = 390, h = 844): any {
 
 // ── Headless Adapter ──
 
+// Reuse native canvas instances to avoid Skia panic when multiple createTestApp
+// calls create/destroy canvases in the same worker thread (#28).
+const _canvasCache = new Map<string, { canvas: any; ctx: any }>();
+
+function getOrCreateCanvas(w: number, h: number, napiCanvas: any): { canvas: any; ctx: any } {
+  const key = `${w}x${h}`;
+  let cached = _canvasCache.get(key);
+  if (!cached) {
+    const canvas = napiCanvas.createCanvas(w * 2, h * 2);
+    const ctx = canvas.getContext('2d');
+    ctx.scale(2, 2);
+    patchCtxCJKFallback(ctx);
+    cached = { canvas, ctx };
+    _canvasCache.set(key, cached);
+  }
+  // Clear for fresh use
+  const { canvas, ctx } = cached;
+  ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, w * 2, h * 2);
+  ctx.restore();
+  return cached;
+}
+
 class HeadlessAdapter implements PlatformAdapter {
   readonly name = 'web' as const;
   private canvas: any;
@@ -173,12 +205,9 @@ class HeadlessAdapter implements PlatformAdapter {
   constructor(w: number, h: number, napiCanvas: any) {
     this.w = w;
     this.h = h;
-    this.canvas = napiCanvas.createCanvas(w * 2, h * 2);
-    this.ctx = this.canvas.getContext('2d');
-    this.ctx.scale(2, 2); // DPR=2
-
-    // Patch main ctx for CJK fallback
-    patchCtxCJKFallback(this.ctx);
+    const cached = getOrCreateCanvas(w, h, napiCanvas);
+    this.canvas = cached.canvas;
+    this.ctx = cached.ctx;
 
     // Polyfill globalThis.Image for headless — mirrors wx/tt polyfill pattern
     // so game code using `new Image()` or `loadImage()` works without changes

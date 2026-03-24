@@ -10,11 +10,11 @@
 
 import { UINode, type UINodeOptions } from '@lucid-2d/core';
 
-export interface ScenePreset {
+export interface ScenePreset<T extends SceneNode = SceneNode> {
   /** Human-readable description (shown in $inspect) */
   label?: string;
   /** Setup function — mutate the scene to reach this state */
-  setup: (scene: SceneNode) => void;
+  setup: (scene: T) => void;
 }
 
 export class SceneNode extends UINode {
@@ -42,7 +42,7 @@ export class SceneNode extends UINode {
    * }
    * ```
    */
-  $presets(): Record<string, ScenePreset> | null {
+  $presets(): Record<string, ScenePreset<this>> | null {
     return null;
   }
 

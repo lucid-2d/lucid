@@ -265,12 +265,9 @@ import { lucidAliases } from '../path/to/lucid/dev-aliases.js';
 
 export default defineConfig({
   resolve: { alias: lucidAliases() },
-  // Generates all aliases including subpath exports:
-  // '@lucid-2d/core'           → packages/core/src/index.ts
-  // '@lucid-2d/engine'         → packages/engine/src/index.ts
-  // '@lucid-2d/engine/testing' → packages/engine/src/testing.ts
-  // '@lucid-2d/ui'             → packages/ui/src/index.ts
-  // ...
+  // Returns array format (subpath exports first to avoid prefix matching):
+  // [{ find: '@lucid-2d/engine/testing', replacement: '...' },
+  //  { find: '@lucid-2d/core', replacement: '...' }, ...]
 });
 ```
 
