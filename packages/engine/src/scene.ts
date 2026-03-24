@@ -28,6 +28,24 @@ export class SceneNode extends UINode {
   onResume(): void {}
 
   /**
+   * Async resource loading hook. Called after scene is added to tree but before onEnter().
+   * Override to load images, audio, or data files.
+   *
+   * ```typescript
+   * class GameScene extends SceneNode {
+   *   async preload() {
+   *     this.bg = await loadImage('bg.png');
+   *     this.atlas = await loadImage('atlas.png');
+   *   }
+   *   onEnter() { // resources ready }
+   * }
+   *
+   * await app.router.push(new GameScene(app));
+   * ```
+   */
+  preload(): Promise<void> | void {}
+
+  /**
    * Declare preset states for AI inspection, testing, and screenshots.
    *
    * Override in subclasses to declare states that can be programmatically triggered:
@@ -161,18 +179,27 @@ export class SceneRouter extends UINode {
     return parts.join(' ');
   }
 
-  /** 压入新场景（暂停当前，进入新场景） */
-  push(scene: SceneNode, transition?: TransitionOptions): void {
+  /** 压入新场景（暂停当前，await preload，进入新场景） */
+  push(scene: SceneNode, transition?: TransitionOptions): void | Promise<void> {
     const oldScene = this.current ?? null;
     oldScene?.onPause();
     this.stack.push(scene);
     this.addChild(scene);
+
+    const result = scene.preload();
+    if (result && typeof (result as any).then === 'function') {
+      // Async preload — await then continue
+      return (result as Promise<void>).then(() => {
+        scene.onEnter();
+        this._logAction('push', scene);
+        this._startTransition(oldScene, scene, transition, () => {});
+      });
+    }
+
+    // Sync preload (default) — continue immediately
     scene.onEnter();
     this._logAction('push', scene);
-
-    this._startTransition(oldScene, scene, transition, () => {
-      // Push transition complete — old scene stays in tree but paused
-    });
+    this._startTransition(oldScene, scene, transition, () => {});
   }
 
   /** 弹出栈顶场景（退出当前，恢复前一个） */
@@ -193,21 +220,27 @@ export class SceneRouter extends UINode {
     return oldScene;
   }
 
-  /** 替换栈顶场景 */
-  replace(scene: SceneNode, transition?: TransitionOptions): void {
+  /** 替换栈顶场景（await preload） */
+  replace(scene: SceneNode, transition?: TransitionOptions): void | Promise<void> {
     const oldScene = this.stack.pop() ?? null;
     if (oldScene) oldScene.onExit();
 
     this.stack.push(scene);
     this.addChild(scene);
-    scene.onEnter();
-    this._logAction('replace', scene);
 
-    if (this._resolveTransition(oldScene, scene, transition)) {
-      return;
+    const finalize = () => {
+      scene.onEnter();
+      this._logAction('replace', scene);
+      if (this._resolveTransition(oldScene, scene, transition)) return;
+      if (oldScene) this.removeChild(oldScene);
+    };
+
+    const result = scene.preload();
+    if (result && typeof (result as any).then === 'function') {
+      return (result as Promise<void>).then(finalize);
     }
 
-    if (oldScene) this.removeChild(oldScene);
+    finalize();
   }
 
   $update(dt: number): void {

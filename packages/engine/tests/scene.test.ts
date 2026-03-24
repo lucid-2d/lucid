@@ -360,3 +360,106 @@ describe('SceneRouter transitions', () => {
     expect(b.y).toBe(0);
   });
 });
+
+// ── Preload ──
+
+describe('Scene preload', () => {
+  it('push awaits preload before calling onEnter', async () => {
+    const router = new SceneRouter();
+    const order: string[] = [];
+
+    class AsyncScene extends SceneNode {
+      async preload() {
+        order.push('preload-start');
+        await new Promise(r => setTimeout(r, 10));
+        order.push('preload-end');
+      }
+      onEnter() { order.push('onEnter'); }
+    }
+
+    await router.push(new AsyncScene({ id: 'async' }));
+    expect(order).toEqual(['preload-start', 'preload-end', 'onEnter']);
+  });
+
+  it('push works normally for scenes without preload', async () => {
+    const router = new SceneRouter();
+    const scene = new SceneNode({ id: 'sync' });
+    scene.onEnter = vi.fn();
+
+    await router.push(scene);
+    expect(scene.onEnter).toHaveBeenCalledOnce();
+    expect(router.current).toBe(scene);
+  });
+
+  it('replace awaits preload before calling onEnter', async () => {
+    const router = new SceneRouter();
+    const order: string[] = [];
+
+    router.push(new SceneNode({ id: 'old' }));
+
+    class AsyncScene extends SceneNode {
+      async preload() {
+        order.push('preload');
+        await new Promise(r => setTimeout(r, 10));
+      }
+      onEnter() { order.push('onEnter'); }
+    }
+
+    await router.replace(new AsyncScene({ id: 'new' }));
+    expect(order).toEqual(['preload', 'onEnter']);
+  });
+
+  it('scene is in tree during preload', async () => {
+    const router = new SceneRouter();
+    let parentDuringPreload: any = null;
+
+    class CheckScene extends SceneNode {
+      async preload() {
+        parentDuringPreload = this.$parent;
+      }
+    }
+
+    await router.push(new CheckScene({ id: 'check' }));
+    expect(parentDuringPreload).toBe(router);
+  });
+
+  it('preload can set properties used by onEnter', async () => {
+    const router = new SceneRouter();
+
+    class LoadScene extends SceneNode {
+      data: string | null = null;
+      async preload() {
+        await new Promise(r => setTimeout(r, 5));
+        this.data = 'loaded';
+      }
+      onEnter() {
+        expect(this.data).toBe('loaded');
+      }
+    }
+
+    await router.push(new LoadScene({ id: 'load' }));
+  });
+
+  it('preload error propagates to caller', async () => {
+    const router = new SceneRouter();
+
+    class FailScene extends SceneNode {
+      async preload() { throw new Error('load failed'); }
+    }
+
+    await expect(router.push(new FailScene({ id: 'fail' }))).rejects.toThrow('load failed');
+  });
+
+  it('pop does not call preload', () => {
+    const router = new SceneRouter();
+    const a = new SceneNode({ id: 'a' });
+    const b = new SceneNode({ id: 'b' });
+    b.onResume = vi.fn();
+
+    router.push(a);
+    router.push(b);
+    // pop is still synchronous
+    const popped = router.pop();
+    expect(popped).toBe(b);
+  });
+});
