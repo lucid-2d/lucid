@@ -10,6 +10,13 @@
 
 import { UINode, type UINodeOptions } from '@lucid-2d/core';
 
+export interface ScenePreset {
+  /** Human-readable description (shown in $inspect) */
+  label?: string;
+  /** Setup function — mutate the scene to reach this state */
+  setup: (scene: SceneNode) => void;
+}
+
 export class SceneNode extends UINode {
   /** 进入场景时调用（首次推入或 replace 到） */
   onEnter(): void {}
@@ -19,6 +26,25 @@ export class SceneNode extends UINode {
   onPause(): void {}
   /** 上面的场景弹出后恢复时调用 */
   onResume(): void {}
+
+  /**
+   * Declare preset states for AI inspection, testing, and screenshots.
+   *
+   * Override in subclasses to declare states that can be programmatically triggered:
+   * ```typescript
+   * class GameScene extends SceneNode {
+   *   $presets() {
+   *     return {
+   *       paused: { label: '暂停', setup: (s) => s.togglePause() },
+   *       death:  { label: '死亡', setup: (s) => { s.ship.died = true; } },
+   *     };
+   *   }
+   * }
+   * ```
+   */
+  $presets(): Record<string, ScenePreset> | null {
+    return null;
+  }
 
   constructor(opts?: UINodeOptions) {
     super(opts);

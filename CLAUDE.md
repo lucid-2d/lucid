@@ -12,7 +12,7 @@ Lucid is a Canvas 2D game framework designed for AI agents to build, inspect, de
 ```
 packages/
   core/      — UINode, Entity, events, animation, Timer, SeededRNG, Sprite, AnimatedSprite, NineSlice, Camera, I18n, text utils
-  engine/    — createApp (timeScale/fixedTimestep/debugPanel), SceneRouter (transitions+custom+hitTest隔离), platform adapters, headless rendering, audio (register), keyboard, asset loader, DebugPanel, test utils
+  engine/    — createApp (timeScale/fixedTimestep/debugPanel/renderOneFrame/simulateTouch/applyPreset), SceneRouter (transitions+custom+hitTest隔离), SceneNode ($presets), platform adapters, headless rendering, audio (register), keyboard, asset loader, DebugPanel, test utils
   ui/        — 11 base components (Button, Label, Modal, Toggle, TabBar, ScrollView, ProgressBar(colorStops/label), ...)
   game-ui/   — 9 business components (CheckinDialog, ShopPanel, SettingsPanel, ...)
   physics/   — Vec2, collision, ParticlePool/Emitter/Presets, BezierPath, screen shake
@@ -159,6 +159,44 @@ app.saveImage('screenshot.png');
 app.debugOverlay = true; // show node borders + IDs
 app.tick(16);
 app.saveImage('debug.png');
+```
+
+### Scene state control (screenshots & testing)
+
+Scenes declare preset states via `$presets()`. Framework provides discovery + apply:
+
+```typescript
+class GameScene extends SceneNode {
+  $presets() {
+    return {
+      gameplay:   { label: 'Normal',  setup: () => {} },
+      paused:     { label: '暂停',    setup: (s) => s.togglePause() },
+      death:      { label: '死亡',    setup: (s) => { s.ship.died = true; } },
+      transition: { label: '转场',    setup: (s) => s.startTransition(9, 0, '叙事文案...', () => {}) },
+    };
+  }
+}
+```
+
+Use with headless rendering for automated screenshots:
+
+```typescript
+const app = createTestApp({ render: true });
+app.router.push(new GameScene(app));
+app.tick(16);
+
+// Discover available presets
+console.log(app.listPresets()); // ['gameplay', 'paused', 'death', 'transition']
+
+// Apply preset → render one frame → screenshot
+app.applyPreset('death');
+app.renderOneFrame();          // render without advancing game logic
+app.saveImage('death.png');
+
+// Or use simulateTouch for interaction-based screenshots
+app.simulateTouch(195, 506);   // hitTest → touchstart + touchend
+app.renderOneFrame();
+app.saveImage('after-tap.png');
 ```
 
 ### AI query and diff

@@ -80,6 +80,53 @@ export interface App {
   /** 当前 FPS */
   readonly fps: number;
 
+  /**
+   * Render one frame without advancing game logic ($update / $fixedUpdate).
+   * Use after programmatically setting scene state for screenshots or testing.
+   *
+   * ```typescript
+   * app.timeScale = 0;
+   * app.applyPreset('death');
+   * app.renderOneFrame();
+   * app.saveImage('death.png');
+   * ```
+   */
+  renderOneFrame(): void;
+
+  /**
+   * Simulate a touch event at world coordinates.
+   * Performs hitTest → emits touchstart + touchend on the hit node.
+   *
+   * ```typescript
+   * app.simulateTouch(195, 506);
+   * ```
+   */
+  simulateTouch(x: number, y: number): UINode | null;
+
+  /**
+   * Apply a named preset on the current scene.
+   * Scenes declare presets via `$presets()`.
+   *
+   * ```typescript
+   * app.applyPreset('death');
+   * app.renderOneFrame();
+   * app.saveImage('death.png');
+   * ```
+   *
+   * @returns preset names if no name given (discovery), true if applied, false if not found
+   */
+  applyPreset(name: string): boolean;
+
+  /**
+   * List available presets on the current scene.
+   *
+   * ```typescript
+   * console.log(app.listPresets());
+   * // ['gameplay', 'paused', 'death', 'transition']
+   * ```
+   */
+  listPresets(): string[];
+
   /** 导出交互录制（debug 模式） */
   dumpInteractions(): InteractionRecord[];
   /** 清空交互录制 */
@@ -354,6 +401,47 @@ export function createApp(options: AppOptions = {}): App {
 
     tick(dtMs: number) {
       tick(dtMs);
+    },
+
+    renderOneFrame() {
+      // Clear screen
+      ctx.save();
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, screen.width * screen.dpr, screen.height * screen.dpr);
+      ctx.restore();
+      // Render tree (no $update / $fixedUpdate)
+      root.$render(ctx);
+      // Debug overlay
+      if (overlayMode) {
+        renderDebugOverlay(ctx, root);
+      }
+    },
+
+    simulateTouch(x: number, y: number): UINode | null {
+      const hit = root.hitTest(x, y);
+      if (!hit) return null;
+      const local = hit.worldToLocal(x, y);
+      const event = { localX: local.x, localY: local.y, worldX: x, worldY: y };
+      hit.$emit('touchstart', event);
+      hit.$emit('touchend', event);
+      return hit;
+    },
+
+    applyPreset(name: string): boolean {
+      const scene = router.current;
+      if (!scene) return false;
+      const presets = scene.$presets?.();
+      if (!presets || !presets[name]) return false;
+      presets[name].setup(scene);
+      return true;
+    },
+
+    listPresets(): string[] {
+      const scene = router.current;
+      if (!scene) return [];
+      const presets = scene.$presets?.();
+      if (!presets) return [];
+      return Object.keys(presets);
     },
 
     dumpInteractions() { return recorder.dump(); },

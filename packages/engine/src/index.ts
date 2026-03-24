@@ -3,7 +3,7 @@
  */
 
 export { createApp, type App, type AppOptions, type ReplayStep } from './app.js';
-export { SceneNode, SceneRouter, type TransitionType, type TransitionOptions, type SceneLogEntry } from './scene.js';
+export { SceneNode, SceneRouter, type TransitionType, type TransitionOptions, type SceneLogEntry, type ScenePreset } from './scene.js';
 export { detectPlatform, type PlatformName, type PlatformAdapter, type ScreenInfo } from './platform/detect.js';
 export { WebAdapter } from './platform/web.js';
 export { WxAdapter } from './platform/wx.js';
