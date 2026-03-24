@@ -46,8 +46,22 @@ export function createOffscreenCanvas(width: number, height: number): any {
   if (typeof OffscreenCanvas !== 'undefined') {
     return new OffscreenCanvas(width, height);
   }
-  const c = document.createElement('canvas');
-  c.width = width;
-  c.height = height;
-  return c;
+
+  // Headless (Node.js with @napi-rs/canvas)
+  try {
+    const napi = require('@napi-rs/canvas');
+    if (napi.createCanvas) {
+      return napi.createCanvas(width, height);
+    }
+  } catch { /* @napi-rs/canvas not available */ }
+
+  // Browser fallback
+  if (typeof document !== 'undefined') {
+    const c = document.createElement('canvas');
+    c.width = width;
+    c.height = height;
+    return c;
+  }
+
+  throw new Error('[createOffscreenCanvas] No canvas API available (install @napi-rs/canvas for headless)');
 }

@@ -77,6 +77,18 @@ export interface App {
   /** 手动推进一帧（测试用） */
   tick(dtMs: number): void;
 
+  /**
+   * Run multiple ticks, yielding to the event loop between each frame.
+   * Allows async operations (image loading, async onEnter) to complete.
+   *
+   * ```typescript
+   * app.router.push(new GameScene(app));
+   * await app.settle(120);  // run 120 frames, yielding between each
+   * app.saveImage('screenshot.png');
+   * ```
+   */
+  settle(frames?: number, intervalMs?: number): Promise<void>;
+
   /** 当前 FPS */
   readonly fps: number;
 
@@ -401,6 +413,14 @@ export function createApp(options: AppOptions = {}): App {
 
     tick(dtMs: number) {
       tick(dtMs);
+    },
+
+    async settle(frames = 60, intervalMs = 16) {
+      for (let i = 0; i < frames; i++) {
+        tick(intervalMs);
+        // Yield to event loop — lets Promises, img.onload, setTimeout callbacks run
+        await new Promise(r => setTimeout(r, 0));
+      }
     },
 
     renderOneFrame() {

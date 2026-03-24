@@ -4,6 +4,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { createTestApp, tap } from '../src/test-utils';
 import { SceneNode } from '../src/scene';
+import { createOffscreenCanvas } from '../src/canvas-utils';
 import { UINode } from '@lucid-2d/core';
 
 // ── Test scene with presets ──
@@ -226,5 +227,59 @@ describe('Screenshot workflow (integration)', () => {
 
     // Render result
     app.renderOneFrame();
+  });
+});
+
+// ── app.settle ──
+
+describe('App.settle', () => {
+  it('runs multiple frames yielding to event loop', async () => {
+    const app = createTestApp();
+    let updateCount = 0;
+
+    class CountScene extends SceneNode {
+      constructor() { super({ id: 'count', width: 390, height: 844 }); }
+      $update(dt: number) {
+        super.$update(dt);
+        if (dt > 0) updateCount++;
+      }
+    }
+
+    app.router.push(new CountScene());
+    await app.settle(10);
+    expect(updateCount).toBe(10);
+  });
+
+  it('allows async callbacks to complete between frames', async () => {
+    const app = createTestApp();
+    let asyncDone = false;
+
+    class AsyncScene extends SceneNode {
+      constructor() { super({ id: 'async', width: 390, height: 844 }); }
+      onEnter() {
+        // Simulate async work (image loading, fetch, etc.)
+        setTimeout(() => { asyncDone = true; }, 10);
+      }
+    }
+
+    app.router.push(new AsyncScene());
+    expect(asyncDone).toBe(false);
+
+    await app.settle(10);
+    expect(asyncDone).toBe(true);
+  });
+});
+
+// ── createOffscreenCanvas headless ──
+
+describe('createOffscreenCanvas headless', () => {
+  it('works in Node.js with @napi-rs/canvas', () => {
+    const canvas = createOffscreenCanvas(200, 100);
+    expect(canvas).toBeDefined();
+    const ctx = canvas.getContext('2d');
+    expect(ctx).toBeDefined();
+    // Should be able to draw
+    ctx.fillStyle = '#ff0000';
+    ctx.fillRect(0, 0, 200, 100);
   });
 });
