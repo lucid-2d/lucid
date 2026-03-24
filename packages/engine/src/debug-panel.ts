@@ -40,7 +40,7 @@ export class DebugPanel extends UINode {
   private _providers = new Map<string, () => any>();
 
   constructor(app: App) {
-    super({ id: '__debug-panel', width: 0, height: 0, interactive: true });
+    super({ id: '__debug-panel', width: app.screen.width, height: app.screen.height, interactive: true });
     this._app = app;
     this._initEvents();
   }
