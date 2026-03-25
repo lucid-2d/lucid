@@ -1,6 +1,6 @@
 {
   "name": "@lucid-2d/physics",
-  "version": "0.3.7",
+  "version": "0.3.8",
   "description": "Lucid physics — Vec2 math, collision detection, particle pool, screen shake",
   "type": "module",
   "main": "dist/index.js",

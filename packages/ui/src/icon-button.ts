@@ -25,7 +25,7 @@ export class IconButton extends UINode {
 
   constructor(props: IconButtonProps) {
     const sz = props.size ?? 40;
-    super({ ...props, width: sz, height: sz });
+    super({ ...props, width: props.width ?? sz, height: props.height ?? sz });
     this.icon = props.icon;
     this.iconSize = props.iconSize ?? sz * 0.45;
     this.color = props.color ?? UIColors.textLight;
