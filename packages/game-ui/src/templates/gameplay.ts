@@ -19,14 +19,14 @@ export function buildGameplay(scene: TemplateScene, config: GameplayConfig, app:
   const h = scene.height;
 
   // ── Game area (full screen container for game logic) ──
-  const gameArea = new UINode({ id: 'game-area', width: w, height: h });
+  const gameArea = new UINode({ id: '__game-area', width: w, height: h });
   scene.addChild(gameArea);
   config.setup(gameArea, app);
 
   // ── HUD (top area) ──
   if (config.hud) {
     const hudContainer = new UINode({
-      id: 'hud',
+      id: '__hud',
       width: w,
       height: 44,
       layout: 'row',
@@ -61,9 +61,6 @@ export function buildGameplay(scene: TemplateScene, config: GameplayConfig, app:
   }
 
   // ── Pause button (top-left) ──
-  let paused = false;
-  let pauseModal: Modal | null = null;
-
   const pauseBtn = new IconButton({
     id: 'pause',
     icon: 'pause',
@@ -71,18 +68,18 @@ export function buildGameplay(scene: TemplateScene, config: GameplayConfig, app:
   });
   pauseBtn.x = 16;
   pauseBtn.y = 44; // safe area
-  pauseBtn.$on('tap', () => togglePause());
   scene.addChild(pauseBtn);
 
-  function togglePause(): void {
-    if (paused) return; // already showing modal
-    paused = true;
-    pauseModal = createPauseModal(scene, config, app, () => {
-      paused = false;
-      pauseModal = null;
-    });
-    scene.addChild(pauseModal);
-  }
+  // ── PauseModal (created at build time, hidden until pause tapped) ──
+  const pauseModal = createPauseModal(scene, config, app);
+  pauseModal.visible = false;
+  scene.addChild(pauseModal);
+
+  pauseBtn.$on('tap', () => {
+    if (pauseModal.visible) return;
+    pauseModal.visible = true;
+    pauseModal.open();
+  });
 
   // ── Background draw ──
   if (config.drawBackground) {
@@ -99,7 +96,6 @@ function createPauseModal(
   scene: TemplateScene,
   config: GameplayConfig,
   app: TemplateApp,
-  onClose: () => void,
 ): Modal {
   const modal = new Modal({
     title: '暂停',
@@ -124,8 +120,8 @@ function createPauseModal(
   });
   resumeBtn.x = bx; resumeBtn.y = y;
   resumeBtn.$on('tap', () => {
-    scene.removeChild(modal);
-    onClose();
+    modal.close();
+    modal.visible = false;
   });
   modal.content.addChild(resumeBtn);
   y += 60;
@@ -199,11 +195,7 @@ function createPauseModal(
   }
 
   modal.fitContent();
-  modal.open();
-  modal.$on('close', () => {
-    scene.removeChild(modal);
-    onClose();
-  });
+  modal.$on('close', () => { modal.visible = false; });
 
   return modal;
 }

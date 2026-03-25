@@ -149,11 +149,11 @@ export function buildMenu(scene: TemplateScene, config: MenuConfig, app: Templat
     text: '隐私协议',
     variant: 'ghost',
     width: 120,
-    height: 36,
+    height: 44,
     fontSize: 12,
   });
   privacyBtn.x = Math.round((w - 120) / 2);
-  privacyBtn.y = h - 60;
+  privacyBtn.y = h - 64;
   privacyBtn.$on('tap', () => openPrivacy(scene, config, app));
   scene.addChild(privacyBtn);
 

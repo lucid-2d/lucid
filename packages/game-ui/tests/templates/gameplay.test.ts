@@ -28,7 +28,7 @@ describe('GameplayTemplate', () => {
     const scene = createScene(app, makeGameplayConfig());
     scene.onEnter();
 
-    const gameArea = scene.findById('game-area');
+    const gameArea = scene.findById('__game-area');
     expect(gameArea).toBeDefined();
     expect(gameArea!.width).toBe(390);
     expect(gameArea!.height).toBe(844);
@@ -43,7 +43,7 @@ describe('GameplayTemplate', () => {
     scene.onEnter();
 
     expect(setupArea).toBeDefined();
-    expect(setupArea!.id).toBe('game-area');
+    expect(setupArea!.id).toBe('__game-area');
   });
 
   it('creates pause button', () => {
@@ -56,33 +56,37 @@ describe('GameplayTemplate', () => {
     expect(pause!.interactive).toBe(true);
   });
 
-  it('pause button opens pause modal with required actions', () => {
+  it('pause modal exists at build time with required actions', () => {
     const app = makeApp();
     const scene = createScene(app, makeGameplayConfig());
     scene.onEnter();
 
-    const pause = scene.findById('pause');
-    pause!.$emit('tap');
-
+    // Modal exists but hidden
     const modal = scene.findById('pause-modal');
     expect(modal).toBeDefined();
+    expect(modal!.visible).toBe(false);
 
-    // Check required buttons exist
+    // Required buttons exist inside modal
     expect(scene.findById('resume')).toBeDefined();
     expect(scene.findById('restart')).toBeDefined();
     expect(scene.findById('home')).toBeDefined();
+
+    // Tap pause shows modal
+    scene.findById('pause')!.$emit('tap');
+    expect(modal!.visible).toBe(true);
   });
 
-  it('resume closes pause modal', () => {
+  it('resume hides pause modal', () => {
     const app = makeApp();
     const scene = createScene(app, makeGameplayConfig());
     scene.onEnter();
 
     scene.findById('pause')!.$emit('tap');
-    expect(scene.findById('pause-modal')).toBeDefined();
+    const modal = scene.findById('pause-modal')!;
+    expect(modal.visible).toBe(true);
 
     scene.findById('resume')!.$emit('tap');
-    expect(scene.findById('pause-modal')).toBeNull();
+    expect(modal.visible).toBe(false);
   });
 
   it('restart calls config handler', () => {
