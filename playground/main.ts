@@ -4,8 +4,8 @@
 
 import { createApp, SceneNode } from '../packages/engine/src/index';
 import { UINode } from '../packages/core/src/index';
-import { Button, Label, Modal, ProgressBar, Toggle, TabBar, ScrollView } from '../packages/ui/src/index';
-import { CheckinDialog, SettingsPanel, ResultPanel, ShopPanel, createScene, type ShopItem } from '../packages/game-ui/src/index';
+import { Label, Modal, Button, ScrollView } from '../packages/ui/src/index';
+import { ResultPanel, createScene, type ShopItem } from '../packages/game-ui/src/index';
 import { ParticlePool } from '../packages/physics/src/index';
 
 const W = 390, H = 844;
@@ -41,112 +41,93 @@ function drawBg(ctx: CanvasRenderingContext2D) {
   ctx.fillRect(0, 0, W, H);
 }
 
-// ── 菜单场景 ─────────────────────────────────
+// ── 菜单场景（使用 MenuTemplate）─────────────────
 
-class MenuScene extends SceneNode {
-  private floaters: Array<{ x: number; y: number; vx: number; vy: number; r: number; color: string }> = [];
+function createMenuScene() {
+  let soundOn = true;
+  let vibrationOn = false;
 
-  onEnter() {
-    for (let i = 0; i < 12; i++) {
-      this.floaters.push({
-        x: Math.random() * W, y: Math.random() * H,
-        vx: (Math.random() - 0.5) * 15, vy: (Math.random() - 0.5) * 15,
-        r: 2 + Math.random() * 5,
-        color: ['#e94560', '#118ab2', '#ffd166', '#06d6a0'][Math.floor(Math.random() * 4)],
-      });
-    }
+  return createScene(app, {
+    template: 'menu',
+    title: 'Lucid',
+    subtitle: 'AI-first Canvas 2D Game Framework',
+    bestScore: 2480,
+    stats: [
+      { icon: 'shield', label: '已玩', value: '42' },
+      { icon: 'shield', label: '最远', value: '15' },
+      { icon: 'block', label: '消除', value: '1200' },
+      { icon: 'lightning', label: '连击', value: '8' },
+    ],
 
-    const title = new Label({ id: 'title', text: 'Lucid', fontSize: 42, fontWeight: 'bold', color: '#ffd166', align: 'center', width: W, height: 50 });
-    title.y = 180;
-    this.addChild(title);
+    play: () => app.router.replace(new PlayScene({ id: 'play' })),
+    settings: {
+      toggles: [
+        { id: 'sound', label: '音效', value: true },
+        { id: 'music', label: '音乐', value: true },
+        { id: 'vibration', label: '振动', value: false },
+      ],
+      links: [{ id: 'privacy', label: '隐私协议' }],
+      version: 'v0.5.0',
+      onToggle: (id, val) => console.log('[toggle]', id, val),
+    },
+    privacy: { content: '我们重视您的隐私保护。本游戏不收集任何个人信息。使用本游戏即表示您同意本隐私协议。' },
 
-    const subtitle = new Label({ text: 'AI-first Canvas 2D Game Framework', fontSize: 13, color: 'rgba(255,255,255,0.4)', align: 'center', width: W, height: 20 });
-    subtitle.y = 235;
-    this.addChild(subtitle);
+    zoneC: [
+      { id: 'shop', onTap: () => app.router.push(createShopScene()) },
+      { id: 'leaderboard', onTap: () => app.router.push(createLeaderboardScene()) },
+    ],
 
-    // 按钮组
-    const btnDefs = [
-      { id: 'play', text: '开始游戏', variant: 'primary' as const, action: () => app.router.replace(new PlayScene({ id: 'play' })) },
-      { id: 'shop', text: '商店', variant: 'secondary' as const, action: () => this.showOverlay('shop') },
-      { id: 'checkin', text: '每日签到', variant: 'outline' as const, action: () => this.showOverlay('checkin') },
-      { id: 'settings', text: '设置', variant: 'ghost' as const, action: () => this.showOverlay('settings') },
-    ];
+    toggles: [
+      { id: 'sound', icon: 'sound-on', offIcon: 'sound-off', value: soundOn, onChange: (v) => { soundOn = v; } },
+      { id: 'vibration', icon: 'vibrate', value: vibrationOn, onChange: (v) => { vibrationOn = v; } },
+    ],
 
-    btnDefs.forEach((b, i) => {
-      const btn = new Button({ id: b.id, text: b.text, variant: b.variant, width: 220, height: 48 });
-      btn.x = (W - 220) / 2;
-      btn.y = 340 + i * 62;
-      btn.$on('tap', b.action);
-      this.addChild(btn);
-    });
+    zoneD: [
+      { id: 'checkin' },
+      { id: 'achievements', icon: 'achievement', text: '成就', onTap: () => console.log('[achievements]') },
+    ],
 
-    const footer = new Label({ text: '197 tests · 5 packages · 0 dependencies', fontSize: 11, color: 'rgba(255,255,255,0.25)', align: 'center', width: W, height: 20 });
-    footer.y = H - 40;
-    this.addChild(footer);
-  }
+    checkin: { rewards: [10, 15, 20, 25, 30, 40, 80], currentDay: 3, claimed: false, onClaim: () => console.log('[checkin claim]') },
 
-  private showOverlay(type: string) {
-    // 移除旧 overlay
-    const old = this.findById('overlay');
-    if (old) old.removeFromParent();
+    version: 'v0.5.0',
 
-    if (type === 'shop') {
-      const shop = new ShopPanel({
-        id: 'overlay',
-        tabs: [{ key: 'skin', label: '弹球皮肤' }, { key: 'effect', label: '消除特效' }],
-        items: shopItems,
-      });
-      shop.$on('close', () => shop.removeFromParent());
-      shop.$on('equip', (item: ShopItem) => console.log('[equip]', item.id));
-      shop.$on('purchase', (item: ShopItem) => console.log('[purchase]', item.id));
-      this.addChild(shop);
-    } else if (type === 'checkin') {
-      const checkin = new CheckinDialog({ rewards: [10, 10, 15, 20, 20, 25, 50], currentDay: 3, claimed: false });
-      checkin.id = 'overlay';
-      checkin.$on('claim', (day: number, reward: number) => {
-        console.log(`[签到] 第${day + 1}天 +${reward}金币`);
-        checkin.close();
-        checkin.removeFromParent();
-      });
-      checkin.$on('close', () => checkin.removeFromParent());
-      this.addChild(checkin);
-    } else if (type === 'settings') {
-      const settings = new SettingsPanel({
-        toggles: [
-          { id: 'sound', label: '音效', value: true },
-          { id: 'music', label: '音乐', value: true },
-          { id: 'vibration', label: '振动', value: false },
-        ],
-        links: [{ id: 'privacy', label: '隐私协议' }],
-        version: 'v0.1.0',
-      });
-      settings.id = 'overlay';
-      settings.$on('toggle', (id: string, val: boolean) => console.log('[toggle]', id, val));
-      settings.$on('close', () => settings.removeFromParent());
-      this.addChild(settings);
-    }
-  }
+    drawBackground: (ctx) => drawBg(ctx),
+  });
+}
 
-  onBeforeUpdate() {
-    for (const f of this.floaters) {
-      f.x += f.vx * 0.016;
-      f.y += f.vy * 0.016;
-      if (f.x < 0 || f.x > W) f.vx *= -1;
-      if (f.y < 0 || f.y > H) f.vy *= -1;
-    }
-  }
+// ── 商店场景（使用 ShopTemplate）─────────────────
 
-  protected draw(ctx: CanvasRenderingContext2D) {
-    drawBg(ctx);
-    for (const f of this.floaters) {
-      ctx.globalAlpha = 0.25;
-      ctx.beginPath();
-      ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
-      ctx.fillStyle = f.color;
-      ctx.fill();
-    }
-    ctx.globalAlpha = 1;
-  }
+function createShopScene() {
+  return createScene(app, {
+    template: 'shop',
+    variant: 'skin',
+    back: () => app.router.pop(),
+    tabs: [{ key: 'skin', label: '弹球皮肤' }, { key: 'effect', label: '消除特效' }],
+    items: shopItems,
+    onPurchase: (item) => console.log('[purchase]', item.id),
+    onEquip: (item) => console.log('[equip]', item.id),
+    drawBackground: (ctx) => drawBg(ctx),
+  });
+}
+
+// ── 排行榜场景（使用 ListTemplate）─────────────────
+
+function createLeaderboardScene() {
+  return createScene(app, {
+    template: 'list',
+    variant: 'leaderboard',
+    back: () => app.router.pop(),
+    tabs: [{ key: 'friends', label: '好友' }, { key: 'global', label: '全服' }],
+    entries: [
+      { rank: 1, name: '玩家 A', score: 9800 },
+      { rank: 2, name: '玩家 B', score: 7200 },
+      { rank: 3, name: '玩家 C', score: 5100 },
+      { rank: 4, name: '你', score: 2480, isMe: true },
+      { rank: 5, name: '玩家 D', score: 1900 },
+    ],
+    myEntry: { rank: 4, name: '你', score: 2480, isMe: true },
+    drawBackground: (ctx) => drawBg(ctx),
+  });
 }
 
 // ── 游戏场景 ─────────────────────────────────
@@ -306,90 +287,12 @@ class PlayScene extends SceneNode {
 
 import { GalleryScene } from './gallery';
 
-// ── Template Menu Demo ─────────────────────────
-
-function createTemplateMenu() {
-  let bestScore = 2480;
-  let coins = 128;
-  let totalGames = 42;
-  let bestLevel = 15;
-  let totalBlocks = 1200;
-  let bestCombo = 8;
-  let unclaimedMissions = 2;
-  let soundOn = true;
-
-  return createScene(app, {
-    template: 'menu',
-    title: '弹球狂飙',
-    subtitle: 'Ball Frenzy',
-    bestScore: () => bestScore,
-    stats: [
-      { icon: 'shield', label: '已玩', value: () => `${totalGames}` },
-      { icon: 'shield', label: '最远', value: () => `${bestLevel}` },
-      { icon: 'block', label: '消除', value: () => `${totalBlocks}` },
-      { icon: 'lightning', label: '连击', value: () => `${bestCombo}` },
-    ],
-
-    play: () => app.router.replace(new PlayScene({ id: 'play' })),
-    settings: {
-      toggles: [
-        { id: 'sound', label: '音效', value: true },
-        { id: 'music', label: '音乐', value: true },
-        { id: 'vibration', label: '振动', value: false },
-      ],
-      links: [{ id: 'privacy', label: '隐私协议' }],
-      version: 'v0.4.8',
-      onToggle: (id, val) => console.log('[toggle]', id, val),
-    },
-    privacy: { content: '我们重视您的隐私保护。本游戏不收集任何个人信息。' },
-
-    zoneA: [
-      { id: 'coins', icon: 'coin', text: () => `${coins}`, onTap: () => console.log('[coins] open shop') },
-    ],
-
-    continueGame: {
-      label: '继续游戏',
-      sublabel: '第15关 · 2480分',
-      onTap: () => console.log('[continue]'),
-    },
-
-    zoneC: [
-      { id: 'daily-challenge', text: '每日挑战 03/25', variant: 'secondary', onTap: () => console.log('[daily]') },
-      { id: 'leaderboard', onTap: () => console.log('[leaderboard]') },
-      { id: 'shop', onTap: () => console.log('[shop]') },
-    ],
-
-    toggles: [
-      { id: 'sound', icon: 'sound-on', offIcon: 'sound-off', value: soundOn, onChange: (v) => { soundOn = v; console.log('[sound]', v); } },
-      { id: 'vibration', icon: 'vibrate', value: false, onChange: (v) => console.log('[vibration]', v) },
-    ],
-
-    zoneD: [
-      { id: 'checkin' },
-      { id: 'achievements', icon: 'achievement', text: '成就', onTap: () => console.log('[achievements]') },
-      { id: 'battlepass', onTap: () => console.log('[battlepass]') },
-      { id: 'missions', icon: 'mission', text: '任务', badge: () => unclaimedMissions, onTap: () => console.log('[missions]') },
-    ],
-
-    cornerLeft: { icon: 'fire', onTap: () => console.log('[effects]') },
-    cornerRight: { icon: 'gift', text: () => '3', onTap: () => console.log('[chest]') },
-
-    checkin: { rewards: [10, 15, 20, 25, 30, 40, 80], currentDay: 3, claimed: false, onClaim: () => console.log('[checkin claim]') },
-
-    help: () => console.log('[help]'),
-    restorePurchase: () => console.log('[restore]'),
-    version: 'v1.0.0',
-
-    drawBackground: (ctx, w, h) => drawBg(ctx),
-  });
-}
-
 // ── 场景切换 ─────────────────────────────────
 
 let currentMode = 'demo';
 
 function switchToDemo() {
-  app.router.replace(new MenuScene({ id: 'menu' }));
+  app.router.replace(createMenuScene());
   currentMode = 'demo';
 }
 
@@ -398,26 +301,19 @@ function switchToGallery() {
   currentMode = 'gallery';
 }
 
-function switchToTemplateMenu() {
-  app.router.replace(createTemplateMenu());
-  currentMode = 'template';
-}
-
 (window as any).switchScene = (mode: string) => {
   if (mode === 'demo') switchToDemo();
-  else if (mode === 'template') switchToTemplateMenu();
   else switchToGallery();
 
-  // Update button styles
   document.querySelectorAll('.scene-switcher button').forEach((btn, i) => {
-    const modes = ['demo', 'gallery', 'template'];
+    const modes = ['demo', 'gallery'];
     btn.classList.toggle('active', modes[i] === mode);
   });
 };
 
 // ── 启动 ─────────────────────────────────────
 
-app.router.push(new MenuScene({ id: 'menu' }));
+app.router.push(createMenuScene());
 app.start();
 
 // 鼠标滚轮支持（Gallery 滚动）
