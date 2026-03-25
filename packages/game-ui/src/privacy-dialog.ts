@@ -84,24 +84,33 @@ export class PrivacyPage extends UINode {
     scroll.x = 8;
     scroll.y = scrollY;
 
+    // Estimate text height based on content length
+    const fontSize = 14;
+    const lineH = fontSize * 1.8;
+    const avgCharW = fontSize; // CJK chars ~= fontSize width
+    const charsPerLine = Math.max(1, Math.floor(textW / avgCharW));
+    const manualBreaks = (content.match(/\n/g) || []).length;
+    const wrappedLines = Math.ceil(content.replace(/\n/g, '').length / charsPerLine);
+    const totalLines = wrappedLines + manualBreaks;
+    const estimatedTextH = Math.ceil(totalLines * lineH) + 16;
+
     const textLabel = new Label({
       id: 'privacy-content',
       text: content,
-      fontSize: 14,
+      fontSize,
       color: UIColors.textLight,
       align: 'left',
       wrap: true,
       lineHeight: 1.8,
       verticalAlign: 'top',
       width: textW,
-      height: scrollH * 3, // large enough for long text
+      height: estimatedTextH,
     });
     textLabel.x = 16;
     textLabel.y = 8;
     scroll.content.addChild(textLabel);
 
-    // Set scroll content height based on text
-    scroll.contentHeight = textLabel.height + 24;
+    scroll.contentHeight = estimatedTextH + 24;
     this.addChild(scroll);
 
     // ── Bottom buttons ──
