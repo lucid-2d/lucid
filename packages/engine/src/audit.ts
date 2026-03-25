@@ -23,6 +23,8 @@ export interface AuditOptions {
   ignore?: string[];
   /** Override severity per rule ('off' to disable) */
   rules?: Record<string, 'error' | 'warning' | 'info' | 'off'>;
+  /** When true, warnings also cause pass=false */
+  strict?: boolean;
 }
 
 export interface AuditResult {
@@ -113,6 +115,15 @@ function isModalType(node: UINode): boolean {
   return t === 'Modal' || t === 'CheckinDialog' || t === 'SettingsPanel'
     || t === 'LuckyBoxDialog' || t === 'PrivacyDialog'
     || (typeof (node as any).open === 'function' && typeof (node as any).close === 'function');
+}
+
+function isInsideModal(node: UINode): boolean {
+  let p = node.$parent;
+  while (p) {
+    if (isModalType(p)) return true;
+    p = p.$parent;
+  }
+  return false;
 }
 
 function collectModals(root: UINode): UINode[] {
@@ -528,7 +539,10 @@ rule('touch-target-recommended', 'warning', (app) => {
 // #19 exit-button-position
 rule('exit-button-position', 'warning', (app, screen) => {
   const issues: AuditIssue[] = [];
-  const nodes = collectInteractive(app.root).filter(n => matchesAnyPattern(n, 'back', 'pause'));
+  const nodes = collectInteractive(app.root)
+    .filter(n => matchesAnyPattern(n, 'back', 'pause'))
+    .filter(n => !isModalType(n))
+    .filter(n => !isInsideModal(n));
   for (const node of nodes) {
     const b = getWorldBounds(node);
     const inTopZone = b.y < screen.height * 0.15;
@@ -744,10 +758,56 @@ export function auditUX(app: App, options?: AuditOptions): AuditResult {
     }
   }
 
-  return {
-    pass: errors.length === 0,
-    issues: allIssues,
-    summary: lines.join('\n'),
-    layout,
-  };
+  const pass = options?.strict
+    ? errors.length === 0 && warnings.length === 0
+    : errors.length === 0;
+
+  return { pass, issues: allIssues, summary: lines.join('\n'), layout };
+}
+
+// ══════════════════════════════════════════
+// auditAll — batch audit multiple scenes
+// ══════════════════════════════════════════
+
+export interface AuditSceneEntry {
+  /** Scene instance to audit */
+  scene: SceneNode;
+  /** Human-readable label for reports */
+  label: string;
+  /** Optional setup after scene enters (e.g. tap pause button) */
+  setup?: (app: App) => void;
+}
+
+export interface AuditAllResult {
+  allPassed: boolean;
+  sceneCount: number;
+  perScene: Map<string, AuditResult>;
+  summary: string;
+}
+
+export async function auditAll(app: App, entries: AuditSceneEntry[], options?: AuditOptions): Promise<AuditAllResult> {
+  const perScene = new Map<string, AuditResult>();
+  const summaryLines: string[] = [];
+
+  for (const entry of entries) {
+    await app.router.replace(entry.scene);
+    app.tick(16);
+    if (entry.setup) entry.setup(app);
+    app.tick(16);
+
+    const result = auditUX(app, options);
+    perScene.set(entry.label, result);
+
+    const status = result.pass ? '✓' : '✗';
+    const errorCount = result.issues.filter(i => i.severity === 'error').length;
+    const warnCount = result.issues.filter(i => i.severity === 'warning').length;
+    summaryLines.push(`${status} ${entry.label}: ${errorCount} errors, ${warnCount} warnings`);
+  }
+
+  const allPassed = [...perScene.values()].every(r => r.pass);
+
+  summaryLines.unshift(`Audited ${entries.length} scenes — ${allPassed ? 'ALL PASSED' : 'FAILED'}`);
+  summaryLines.unshift('');
+
+  return { allPassed, sceneCount: entries.length, perScene, summary: summaryLines.join('\n') };
 }

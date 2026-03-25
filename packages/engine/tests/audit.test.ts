@@ -3,7 +3,7 @@
  */
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createTestApp } from '../src/test-utils';
-import { auditUX, defineRule } from '../src/audit';
+import { auditUX, auditAll, defineRule } from '../src/audit';
 import { SceneNode } from '../src/scene';
 import { UINode } from '@lucid-2d/core';
 
@@ -514,6 +514,201 @@ describe('summary', () => {
 
     const result = auditUX(app);
     expect(result.summary).toContain('Errors');
+  });
+});
+
+describe('rule: exit-button-position', () => {
+  it('does not flag buttons inside Modal', () => {
+    const app = createTestApp();
+    const scene = makeScene('play');
+    addButton(scene, 'pause-btn', 340, 10, 44, 44, '⏸');
+    const modal = addModal(scene, 'pause-modal', true);
+    addButton(modal, 'home-btn', 85, 200, 200, 48, '返回主页');
+    addButton(modal, 'continue', 85, 260, 200, 48, '继续');
+    addButton(modal, 'restart', 85, 320, 200, 48, '重新开始');
+    addButton(modal, 'settings', 85, 380, 200, 48, '设置');
+    app.router.push(scene);
+    app.tick(16);
+
+    const result = auditUX(app);
+    const posIssues = result.issues.filter(i => i.rule === 'exit-button-position');
+    // home-btn inside modal should NOT be flagged
+    expect(posIssues.find(i => i.nodeId === 'home-btn')).toBeUndefined();
+  });
+
+  it('does not flag Modal container itself', () => {
+    const app = createTestApp();
+    const scene = makeScene('play');
+    addButton(scene, 'pause-btn', 340, 10, 44, 44, '⏸');
+    const modal = addModal(scene, 'pause-modal', true);
+    addButton(modal, 'continue', 85, 260, 200, 48, '继续');
+    addButton(modal, 'restart', 85, 320, 200, 48, '重新开始');
+    addButton(modal, 'home', 85, 200, 200, 48, '主页');
+    addButton(modal, 'settings', 85, 380, 200, 48, '设置');
+    app.router.push(scene);
+    app.tick(16);
+
+    const result = auditUX(app);
+    const posIssues = result.issues.filter(i => i.rule === 'exit-button-position');
+    expect(posIssues.find(i => i.nodeId === 'pause-modal')).toBeUndefined();
+  });
+});
+
+describe('strict mode', () => {
+  it('pass=true when only warnings exist (non-strict)', () => {
+    const app = createTestApp();
+    const scene = makeScene('menu');
+    addButton(scene, 'play', 95, 400, 200, 48, '开始');
+    addButton(scene, 'settings', 95, 500, 200, 48, '设置');
+    addButton(scene, 'privacy', 95, 600, 200, 48, '隐私协议');
+    addButton(scene, 'emoji-btn', 95, 700, 200, 48, '📅 签到');
+    app.router.push(scene);
+    app.tick(16);
+
+    const result = auditUX(app);
+    expect(result.issues.some(i => i.severity === 'warning')).toBe(true);
+    expect(result.pass).toBe(true); // warnings don't fail in normal mode
+  });
+
+  it('pass=false when warnings exist (strict)', () => {
+    const app = createTestApp();
+    const scene = makeScene('menu');
+    addButton(scene, 'play', 95, 400, 200, 48, '开始');
+    addButton(scene, 'settings', 95, 500, 200, 48, '设置');
+    addButton(scene, 'privacy', 95, 600, 200, 48, '隐私协议');
+    addButton(scene, 'emoji-btn', 95, 700, 200, 48, '📅 签到');
+    app.router.push(scene);
+    app.tick(16);
+
+    const result = auditUX(app, { strict: true });
+    expect(result.pass).toBe(false); // warnings fail in strict mode
+  });
+
+  it('pass=true in strict when no errors and no warnings', () => {
+    const app = createTestApp();
+    const scene = makeScene('menu');
+    addButton(scene, 'play', 95, 400, 200, 48, '开始');
+    addButton(scene, 'settings', 95, 500, 200, 48, '设置');
+    addButton(scene, 'privacy', 95, 600, 200, 48, '隐私协议');
+    app.router.push(scene);
+    app.tick(16);
+
+    const result = auditUX(app, { strict: true });
+    expect(result.issues.filter(i => i.severity === 'error').length).toBe(0);
+    expect(result.issues.filter(i => i.severity === 'warning').length).toBe(0);
+    expect(result.pass).toBe(true);
+  });
+});
+
+describe('auditAll', () => {
+  it('audits multiple scenes and returns per-scene results', async () => {
+    const app = createTestApp();
+
+    const menuScene = makeScene('menu');
+    addButton(menuScene, 'play', 95, 400, 200, 48, '开始');
+    addButton(menuScene, 'settings', 95, 500, 200, 48, '设置');
+    addButton(menuScene, 'privacy', 95, 600, 200, 48, '隐私协议');
+
+    const playScene = makeScene('play');
+    addButton(playScene, 'pause', 340, 10, 44, 44, '⏸');
+
+    const results = await auditAll(app, [
+      { scene: menuScene, label: 'menu' },
+      { scene: playScene, label: 'play' },
+    ]);
+
+    expect(results.sceneCount).toBe(2);
+    expect(results.perScene.size).toBe(2);
+    expect(results.perScene.has('menu')).toBe(true);
+    expect(results.perScene.has('play')).toBe(true);
+  });
+
+  it('allPassed is true when all scenes pass', async () => {
+    const app = createTestApp();
+
+    const menuScene = makeScene('menu');
+    addButton(menuScene, 'play', 95, 400, 200, 48, '开始');
+    addButton(menuScene, 'settings', 95, 500, 200, 48, '设置');
+    addButton(menuScene, 'privacy', 95, 600, 200, 48, '隐私协议');
+
+    const results = await auditAll(app, [
+      { scene: menuScene, label: 'menu' },
+    ]);
+
+    expect(results.allPassed).toBe(true);
+  });
+
+  it('allPassed is false when any scene fails', async () => {
+    const app = createTestApp();
+
+    const menuScene = makeScene('menu');
+    addButton(menuScene, 'play', 95, 400, 200, 48, '开始');
+    addButton(menuScene, 'settings', 95, 500, 200, 48, '设置');
+    addButton(menuScene, 'privacy', 95, 600, 200, 48, '隐私协议');
+
+    const emptyScene = makeScene('play'); // no buttons → no-dead-end error
+
+    const results = await auditAll(app, [
+      { scene: menuScene, label: 'menu' },
+      { scene: emptyScene, label: 'play' },
+    ]);
+
+    expect(results.allPassed).toBe(false);
+    expect(results.perScene.get('menu')!.pass).toBe(true);
+    expect(results.perScene.get('play')!.pass).toBe(false);
+  });
+
+  it('setup callback is called before audit', async () => {
+    const app = createTestApp();
+
+    const scene = makeScene('menu');
+    addButton(scene, 'play', 95, 400, 200, 48, '开始');
+    addButton(scene, 'settings', 95, 500, 200, 48, '设置');
+    addButton(scene, 'privacy', 95, 600, 200, 48, '隐私协议');
+
+    let setupCalled = false;
+    const results = await auditAll(app, [
+      { scene, label: 'menu', setup: () => { setupCalled = true; } },
+    ]);
+
+    expect(setupCalled).toBe(true);
+    expect(results.sceneCount).toBe(1);
+  });
+
+  it('passes options through to auditUX', async () => {
+    const app = createTestApp();
+
+    const scene = makeScene('menu');
+    addButton(scene, 'play', 95, 400, 200, 48, '开始');
+    addButton(scene, 'settings', 95, 500, 200, 48, '设置');
+    addButton(scene, 'privacy', 95, 600, 200, 48, '隐私协议');
+    addButton(scene, 'emoji', 95, 700, 200, 48, '📅 签到');
+
+    const results = await auditAll(app, [
+      { scene, label: 'menu' },
+    ], { strict: true });
+
+    // strict mode → warnings fail
+    expect(results.allPassed).toBe(false);
+  });
+
+  it('summary includes scene count', async () => {
+    const app = createTestApp();
+
+    const s1 = makeScene('menu');
+    addButton(s1, 'play', 95, 400, 200, 48, '开始');
+    addButton(s1, 'settings', 95, 500, 200, 48, '设置');
+    addButton(s1, 'privacy', 95, 600, 200, 48, '隐私协议');
+
+    const s2 = makeScene('result');
+    addButton(s2, 'retry', 95, 400, 200, 48, '再来一局');
+
+    const results = await auditAll(app, [
+      { scene: s1, label: 'menu' },
+      { scene: s2, label: 'result' },
+    ]);
+
+    expect(results.summary).toContain('2 scenes');
   });
 });
 
