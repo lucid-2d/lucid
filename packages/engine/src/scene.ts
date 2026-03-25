@@ -138,6 +138,20 @@ export class SceneRouter extends UINode {
   /** Scene lifecycle log (debug mode only) */
   get log(): readonly SceneLogEntry[] { return this._log; }
 
+  /** @internal Template validation is enabled by createApp/boot. Tests skip by default. */
+  _skipTemplateValidation = true;
+
+  private _validateTemplate(scene: SceneNode): void {
+    if (this._skipTemplateValidation) return;
+    const ctor = scene.constructor as any;
+    if (!ctor.__template) {
+      throw new Error(
+        `[lucid] Scene "${scene.id ?? scene.$type}" is not a template scene. ` +
+        `Use createScene() from @lucid-2d/game-ui to create scenes.`
+      );
+    }
+  }
+
   private _logAction(action: SceneLogEntry['action'], scene: SceneNode): void {
     if (!this._debug) return;
     this._log.push({
@@ -183,6 +197,7 @@ export class SceneRouter extends UINode {
 
   /** 压入新场景（暂停当前，await preload，进入新场景） */
   push(scene: SceneNode, transition?: TransitionOptions): void | Promise<void> {
+    this._validateTemplate(scene);
     const oldScene = this.current ?? null;
     oldScene?.onPause();
     this.stack.push(scene);
@@ -224,6 +239,7 @@ export class SceneRouter extends UINode {
 
   /** 替换栈顶场景（await preload） */
   replace(scene: SceneNode, transition?: TransitionOptions): void | Promise<void> {
+    this._validateTemplate(scene);
     const oldScene = this.stack.pop() ?? null;
     if (oldScene) oldScene.onExit();
 

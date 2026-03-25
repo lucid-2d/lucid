@@ -251,6 +251,20 @@ function rule(id: string, severity: AuditIssue['severity'], test: AuditRule['tes
   _builtinRules.push({ id, severity, test });
 }
 
+// #0 template-required — the one rule that replaces most others
+rule('template-required', 'error', (app) => {
+  // Only enforced when template mode is active (boot() sets _skipTemplateValidation=false)
+  if (app.router._skipTemplateValidation) return [];
+  const scene = app.router.current;
+  if (!scene) return [];
+  const ctor = scene.constructor as any;
+  if (!ctor.__template) {
+    return [buildIssue('template-required', 'error', scene,
+      `Scene "${scene.id}" is not a template scene. Use createScene() from @lucid-2d/game-ui.`)];
+  }
+  return [];
+});
+
 // ── Error Rules (15) ──
 
 // #1 no-overlap

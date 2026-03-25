@@ -85,6 +85,9 @@ export async function boot(options: BootOptions = {}): Promise<App> {
     ...rest,
   });
 
+  // Enforce template-only scenes in production
+  app.router._skipTemplateValidation = false;
+
   // Expose for AI agent / Playwright debugging
   if (platform === 'web' && typeof window !== 'undefined') {
     (window as any)._app = app;

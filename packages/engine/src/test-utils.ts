@@ -400,6 +400,9 @@ export function createTestApp(opts?: TestAppOptions): TestApp {
     });
   }
 
+  // createTestApp skips template validation (already true by default, createApp sets false)
+  app.router._skipTemplateValidation = true;
+
   const testApp = app as TestApp;
 
   testApp.toImage = () => {
