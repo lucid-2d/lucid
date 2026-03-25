@@ -12,6 +12,10 @@ import { TemplateScene } from './template-scene.js';
 import { buildMenu } from './menu.js';
 import { buildGameplay } from './gameplay.js';
 import { buildResult } from './result.js';
+import { buildMap } from './map.js';
+import { buildShop } from './shop.js';
+import { buildList } from './list.js';
+import { buildPass } from './pass.js';
 
 // ══════════════════════════════════════════
 // Config Validators
@@ -91,12 +95,6 @@ function validatePass(c: PassConfig): void {
     throw new Error('[lucid] PassTemplate requires "rewards" array');
   }
 }
-
-// Stage 4 builders (placeholder)
-function buildMap(scene: TemplateScene, config: MapConfig, app: TemplateApp): void {}
-function buildShop(scene: TemplateScene, config: ShopConfig, app: TemplateApp): void {}
-function buildList(scene: TemplateScene, config: ListConfig, app: TemplateApp): void {}
-function buildPass(scene: TemplateScene, config: PassConfig, app: TemplateApp): void {}
 
 // ══════════════════════════════════════════
 // Main entry

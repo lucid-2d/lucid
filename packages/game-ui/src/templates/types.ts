@@ -202,6 +202,7 @@ export interface ShopConfig {
   onEquip?: (item: ShopItem) => void;
 
   // Coin shop
+  coins?: number;
   coinItems?: CoinShopItem[];
   onCoinPurchase?: (item: CoinShopItem) => void;
 
