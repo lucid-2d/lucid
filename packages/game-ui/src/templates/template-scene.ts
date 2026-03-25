@@ -3,10 +3,10 @@
  * Marked with __template for router validation.
  */
 
-import { UINode } from '@lucid-2d/core';
+import { SceneNode } from '@lucid-2d/core';
 import type { TemplateConfig, TemplateName } from './types.js';
 
-export class TemplateScene extends UINode {
+export class TemplateScene extends SceneNode {
   static readonly __template = true;
 
   readonly templateType: TemplateName;
@@ -18,13 +18,6 @@ export class TemplateScene extends UINode {
     this.templateType = templateType;
     this.templateConfig = config;
   }
-
-  /** Called by engine as scene lifecycle */
-  onEnter(): void {}
-  onExit(): void {}
-  onPause(): void {}
-  onResume(): void {}
-  preload(): void | Promise<void> {}
 
   /** Refresh all dynamic values (bestScore, badges, stats, etc.). Called on onEnter/onResume. */
   refresh(): void {}

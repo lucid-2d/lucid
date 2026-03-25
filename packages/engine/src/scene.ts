@@ -8,68 +8,10 @@
  * - 支持过渡动画（fade/slide）
  */
 
-import { UINode, type UINodeOptions } from '@lucid-2d/core';
+import { UINode, SceneNode, type ScenePreset } from '@lucid-2d/core';
 
-export interface ScenePreset<T extends SceneNode = SceneNode> {
-  /** Human-readable description (shown in $inspect) */
-  label?: string;
-  /** Setup function — mutate the scene to reach this state (method syntax for bivariant type checking) */
-  setup(scene: T): void;
-}
-
-export class SceneNode extends UINode {
-  /** 进入场景时调用（首次推入或 replace 到） */
-  onEnter(): void {}
-  /** 离开场景时调用（pop 或被 replace） */
-  onExit(): void {}
-  /** 有新场景压在上面时调用 */
-  onPause(): void {}
-  /** 上面的场景弹出后恢复时调用 */
-  onResume(): void {}
-
-  /**
-   * Async resource loading hook. Called before onEnter().
-   * If async, the scene is NOT in the render tree during preload
-   * (preventing $update/$render on uninitialized state).
-   * Override to load images, audio, or data files.
-   *
-   * ```typescript
-   * class GameScene extends SceneNode {
-   *   async preload() {
-   *     this.bg = await loadImage('bg.png');
-   *     this.atlas = await loadImage('atlas.png');
-   *   }
-   *   onEnter() { // resources ready }
-   * }
-   *
-   * await app.router.push(new GameScene(app));
-   * ```
-   */
-  preload(): Promise<void> | void {}
-
-  /**
-   * Declare preset states for AI inspection, testing, and screenshots.
-   *
-   * Override in subclasses to declare states that can be programmatically triggered:
-   * ```typescript
-   * class GameScene extends SceneNode {
-   *   $presets() {
-   *     return {
-   *       paused: { label: '暂停', setup: (s) => s.togglePause() },
-   *       death:  { label: '死亡', setup: (s) => { s.ship.died = true; } },
-   *     };
-   *   }
-   * }
-   * ```
-   */
-  $presets(): Record<string, ScenePreset<this>> | null {
-    return null;
-  }
-
-  constructor(opts?: UINodeOptions) {
-    super(opts);
-  }
-}
+// Re-export from core for backward compatibility
+export { SceneNode, type ScenePreset };
 
 // ── Transition ──
 

@@ -34,5 +34,8 @@ export { I18n, type Translations, type LocaleMap } from './i18n.js';
 // 实体感知
 export { Entity, type EntityDescriptor } from './entity.js';
 
+// 场景基类
+export { SceneNode, type ScenePreset } from './scene-node.js';
+
 // AI 调试
 export { InteractionRecorder, type InteractionRecord, type RecorderOptions } from './recorder.js';
