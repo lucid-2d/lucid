@@ -1,0 +1,178 @@
+/**
+ * createScene() — the single entry point for creating template scenes.
+ * Validates config at creation time, returns a sealed TemplateScene.
+ */
+
+import type {
+  TemplateConfig, TemplateApp,
+  MenuConfig, GameplayConfig, ResultConfig,
+  MapConfig, ShopConfig, ListConfig, PassConfig,
+} from './types.js';
+import { TemplateScene } from './template-scene.js';
+
+// ══════════════════════════════════════════
+// Config Validators
+// ══════════════════════════════════════════
+
+function validateMenu(c: MenuConfig): void {
+  if (typeof c.play !== 'function') {
+    throw new Error('[lucid] MenuTemplate requires "play" action');
+  }
+  if (!c.settings || !c.settings.toggles) {
+    throw new Error('[lucid] MenuTemplate requires "settings" with toggles');
+  }
+  if (!c.privacy || !c.privacy.content) {
+    throw new Error('[lucid] MenuTemplate requires "privacy" with content');
+  }
+}
+
+function validateGameplay(c: GameplayConfig): void {
+  if (!c.pause) {
+    throw new Error('[lucid] GameplayTemplate requires "pause" config');
+  }
+  if (typeof c.pause.restart !== 'function') {
+    throw new Error('[lucid] GameplayTemplate pause requires "restart" action');
+  }
+  if (typeof c.pause.home !== 'function') {
+    throw new Error('[lucid] GameplayTemplate pause requires "home" action');
+  }
+  if (typeof c.setup !== 'function') {
+    throw new Error('[lucid] GameplayTemplate requires "setup" function');
+  }
+}
+
+function validateResult(c: ResultConfig): void {
+  if (typeof c.restart !== 'function' && typeof c.home !== 'function') {
+    throw new Error('[lucid] ResultTemplate requires at least one of: restart, home');
+  }
+  if (typeof c.score !== 'number') {
+    throw new Error('[lucid] ResultTemplate requires "score" (number)');
+  }
+}
+
+function validateMap(c: MapConfig): void {
+  if (typeof c.back !== 'function') {
+    throw new Error('[lucid] MapTemplate requires "back" action');
+  }
+  if (typeof c.setup !== 'function') {
+    throw new Error('[lucid] MapTemplate requires "setup" function');
+  }
+}
+
+function validateShop(c: ShopConfig): void {
+  if (typeof c.back !== 'function') {
+    throw new Error('[lucid] ShopTemplate requires "back" action');
+  }
+  if (c.variant === 'skin' && !c.items) {
+    throw new Error('[lucid] ShopTemplate variant="skin" requires "items"');
+  }
+  if (c.variant === 'coin' && !c.coinItems) {
+    throw new Error('[lucid] ShopTemplate variant="coin" requires "coinItems"');
+  }
+}
+
+function validateList(c: ListConfig): void {
+  if (typeof c.back !== 'function') {
+    throw new Error('[lucid] ListTemplate requires "back" action');
+  }
+  if (!Array.isArray(c.entries)) {
+    throw new Error('[lucid] ListTemplate requires "entries" array');
+  }
+}
+
+function validatePass(c: PassConfig): void {
+  if (typeof c.back !== 'function') {
+    throw new Error('[lucid] PassTemplate requires "back" action');
+  }
+  if (!Array.isArray(c.rewards)) {
+    throw new Error('[lucid] PassTemplate requires "rewards" array');
+  }
+}
+
+// ══════════════════════════════════════════
+// Template builders (placeholder — Stage 3/4 will add real rendering)
+// ══════════════════════════════════════════
+
+function buildMenu(scene: TemplateScene, config: MenuConfig, app: TemplateApp): void {
+  // Stage 3: real implementation
+}
+
+function buildGameplay(scene: TemplateScene, config: GameplayConfig, app: TemplateApp): void {
+  // Stage 3: real implementation
+}
+
+function buildResult(scene: TemplateScene, config: ResultConfig, app: TemplateApp): void {
+  // Stage 3: real implementation
+}
+
+function buildMap(scene: TemplateScene, config: MapConfig, app: TemplateApp): void {
+  // Stage 4: real implementation
+}
+
+function buildShop(scene: TemplateScene, config: ShopConfig, app: TemplateApp): void {
+  // Stage 4: real implementation
+}
+
+function buildList(scene: TemplateScene, config: ListConfig, app: TemplateApp): void {
+  // Stage 4: real implementation
+}
+
+function buildPass(scene: TemplateScene, config: PassConfig, app: TemplateApp): void {
+  // Stage 4: real implementation
+}
+
+// ══════════════════════════════════════════
+// Main entry
+// ══════════════════════════════════════════
+
+export function createScene(app: TemplateApp, config: TemplateConfig): TemplateScene {
+  const w = app.screen.width;
+  const h = app.screen.height;
+
+  switch (config.template) {
+    case 'menu': {
+      validateMenu(config);
+      const scene = new TemplateScene('menu', config, w, h);
+      scene.onEnter = () => buildMenu(scene, config, app);
+      return scene;
+    }
+    case 'gameplay': {
+      validateGameplay(config);
+      const scene = new TemplateScene('gameplay', config, w, h);
+      scene.onEnter = () => buildGameplay(scene, config, app);
+      return scene;
+    }
+    case 'result': {
+      validateResult(config);
+      const scene = new TemplateScene('result', config, w, h);
+      scene.onEnter = () => buildResult(scene, config, app);
+      return scene;
+    }
+    case 'map': {
+      validateMap(config);
+      const scene = new TemplateScene('map', config, w, h);
+      scene.onEnter = () => buildMap(scene, config, app);
+      return scene;
+    }
+    case 'shop': {
+      validateShop(config);
+      const scene = new TemplateScene('shop', config, w, h);
+      scene.onEnter = () => buildShop(scene, config, app);
+      return scene;
+    }
+    case 'list': {
+      validateList(config);
+      const scene = new TemplateScene('list', config, w, h);
+      scene.onEnter = () => buildList(scene, config, app);
+      return scene;
+    }
+    case 'pass': {
+      validatePass(config);
+      const scene = new TemplateScene('pass', config, w, h);
+      scene.onEnter = () => buildPass(scene, config, app);
+      return scene;
+    }
+    default:
+      throw new Error(`[lucid] Unknown template: ${(config as any).template}`);
+  }
+}
