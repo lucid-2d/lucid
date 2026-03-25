@@ -8,9 +8,8 @@
  */
 
 import { UINode } from '@lucid-2d/core';
-import { Button, IconButton, Label, Modal, UIColors } from '@lucid-2d/ui';
-import { SettingsPanel } from '../settings-panel.js';
-import { ACTION_DEFAULTS } from './actions.js';
+import { IconButton, Label, UIColors } from '@lucid-2d/ui';
+import { PauseModal } from '../pause-modal.js';
 import type { GameplayConfig, TemplateApp } from './types.js';
 import type { TemplateScene } from './template-scene.js';
 
@@ -48,7 +47,6 @@ export function buildGameplay(scene: TemplateScene, config: GameplayConfig, app:
         width: 100,
         height: 30,
       });
-      // Update HUD values on each frame
       const origUpdate = lbl['$update']?.bind(lbl);
       lbl['$update'] = function (dt: number) {
         origUpdate?.(dt);
@@ -67,12 +65,30 @@ export function buildGameplay(scene: TemplateScene, config: GameplayConfig, app:
     size: 44,
   });
   pauseBtn.x = 16;
-  pauseBtn.y = 44; // safe area
+  pauseBtn.y = 44;
   scene.addChild(pauseBtn);
 
   // ── PauseModal (created at build time, hidden until pause tapped) ──
-  const pauseModal = createPauseModal(scene, config, app);
+  const pauseModal = new PauseModal({
+    resume: () => {
+      pauseModal.close();
+      pauseModal.visible = false;
+    },
+    restart: () => config.pause.restart(),
+    home: () => config.pause.home(),
+    settings: config.pause.settings ? {
+      toggles: config.pause.settings.toggles,
+      links: config.pause.settings.links,
+      version: config.pause.settings.version,
+      onToggle: config.pause.settings.onToggle,
+      onLink: config.pause.settings.onLink,
+    } : undefined,
+    quit: config.pause.quit,
+    screenWidth: w,
+    screenHeight: h,
+  });
   pauseModal.visible = false;
+  pauseModal.attachTo(scene);
   scene.addChild(pauseModal);
 
   pauseBtn.$on('tap', () => {
@@ -90,114 +106,4 @@ export function buildGameplay(scene: TemplateScene, config: GameplayConfig, app:
       origDraw?.(ctx);
     };
   }
-}
-
-function createPauseModal(
-  scene: TemplateScene,
-  config: GameplayConfig,
-  app: TemplateApp,
-): Modal {
-  const modal = new Modal({
-    title: '暂停',
-    id: 'pause-modal',
-    width: 280,
-    height: 300,
-    screenWidth: scene.width,
-    screenHeight: scene.height,
-  });
-
-  const bw = 200;
-  const bx = (280 - bw) / 2;
-  let y = 0;
-
-  // Resume
-  const resumeBtn = new Button({
-    id: 'resume',
-    text: ACTION_DEFAULTS.resume.text,
-    variant: 'primary',
-    width: bw,
-    height: 48,
-  });
-  resumeBtn.x = bx; resumeBtn.y = y;
-  resumeBtn.$on('tap', () => {
-    modal.close();
-    modal.visible = false;
-  });
-  modal.content.addChild(resumeBtn);
-  y += 60;
-
-  // Restart
-  const restartBtn = new Button({
-    id: 'restart',
-    text: ACTION_DEFAULTS.restart.text,
-    variant: 'secondary',
-    width: bw,
-    height: 48,
-  });
-  restartBtn.x = bx; restartBtn.y = y;
-  restartBtn.$on('tap', () => config.pause.restart());
-  modal.content.addChild(restartBtn);
-  y += 60;
-
-  // Home
-  const homeBtn = new Button({
-    id: 'home',
-    text: ACTION_DEFAULTS.home.text,
-    variant: 'secondary',
-    width: bw,
-    height: 48,
-  });
-  homeBtn.x = bx; homeBtn.y = y;
-  homeBtn.$on('tap', () => config.pause.home());
-  modal.content.addChild(homeBtn);
-  y += 60;
-
-  // Settings (if provided in pause config)
-  if (config.pause.settings) {
-    const settingsBtn = new Button({
-      id: 'pause-settings',
-      text: ACTION_DEFAULTS.settings.text,
-      variant: 'ghost',
-      width: bw,
-      height: 44,
-    });
-    settingsBtn.x = bx; settingsBtn.y = y;
-    settingsBtn.$on('tap', () => {
-      // Open settings panel on top of pause modal
-      const existing = scene.findById('settings-modal');
-      if (existing) { scene.removeChild(existing); return; }
-      const panel = new SettingsPanel({
-        toggles: config.pause.settings!.toggles,
-        links: config.pause.settings!.links,
-        version: config.pause.settings!.version,
-        screenWidth: scene.width,
-        screenHeight: scene.height,
-      });
-      panel.id = 'settings-modal';
-      panel.$on('toggle', (id: string, val: boolean) => config.pause.settings!.onToggle(id, val));
-      panel.$on('close', () => scene.removeChild(panel));
-      scene.addChild(panel);
-    });
-    modal.content.addChild(settingsBtn);
-    y += 52;
-  }
-
-  // Quit (optional)
-  if (config.pause.quit) {
-    const quitBtn = new Button({
-      id: 'quit',
-      text: ACTION_DEFAULTS.quit.text,
-      variant: 'danger',
-      width: bw,
-      height: 44,
-    });
-    quitBtn.x = bx; quitBtn.y = y;
-    quitBtn.$on('tap', () => config.pause.quit!());
-    modal.content.addChild(quitBtn);
-  }
-
-  modal.fitContent();
-  modal.$on('close', () => { modal.visible = false; });
-
-  return modal;
 }

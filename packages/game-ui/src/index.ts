@@ -11,6 +11,8 @@ export { BattlePassPanel, type BattlePassPanelProps, type BattlePassReward } fro
 export { LuckyBoxDialog, type LuckyBoxDialogProps } from './lucky-box-dialog.js';
 export { CoinShopPanel, type CoinShopPanelProps, type CoinShopItem } from './coin-shop-panel.js';
 export { PrivacyPage, PrivacyDialog, type PrivacyDialogProps } from './privacy-dialog.js';
+export { ConfirmDialog, type ConfirmDialogProps, type ConfirmAction } from './confirm-dialog.js';
+export { PauseModal, type PauseModalProps, type PauseSettingsConfig } from './pause-modal.js';
 
 // Template system
 export {
