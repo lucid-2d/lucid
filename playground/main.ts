@@ -66,8 +66,6 @@ function createMenuScene() {
         { id: 'music', label: '音乐', value: true },
         { id: 'vibration', label: '振动', value: false },
       ],
-      links: [{ id: 'privacy', label: '隐私协议' }],
-      version: 'v0.5.0',
       onToggle: (id, val) => console.log('[toggle]', id, val),
     },
     privacy: { content: '我们重视您的隐私保护。本游戏不收集任何个人信息。使用本游戏即表示您同意本隐私协议。' },
