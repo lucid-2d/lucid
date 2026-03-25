@@ -893,15 +893,18 @@ export class GalleryScene extends SceneNode {
 
   private showPrivacy() {
     this.removeOverlay();
-    const dialog = new PrivacyDialog();
-    dialog.id = 'overlay';
-    dialog.$on('agree', () => {
-      console.log('[隐私] agreed');
-      setTimeout(() => dialog.removeFromParent(), 200);
+    const page = new PrivacyDialog({
+      content: '本游戏尊重并保护用户的隐私权。本隐私政策说明我们如何收集、使用、存储和保护您的个人信息。\n\n一、信息收集\n我们不会主动收集您的个人身份信息。游戏过程中产生的数据（如分数、设置偏好）仅存储在您的设备本地。\n\n二、第三方服务\n本游戏可能使用第三方广告服务。这些服务可能会收集匿名的设备信息用于广告投放。\n\n三、数据存储\n所有游戏数据存储在您的设备本地存储中。卸载游戏将清除所有本地数据。\n\n四、儿童隐私\n本游戏不会故意收集13岁以下儿童的个人信息。\n\n五、政策更新\n我们可能会不时更新本隐私政策。更新后的政策将在游戏内通知您。',
+      showViewButton: true,
     });
-    dialog.$on('viewPolicy', () => console.log('[隐私] viewPolicy'));
-    dialog.$on('close', () => setTimeout(() => dialog.removeFromParent(), 200));
-    this.addChild(dialog);
+    page.id = 'overlay';
+    page.$on('agree', () => {
+      console.log('[隐私] agreed');
+      page.removeFromParent();
+    });
+    page.$on('back', () => page.removeFromParent());
+    page.$on('viewPolicy', () => console.log('[隐私] viewPolicy'));
+    this.addChild(page);
   }
 
   onBeforeUpdate() {

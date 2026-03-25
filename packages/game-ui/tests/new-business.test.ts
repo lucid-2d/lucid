@@ -133,16 +133,16 @@ describe('PrivacyDialog', () => {
     expect(handler).toHaveBeenCalledOnce();
   });
 
-  it('emits viewPolicy', () => {
-    const dialog = new PrivacyDialog();
+  it('emits viewPolicy when showViewButton is true', () => {
+    const dialog = new PrivacyDialog({ showViewButton: true });
     const handler = vi.fn();
     dialog.$on('viewPolicy', handler);
     dialog.findById('view-privacy')?.$emit('tap');
     expect(handler).toHaveBeenCalledOnce();
   });
 
-  it('no close button (must agree)', () => {
+  it('hides view button when showViewButton is not set', () => {
     const dialog = new PrivacyDialog();
-    expect(dialog.findById('modal-close')).toBeNull();
+    expect(dialog.findById('view-privacy')).toBeNull();
   });
 });

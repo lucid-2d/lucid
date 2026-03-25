@@ -8,7 +8,7 @@
 import { UINode } from '@lucid-2d/core';
 import { Button, IconButton, Label, UIColors } from '@lucid-2d/ui';
 import { SettingsPanel } from '../settings-panel.js';
-import { PrivacyDialog } from '../privacy-dialog.js';
+import { PrivacyPage } from '../privacy-dialog.js';
 import { CheckinDialog } from '../checkin-dialog.js';
 import { LuckyBoxDialog } from '../lucky-box-dialog.js';
 import { ACTION_DEFAULTS, ACTION_SIZES } from './actions.js';
@@ -191,23 +191,19 @@ function openSettings(scene: TemplateScene, config: MenuConfig, app: TemplateApp
   scene.addChild(panel);
 }
 
-function openPrivacy(scene: TemplateScene, config: MenuConfig, _app: TemplateApp): void {
-  const existing = scene.findById('privacy-modal');
-  if (existing) { scene.removeChild(existing); return; }
-
-  const dialog = new PrivacyDialog({
+function openPrivacy(_scene: TemplateScene, config: MenuConfig, app: TemplateApp): void {
+  const page = new PrivacyPage({
     content: config.privacy.content,
-    screenWidth: scene.width,
-    screenHeight: scene.height,
+    screenWidth: app.screen.width,
+    screenHeight: app.screen.height,
     showViewButton: !!config.privacy.onViewPolicy,
   });
-  dialog.id = 'privacy-modal';
   if (config.privacy.onViewPolicy) {
-    dialog.$on('viewPolicy', () => config.privacy.onViewPolicy!());
+    page.$on('viewPolicy', () => config.privacy.onViewPolicy!());
   }
-  dialog.$on('agree', () => scene.removeChild(dialog));
-  dialog.$on('close', () => scene.removeChild(dialog));
-  scene.addChild(dialog);
+  page.$on('agree', () => app.router.pop());
+  page.$on('back', () => app.router.pop());
+  app.router.push(page as any);
 }
 
 function openCheckin(scene: TemplateScene, config: MenuConfig, _app: TemplateApp): void {

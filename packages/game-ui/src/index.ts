@@ -10,7 +10,7 @@ export { LeaderboardPanel, type LeaderboardPanelProps, type LeaderboardEntry } f
 export { BattlePassPanel, type BattlePassPanelProps, type BattlePassReward } from './battle-pass-panel.js';
 export { LuckyBoxDialog, type LuckyBoxDialogProps } from './lucky-box-dialog.js';
 export { CoinShopPanel, type CoinShopPanelProps, type CoinShopItem } from './coin-shop-panel.js';
-export { PrivacyDialog, type PrivacyDialogProps } from './privacy-dialog.js';
+export { PrivacyPage, PrivacyDialog, type PrivacyDialogProps } from './privacy-dialog.js';
 
 // Template system
 export {
