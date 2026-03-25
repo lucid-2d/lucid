@@ -53,43 +53,60 @@ export function buildMenu(scene: TemplateScene, config: MenuConfig, app: Templat
   // Track dynamic updaters for refresh()
   const updaters: Array<() => void> = [];
 
-  // ── Settings icon (top-right, always) ──
+  // ── Settings icon (top-LEFT — right side blocked by platform capsule button) ──
   const settingsBtn = new IconButton({
     id: 'settings',
     icon: 'settings',
     size: 44,
   });
-  settingsBtn.x = w - 44 - 16;
+  settingsBtn.x = 12;
   settingsBtn.y = safeTop;
   settingsBtn.$on('tap', () => openSettings(scene, config, app));
   scene.addChild(settingsBtn);
 
-  // ── Zone A — Top Status Badges ──
+  // ── Zone A — Top Status Badges (left side, after settings) ──
   if (config.zoneA && config.zoneA.length > 0) {
-    let ax = w - 44 - 16 - 12; // left of settings icon
+    let ax = 12 + 44 + 8; // right of settings icon
     const ay = safeTop + 6;
 
-    for (let i = config.zoneA.length - 1; i >= 0; i--) {
-      const badge = config.zoneA[i];
-      const badgeW = 80;
+    for (const badge of config.zoneA) {
+      const iconW = badge.icon ? 18 : 0;
+      const textVal = resolveText(badge.text);
+      const textW = textVal.length * 10 + 8;
+      const badgeW = iconW + textW + 8;
       const badgeH = 28;
       const container = new UINode({ id: badge.id, width: badgeW, height: badgeH });
       container.interactive = true;
-      container.x = ax - badgeW;
+      container.x = ax;
       container.y = ay;
       container.$on('tap', () => badge.onTap());
 
+      let contentX = 4;
+
+      // Badge icon
+      if (badge.icon) {
+        const iconNode = new Icon({
+          id: `${badge.id}-icon`,
+          name: badge.icon,
+          size: 14,
+        });
+        iconNode.x = contentX;
+        iconNode.y = Math.round((badgeH - 14) / 2);
+        container.addChild(iconNode);
+        contentX += 18;
+      }
+
       // Badge text label
-      const textVal = resolveText(badge.text);
       const label = new Label({
         id: `${badge.id}-text`,
         text: textVal,
         fontSize: 12,
         color: UIColors.text,
-        align: 'center',
-        width: badgeW,
+        align: 'left',
+        width: textW,
         height: badgeH,
       });
+      label.x = contentX;
       container.addChild(label);
 
       if (typeof badge.text === 'function') {
@@ -98,7 +115,7 @@ export function buildMenu(scene: TemplateScene, config: MenuConfig, app: Templat
       }
 
       scene.addChild(container);
-      ax -= badgeW + 8;
+      ax += badgeW + 8;
     }
   }
 
@@ -166,8 +183,8 @@ export function buildMenu(scene: TemplateScene, config: MenuConfig, app: Templat
 
   // ── Stats 2×2 grid ──
   if (config.stats && config.stats.length > 0) {
-    const cardW = 60;
-    const cardH = 54;
+    const cardW = 68;
+    const cardH = 60;
     const gap = 8;
     const cols = Math.min(config.stats.length, 4);
     const totalW = cols * cardW + (cols - 1) * gap;
@@ -180,6 +197,17 @@ export function buildMenu(scene: TemplateScene, config: MenuConfig, app: Templat
       card.x = startX + i * (cardW + gap);
       card.y = statsY;
 
+      // Icon
+      const iconNode = new Icon({
+        id: `stat-${i}-icon`,
+        name: stat.icon,
+        size: 14,
+        color: UIColors.textSecondary,
+      });
+      iconNode.x = Math.round((cardW - 14) / 2);
+      iconNode.y = 2;
+      card.addChild(iconNode);
+
       const valText = typeof stat.value === 'function' ? stat.value() : stat.value;
       const valLabel = new Label({
         id: `stat-${i}-value`,
@@ -189,9 +217,9 @@ export function buildMenu(scene: TemplateScene, config: MenuConfig, app: Templat
         color: UIColors.text,
         align: 'center',
         width: cardW,
-        height: 24,
+        height: 22,
       });
-      valLabel.y = 4;
+      valLabel.y = 18;
       card.addChild(valLabel);
 
       const nameLabel = new Label({
@@ -201,9 +229,9 @@ export function buildMenu(scene: TemplateScene, config: MenuConfig, app: Templat
         color: UIColors.textSecondary,
         align: 'center',
         width: cardW,
-        height: 16,
+        height: 14,
       });
-      nameLabel.y = 30;
+      nameLabel.y = 42;
       card.addChild(nameLabel);
 
       if (typeof stat.value === 'function') {
@@ -263,11 +291,13 @@ export function buildMenu(scene: TemplateScene, config: MenuConfig, app: Templat
   }
 
   // ── Play button (always present) ──
+  // When continueGame exists, play is demoted to secondary (only one primary)
   const playSize = ACTION_SIZES.lg;
+  const playVariant = config.continueGame ? 'secondary' : 'primary';
   const playBtn = new Button({
     id: 'play',
     text: ACTION_DEFAULTS.play.text,
-    variant: 'primary',
+    variant: playVariant,
     width: playSize.width,
     height: playSize.height,
   });
@@ -279,9 +309,9 @@ export function buildMenu(scene: TemplateScene, config: MenuConfig, app: Templat
   scene.addChild(playBtn);
   curY = playY + playSize.height + 12;
 
-  // ── Zone C — Main Buttons ──
+  // ── Zone C — Main Buttons (same width as play for alignment) ──
   if (config.zoneC && config.zoneC.length > 0) {
-    const btnW = 200;
+    const btnW = playSize.width;
     const btnH = 48;
     const gap = 12;
 
@@ -319,27 +349,44 @@ export function buildMenu(scene: TemplateScene, config: MenuConfig, app: Templat
     }
   }
 
-  // ── Toggles ──
+  // ── Toggles (icon + switch, horizontally centered) ──
   if (config.toggles && config.toggles.length > 0) {
-    const toggleY = curY + 4;
-    const toggleGap = 24;
-    const toggleW = 44;
-    const totalTogglesW = config.toggles.length * toggleW + (config.toggles.length - 1) * toggleGap;
+    const toggleY = curY + 8;
+    const toggleGap = 32;
+    const itemW = 60; // icon(16) + gap(4) + toggle(40)
+    const totalTogglesW = config.toggles.length * itemW + (config.toggles.length - 1) * toggleGap;
     let tx = Math.round((w - totalTogglesW) / 2);
 
     for (const item of config.toggles) {
+      // Icon label
+      const iconNode = new Icon({
+        id: `toggle-${item.id}-icon`,
+        name: item.value ? item.icon : (item.offIcon ?? item.icon),
+        size: 18,
+        color: item.value ? UIColors.text : UIColors.textSecondary,
+      });
+      iconNode.x = tx;
+      iconNode.y = toggleY + 3;
+      scene.addChild(iconNode);
+
+      // Toggle switch
       const toggle = new Toggle({
         id: `toggle-${item.id}`,
         label: '',
         value: item.value,
-        width: toggleW,
-        height: 24,
+        width: 40,
+        height: 22,
       });
-      toggle.x = tx;
+      toggle.x = tx + 22;
       toggle.y = toggleY;
-      toggle.$on('change', (val: boolean) => item.onChange(val));
+      toggle.$on('change', (val: boolean) => {
+        item.onChange(val);
+        // Update icon on toggle
+        iconNode.name = val ? item.icon : (item.offIcon ?? item.icon);
+        iconNode.color = val ? UIColors.text : UIColors.textSecondary;
+      });
       scene.addChild(toggle);
-      tx += toggleW + toggleGap;
+      tx += itemW + toggleGap;
     }
 
     curY = toggleY + 32;
