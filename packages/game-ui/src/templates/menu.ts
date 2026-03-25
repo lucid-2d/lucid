@@ -288,7 +288,9 @@ export function buildMenu(scene: TemplateScene, config: MenuConfig, app: Templat
     for (const item of config.zoneC) {
       const def = isActionCode(item.id) ? ACTION_DEFAULTS[item.id] : undefined;
       const text = item.text ?? def?.text ?? item.id;
-      const variant = item.variant ?? def?.variant ?? 'secondary';
+      // Zone C buttons are full-width — ignore ACTION_DEFAULTS variant (designed for icon buttons)
+      // Only use explicit item.variant or default to 'secondary'
+      const variant = item.variant ?? 'secondary';
       const disabled = resolveDisabled(item.disabled);
 
       const btn = new Button({
