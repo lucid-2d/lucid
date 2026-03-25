@@ -77,10 +77,10 @@ export function buildMenu(scene: TemplateScene, config: MenuConfig, app: Templat
       id: 'endless',
       text: '无尽模式',
       variant: 'outline',
-      width: 180,
-      height: 48,
+      width: playSize.width,
+      height: playSize.height,
     });
-    endlessBtn.x = Math.round((w - 180) / 2);
+    endlessBtn.x = Math.round((w - playSize.width) / 2);
     endlessBtn.y = Math.round(h * 0.55) + playSize.height + 16;
     endlessBtn.$on('tap', () => config.endless!());
     scene.addChild(endlessBtn);
@@ -199,8 +199,12 @@ function openPrivacy(scene: TemplateScene, config: MenuConfig, _app: TemplateApp
     content: config.privacy.content,
     screenWidth: scene.width,
     screenHeight: scene.height,
+    showViewButton: !!config.privacy.onViewPolicy,
   });
   dialog.id = 'privacy-modal';
+  if (config.privacy.onViewPolicy) {
+    dialog.$on('viewPolicy', () => config.privacy.onViewPolicy!());
+  }
   dialog.$on('agree', () => scene.removeChild(dialog));
   dialog.$on('close', () => scene.removeChild(dialog));
   scene.addChild(dialog);

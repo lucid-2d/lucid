@@ -11,6 +11,8 @@ export interface PrivacyDialogProps {
   privacyUrl?: string;
   screenWidth?: number;
   screenHeight?: number;
+  /** Show "查看隐私协议" button (default: true for backward compat) */
+  showViewButton?: boolean;
 }
 
 export class PrivacyDialog extends Modal {
@@ -40,15 +42,19 @@ export class PrivacyDialog extends Modal {
     const btnW = 200;
     const btnX = (pw - btnW) / 2;
 
-    const viewBtn = new Button({
-      id: 'view-privacy',
-      text: '查看隐私协议',
-      variant: 'outline',
-      width: btnW, height: 44,
-    });
-    viewBtn.x = btnX; viewBtn.y = 130;
-    viewBtn.$on('tap', () => this.$emit('viewPolicy'));
-    this.content.addChild(viewBtn);
+    let nextY = 130;
+    if (props.showViewButton !== false) {
+      const viewBtn = new Button({
+        id: 'view-privacy',
+        text: '查看隐私协议',
+        variant: 'outline',
+        width: btnW, height: 44,
+      });
+      viewBtn.x = btnX; viewBtn.y = nextY;
+      viewBtn.$on('tap', () => this.$emit('viewPolicy'));
+      this.content.addChild(viewBtn);
+      nextY += 58;
+    }
 
     const agreeBtn = new Button({
       id: 'agree-btn',
@@ -56,7 +62,7 @@ export class PrivacyDialog extends Modal {
       variant: 'primary',
       width: btnW, height: 48,
     });
-    agreeBtn.x = btnX; agreeBtn.y = 190;
+    agreeBtn.x = btnX; agreeBtn.y = nextY;
     agreeBtn.$on('tap', () => {
       this.$emit('agree');
       this.close();

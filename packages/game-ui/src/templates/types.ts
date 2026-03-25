@@ -56,6 +56,7 @@ export interface SettingsConfig {
 
 export interface PrivacyConfig {
   content: string;
+  onViewPolicy?: () => void;
 }
 
 export interface CheckinConfig {
