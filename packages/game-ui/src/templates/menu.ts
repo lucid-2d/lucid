@@ -352,21 +352,25 @@ export function buildMenu(scene: TemplateScene, config: MenuConfig, app: Templat
   // ── Toggles (icon + switch, horizontally centered) ──
   if (config.toggles && config.toggles.length > 0) {
     const toggleY = curY + 8;
-    const toggleGap = 32;
-    const itemW = 60; // icon(16) + gap(4) + toggle(40)
+    const toggleGap = 36;
+    const iconSz = 16;
+    const iconToggleGap = 8;
+    const toggleSw = 40;
+    const toggleSh = 22;
+    const itemW = iconSz + iconToggleGap + toggleSw;
     const totalTogglesW = config.toggles.length * itemW + (config.toggles.length - 1) * toggleGap;
     let tx = Math.round((w - totalTogglesW) / 2);
 
     for (const item of config.toggles) {
-      // Icon label
+      // Icon
       const iconNode = new Icon({
         id: `toggle-${item.id}-icon`,
         name: item.value ? item.icon : (item.offIcon ?? item.icon),
-        size: 18,
+        size: iconSz,
         color: item.value ? UIColors.text : UIColors.textSecondary,
       });
       iconNode.x = tx;
-      iconNode.y = toggleY + 3;
+      iconNode.y = toggleY + Math.round((toggleSh - iconSz) / 2);
       scene.addChild(iconNode);
 
       // Toggle switch
@@ -374,14 +378,13 @@ export function buildMenu(scene: TemplateScene, config: MenuConfig, app: Templat
         id: `toggle-${item.id}`,
         label: '',
         value: item.value,
-        width: 40,
-        height: 22,
+        width: toggleSw,
+        height: toggleSh,
       });
-      toggle.x = tx + 22;
+      toggle.x = tx + iconSz + iconToggleGap;
       toggle.y = toggleY;
       toggle.$on('change', (val: boolean) => {
         item.onChange(val);
-        // Update icon on toggle
         iconNode.name = val ? item.icon : (item.offIcon ?? item.icon);
         iconNode.color = val ? UIColors.text : UIColors.textSecondary;
       });
