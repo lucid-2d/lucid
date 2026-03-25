@@ -124,7 +124,7 @@ export class Modal extends UINode {
     ctx.save();
     ctx.globalAlpha = this.animAlpha * 0.65;
     ctx.fillStyle = '#000000';
-    ctx.fillRect(-this.x, -this.y, this._screenW, this._screenH);
+    ctx.fillRect(-this.x - 1, -this.y - 1, this._screenW + 2, this._screenH + 2);
     ctx.restore();
 
     // 2. 面板 + 所有子节点一起 scale
