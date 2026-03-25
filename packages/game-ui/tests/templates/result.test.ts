@@ -1,0 +1,147 @@
+import { describe, it, expect } from 'vitest';
+import { UINode } from '@lucid-2d/core';
+import { createScene } from '../../src/templates/create-scene';
+import type { TemplateApp, ResultConfig } from '../../src/templates/types';
+
+function makeApp(): TemplateApp {
+  const root = new UINode({ id: 'root', width: 390, height: 844 });
+  return {
+    screen: { width: 390, height: 844 },
+    router: { push: () => {}, replace: () => {}, pop: () => {}, current: undefined },
+    root,
+    tick: () => {},
+  };
+}
+
+function makeResultConfig(overrides: Partial<ResultConfig> = {}): ResultConfig {
+  return {
+    template: 'result',
+    title: 'Game Over',
+    score: 12345,
+    restart: () => {},
+    home: () => {},
+    ...overrides,
+  };
+}
+
+describe('ResultTemplate', () => {
+  it('creates title and score', () => {
+    const app = makeApp();
+    const scene = createScene(app, makeResultConfig());
+    scene.onEnter();
+
+    const title = scene.findById('result-title');
+    expect(title).toBeDefined();
+    expect(title!.$text).toBe('Game Over');
+
+    const score = scene.findById('score');
+    expect(score).toBeDefined();
+    expect(score!.$text).toBe('12345');
+  });
+
+  it('shows NEW BEST when isNewBest', () => {
+    const app = makeApp();
+    const scene = createScene(app, makeResultConfig({ isNewBest: true }));
+    scene.onEnter();
+
+    const best = scene.findById('new-best');
+    expect(best).toBeDefined();
+    expect(best!.$text).toBe('NEW BEST!');
+  });
+
+  it('does not show NEW BEST by default', () => {
+    const app = makeApp();
+    const scene = createScene(app, makeResultConfig());
+    scene.onEnter();
+
+    expect(scene.findById('new-best')).toBeNull();
+  });
+
+  it('creates restart button', () => {
+    const app = makeApp();
+    let restarted = false;
+    const scene = createScene(app, makeResultConfig({
+      restart: () => { restarted = true; },
+    }));
+    scene.onEnter();
+
+    const btn = scene.findById('restart');
+    expect(btn).toBeDefined();
+    btn!.$emit('tap');
+    expect(restarted).toBe(true);
+  });
+
+  it('creates home button', () => {
+    const app = makeApp();
+    let wentHome = false;
+    const scene = createScene(app, makeResultConfig({
+      home: () => { wentHome = true; },
+    }));
+    scene.onEnter();
+
+    const btn = scene.findById('home');
+    expect(btn).toBeDefined();
+    btn!.$emit('tap');
+    expect(wentHome).toBe(true);
+  });
+
+  it('creates share button', () => {
+    const app = makeApp();
+    let shared = false;
+    const scene = createScene(app, makeResultConfig({
+      share: () => { shared = true; },
+    }));
+    scene.onEnter();
+
+    const btn = scene.findById('share');
+    expect(btn).toBeDefined();
+    btn!.$emit('tap');
+    expect(shared).toBe(true);
+  });
+
+  it('creates ad button with custom text', () => {
+    const app = makeApp();
+    let adShown = false;
+    const scene = createScene(app, makeResultConfig({
+      ad: { text: '看广告 双倍金币', onTap: () => { adShown = true; } },
+    }));
+    scene.onEnter();
+
+    const btn = scene.findById('ad');
+    expect(btn).toBeDefined();
+    btn!.$emit('tap');
+    expect(adShown).toBe(true);
+  });
+
+  it('creates stats cards', () => {
+    const app = makeApp();
+    const scene = createScene(app, makeResultConfig({
+      stats: [
+        { icon: 'coin', label: '金币', value: '+128' },
+        { icon: 'medal', label: '关卡', value: '15' },
+      ],
+    }));
+    scene.onEnter();
+
+    expect(scene.findById('stat-0')).toBeDefined();
+    expect(scene.findById('stat-1')).toBeDefined();
+  });
+
+  it('works with only restart (no home)', () => {
+    const app = makeApp();
+    const scene = createScene(app, makeResultConfig({ home: undefined }));
+    scene.onEnter();
+
+    expect(scene.findById('restart')).toBeDefined();
+    expect(scene.findById('home')).toBeNull();
+  });
+
+  it('works with only home (no restart)', () => {
+    const app = makeApp();
+    const scene = createScene(app, makeResultConfig({ restart: undefined }));
+    scene.onEnter();
+
+    expect(scene.findById('home')).toBeDefined();
+    expect(scene.findById('restart')).toBeNull();
+  });
+});

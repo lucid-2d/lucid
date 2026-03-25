@@ -9,6 +9,9 @@ import type {
   MapConfig, ShopConfig, ListConfig, PassConfig,
 } from './types.js';
 import { TemplateScene } from './template-scene.js';
+import { buildMenu } from './menu.js';
+import { buildGameplay } from './gameplay.js';
+import { buildResult } from './result.js';
 
 // ══════════════════════════════════════════
 // Config Validators
@@ -89,37 +92,11 @@ function validatePass(c: PassConfig): void {
   }
 }
 
-// ══════════════════════════════════════════
-// Template builders (placeholder — Stage 3/4 will add real rendering)
-// ══════════════════════════════════════════
-
-function buildMenu(scene: TemplateScene, config: MenuConfig, app: TemplateApp): void {
-  // Stage 3: real implementation
-}
-
-function buildGameplay(scene: TemplateScene, config: GameplayConfig, app: TemplateApp): void {
-  // Stage 3: real implementation
-}
-
-function buildResult(scene: TemplateScene, config: ResultConfig, app: TemplateApp): void {
-  // Stage 3: real implementation
-}
-
-function buildMap(scene: TemplateScene, config: MapConfig, app: TemplateApp): void {
-  // Stage 4: real implementation
-}
-
-function buildShop(scene: TemplateScene, config: ShopConfig, app: TemplateApp): void {
-  // Stage 4: real implementation
-}
-
-function buildList(scene: TemplateScene, config: ListConfig, app: TemplateApp): void {
-  // Stage 4: real implementation
-}
-
-function buildPass(scene: TemplateScene, config: PassConfig, app: TemplateApp): void {
-  // Stage 4: real implementation
-}
+// Stage 4 builders (placeholder)
+function buildMap(scene: TemplateScene, config: MapConfig, app: TemplateApp): void {}
+function buildShop(scene: TemplateScene, config: ShopConfig, app: TemplateApp): void {}
+function buildList(scene: TemplateScene, config: ListConfig, app: TemplateApp): void {}
+function buildPass(scene: TemplateScene, config: PassConfig, app: TemplateApp): void {}
 
 // ══════════════════════════════════════════
 // Main entry
