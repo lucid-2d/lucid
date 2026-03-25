@@ -1,11 +1,13 @@
 /**
- * Lucid Playground — 框架示例项目 + 组件展示
+ * Lucid Playground — 全模板演示 + 组件展示
+ *
+ * 7 个场景模板全部使用 createScene()，展示框架推荐用法。
  */
 
 import { createApp, SceneNode } from '../packages/engine/src/index';
 import { UINode } from '../packages/core/src/index';
-import { Label, Modal, Button, ScrollView } from '../packages/ui/src/index';
-import { ResultPanel, createScene, type ShopItem } from '../packages/game-ui/src/index';
+import { Label, Button, ScrollView } from '../packages/ui/src/index';
+import { createScene, type ShopItem, type BattlePassReward } from '../packages/game-ui/src/index';
 import { ParticlePool } from '../packages/physics/src/index';
 
 const W = 390, H = 844;
@@ -29,7 +31,16 @@ const shopItems: ShopItem[] = [
   { id: 'pixel', name: '像素', desc: '方块爆碎', icon: '🟩', category: 'effect', owned: false, equipped: false, price: '800' },
 ];
 
+const battlePassRewards: BattlePassReward[] = [
+  { level: 1, freeReward: { icon: '🪙', label: '50金币' }, freeClaimed: true },
+  { level: 2, freeReward: { icon: '🪙', label: '80金币' }, paidReward: { icon: '⚪', label: '默认皮肤' }, freeClaimed: true, paidClaimed: false },
+  { level: 3, freeReward: { icon: '🪙', label: '100金币' }, paidReward: { icon: '🌈', label: '彩虹球' } },
+  { level: 4, paidReward: { icon: '🔥', label: '火焰球' } },
+  { level: 5, freeReward: { icon: '🪙', label: '200金币' }, paidReward: { icon: '❄️', label: '冰霜球' } },
+];
+
 const particles = new ParticlePool(200);
+let gameScore = 0;
 
 // ── 工具：绘制渐变背景 ─────────────────────────
 
@@ -41,7 +52,11 @@ function drawBg(ctx: CanvasRenderingContext2D) {
   ctx.fillRect(0, 0, W, H);
 }
 
-// ── 菜单场景（使用 MenuTemplate）─────────────────
+// ═══════════════════════════════════════════
+// 7 个场景模板
+// ═══════════════════════════════════════════
+
+// ── 1. MenuTemplate ──────────────────────────
 
 function createMenuScene() {
   let soundOn = true;
@@ -59,7 +74,7 @@ function createMenuScene() {
       { icon: 'lightning', label: '连击', value: '8' },
     ],
 
-    play: () => app.router.replace(new PlayScene({ id: 'play' })),
+    play: () => app.router.replace(createGameplayScene()),
     settings: {
       toggles: [
         { id: 'sound', label: '音效', value: true },
@@ -82,18 +97,151 @@ function createMenuScene() {
 
     zoneD: [
       { id: 'checkin' },
-      { id: 'achievements', icon: 'achievement', text: '成就', onTap: () => console.log('[achievements]') },
+      { id: 'battlepass', onTap: () => app.router.push(createPassScene()) },
     ],
 
     checkin: { rewards: [10, 15, 20, 25, 30, 40, 80], currentDay: 3, claimed: false, onClaim: () => console.log('[checkin claim]') },
 
     version: 'v0.5.0',
+    drawBackground: (ctx) => drawBg(ctx),
+  });
+}
+
+// ── 2. GameplayTemplate ─────────────────────
+
+function createGameplayScene() {
+  let score = 0;
+  let ballX = W / 2, ballY = 600, ballVx = 130, ballVy = -220;
+  const blocks: Array<{ x: number; y: number; w: number; h: number; color: string; hp: number }> = [];
+  const colors = ['#e94560', '#ff6b6b', '#ffa502', '#ffd166', '#06d6a0', '#118ab2'];
+
+  for (let row = 0; row < 5; row++) {
+    for (let col = 0; col < 5; col++) {
+      blocks.push({ x: 15 + col * 74, y: 100 + row * 36, w: 66, h: 28, color: colors[row], hp: 1 + row });
+    }
+  }
+
+  return createScene(app, {
+    template: 'gameplay',
+
+    hud: {
+      score: () => score,
+      blocks: () => `${blocks.length}`,
+    },
+
+    pause: {
+      restart: () => app.router.replace(createGameplayScene()),
+      home: () => app.router.replace(createMenuScene()),
+      settings: {
+        toggles: [
+          { id: 'sound', label: '音效', value: true },
+          { id: 'music', label: '音乐', value: true },
+        ],
+        onToggle: (id, val) => console.log('[toggle]', id, val),
+      },
+    },
+
+    setup: (gameArea) => {
+      // Game loop via $update
+      const origUpdate = gameArea['$update']?.bind(gameArea);
+      gameArea['$update'] = function (dt: number) {
+        origUpdate?.(dt);
+        const step = 0.016;
+        ballX += ballVx * step;
+        ballY += ballVy * step;
+
+        if (ballX < 8 || ballX > W - 8) { ballVx *= -1; ballX = Math.max(8, Math.min(W - 8, ballX)); }
+        if (ballY < 80) { ballVy = Math.abs(ballVy); }
+
+        for (let i = blocks.length - 1; i >= 0; i--) {
+          const b = blocks[i];
+          if (ballX + 6 > b.x && ballX - 6 < b.x + b.w && ballY + 6 > b.y && ballY - 6 < b.y + b.h) {
+            b.hp--;
+            ballVy *= -1;
+            score += 10;
+            particles.emit(ballX, ballY, { count: 6, speed: 80, color: b.color, lifetime: 0.3 });
+            if (b.hp <= 0) {
+              blocks.splice(i, 1);
+              score += 50;
+              particles.emit(b.x + b.w / 2, b.y + b.h / 2, { count: 12, speed: 120, color: b.color, lifetime: 0.5, gravity: 200 });
+            }
+            break;
+          }
+        }
+
+        if (ballY > H + 10) {
+          gameScore = score;
+          app.router.replace(createResultScene(score, 25 - blocks.length));
+        }
+
+        particles.update(step);
+      };
+
+      // Custom draw for game objects
+      const origDraw = gameArea['draw']?.bind(gameArea);
+      gameArea['draw'] = function (ctx: CanvasRenderingContext2D) {
+        origDraw?.(ctx);
+        // Blocks
+        for (const b of blocks) {
+          ctx.globalAlpha = 0.4 + 0.6 * (b.hp / 5);
+          ctx.fillStyle = b.color;
+          ctx.beginPath();
+          ctx.roundRect(b.x, b.y, b.w, b.h, 4);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = '#fff';
+          ctx.font = 'bold 12px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(String(b.hp), b.x + b.w / 2, b.y + b.h / 2);
+        }
+        ctx.globalAlpha = 1;
+
+        // Ball
+        ctx.beginPath();
+        ctx.arc(ballX, ballY, 6, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.fill();
+
+        // Particles
+        for (const p of particles.particles) {
+          if (!p.active) continue;
+          ctx.globalAlpha = p.life / p.maxLife;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+          ctx.fillStyle = p.color;
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+      };
+    },
 
     drawBackground: (ctx) => drawBg(ctx),
   });
 }
 
-// ── 商店场景（使用 ShopTemplate）─────────────────
+// ── 3. ResultTemplate ───────────────────────
+
+function createResultScene(score: number, blocksCleared: number) {
+  return createScene(app, {
+    template: 'result',
+    title: blocksCleared >= 25 ? '全部消除！' : '游戏结束',
+    score,
+    isNewBest: score > 300,
+    stats: [
+      { icon: 'block', label: '消除方块', value: String(blocksCleared) },
+      { icon: 'star', label: '得分', value: String(score) },
+    ],
+
+    restart: () => app.router.replace(createGameplayScene()),
+    home: () => app.router.replace(createMenuScene()),
+    share: () => console.log('[share]'),
+
+    drawBackground: (ctx) => drawBg(ctx),
+  });
+}
+
+// ── 4. ShopTemplate ─────────────────────────
 
 function createShopScene() {
   return createScene(app, {
@@ -108,7 +256,7 @@ function createShopScene() {
   });
 }
 
-// ── 排行榜场景（使用 ListTemplate）─────────────────
+// ── 5. ListTemplate (Leaderboard) ───────────
 
 function createLeaderboardScene() {
   return createScene(app, {
@@ -128,184 +276,103 @@ function createLeaderboardScene() {
   });
 }
 
-// ── 游戏场景 ─────────────────────────────────
+// ── 6. PassTemplate (Battle Pass) ───────────
 
-class PlayScene extends SceneNode {
-  private ballX = W / 2;
-  private ballY = 600;
-  private ballVx = 130;
-  private ballVy = -220;
-  private score = 0;
-  private scoreLabel!: Label;
-  private blocks: Array<{ x: number; y: number; w: number; h: number; color: string; hp: number }> = [];
-
-  onEnter() {
-    const colors = ['#e94560', '#ff6b6b', '#ffa502', '#ffd166', '#06d6a0', '#118ab2'];
-    for (let row = 0; row < 5; row++) {
-      for (let col = 0; col < 5; col++) {
-        this.blocks.push({
-          x: 15 + col * 74, y: 100 + row * 36,
-          w: 66, h: 28, color: colors[row], hp: 1 + row,
-        });
-      }
-    }
-
-    this.scoreLabel = new Label({ id: 'score', text: '0', fontSize: 20, fontWeight: 'bold', color: '#ffd166', align: 'center', width: W, height: 30 });
-    this.scoreLabel.y = 50;
-    this.addChild(this.scoreLabel);
-
-    const pauseBtn = new Button({ id: 'pause', text: '⏸', variant: 'ghost', width: 36, height: 36 });
-    pauseBtn.x = 8; pauseBtn.y = 48;
-    pauseBtn.$on('tap', () => this.showPause());
-    this.addChild(pauseBtn);
-  }
-
-  private showPause() {
-    const modal = new Modal({ id: 'pause-modal', title: '暂停', screenWidth: W, screenHeight: H, width: 260, height: 200 });
-    const resumeBtn = new Button({ text: '继续游戏', variant: 'primary', width: 180, height: 44 });
-    resumeBtn.x = 40; resumeBtn.y = 20;
-    resumeBtn.$on('tap', () => { modal.close(); modal.removeFromParent(); });
-    modal.content.addChild(resumeBtn);
-
-    const menuBtn = new Button({ text: '返回菜单', variant: 'outline', width: 180, height: 44 });
-    menuBtn.x = 40; menuBtn.y = 80;
-    menuBtn.$on('tap', () => app.router.replace(new MenuScene({ id: 'menu' })));
-    modal.content.addChild(menuBtn);
-
-    modal.open();
-    this.addChild(modal);
-  }
-
-  onBeforeUpdate() {
-    const dt = 0.016;
-    this.ballX += this.ballVx * dt;
-    this.ballY += this.ballVy * dt;
-
-    if (this.ballX < 8 || this.ballX > W - 8) { this.ballVx *= -1; this.ballX = Math.max(8, Math.min(W - 8, this.ballX)); }
-    if (this.ballY < 80) { this.ballVy = Math.abs(this.ballVy); }
-
-    for (let i = this.blocks.length - 1; i >= 0; i--) {
-      const b = this.blocks[i];
-      if (this.ballX + 6 > b.x && this.ballX - 6 < b.x + b.w && this.ballY + 6 > b.y && this.ballY - 6 < b.y + b.h) {
-        b.hp--;
-        this.ballVy *= -1;
-        this.score += 10;
-        particles.emit(this.ballX, this.ballY, { count: 6, speed: 80, color: b.color, lifetime: 0.3 });
-        if (b.hp <= 0) {
-          this.blocks.splice(i, 1);
-          this.score += 50;
-          particles.emit(b.x + b.w / 2, b.y + b.h / 2, { count: 12, speed: 120, color: b.color, lifetime: 0.5, gravity: 200 });
-        }
-        this.scoreLabel.text = String(this.score);
-        break;
-      }
-    }
-
-    if (this.ballY > H + 10) {
-      this.showResult();
-      return;
-    }
-
-    particles.update(dt);
-  }
-
-  private showResult() {
-    const result = new ResultPanel({
-      title: this.blocks.length === 0 ? '全部消除！' : '游戏结束',
-      score: this.score,
-      isNewBest: this.score > 300,
-      stats: [
-        { icon: 'block', label: '消除方块', value: String(25 - this.blocks.length) },
-        { icon: 'star', label: '得分', value: String(this.score) },
-      ],
-      buttons: [
-        { id: 'retry', label: '再来一次', variant: 'primary' },
-        { id: 'menu', label: '返回菜单', variant: 'outline' },
-      ],
-    });
-    result.$on('action', (id: string) => {
-      if (id === 'retry') app.router.replace(new PlayScene({ id: 'play' }));
-      if (id === 'menu') app.router.replace(new MenuScene({ id: 'menu' }));
-    });
-
-    const scene = new SceneNode({ id: 'result-scene' });
-    scene.addChild(result);
-    // 给 result 场景加背景绘制
-    (scene as any)._drawBg = true;
-    const origDraw = scene['draw'].bind(scene);
-    scene['draw'] = (ctx: CanvasRenderingContext2D) => { drawBg(ctx); origDraw(ctx); };
-    app.router.replace(scene);
-  }
-
-  protected draw(ctx: CanvasRenderingContext2D) {
-    drawBg(ctx);
-
-    // Blocks
-    for (const b of this.blocks) {
-      ctx.globalAlpha = 0.4 + 0.6 * (b.hp / 5);
-      ctx.fillStyle = b.color;
-      ctx.beginPath();
-      ctx.roundRect(b.x, b.y, b.w, b.h, 4);
-      ctx.fill();
-      ctx.globalAlpha = 1;
-      ctx.fillStyle = '#fff';
-      ctx.font = 'bold 12px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(String(b.hp), b.x + b.w / 2, b.y + b.h / 2);
-    }
-    ctx.globalAlpha = 1;
-
-    // Ball
-    ctx.beginPath();
-    ctx.arc(this.ballX, this.ballY, 6, 0, Math.PI * 2);
-    ctx.fillStyle = '#ffffff';
-    ctx.fill();
-    // Ball glow
-    ctx.beginPath();
-    ctx.arc(this.ballX, this.ballY, 10, 0, Math.PI * 2);
-    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-    ctx.lineWidth = 1;
-    ctx.stroke();
-
-    // Particles
-    for (const p of particles.particles) {
-      if (!p.active) continue;
-      ctx.globalAlpha = p.life / p.maxLife;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-      ctx.fillStyle = p.color;
-      ctx.fill();
-    }
-    ctx.globalAlpha = 1;
-  }
+function createPassScene() {
+  return createScene(app, {
+    template: 'pass',
+    back: () => app.router.pop(),
+    currentLevel: 3,
+    currentXP: 230,
+    xpToNext: 500,
+    isPremium: false,
+    rewards: battlePassRewards,
+    seasonName: '赛季 1 · 星际征途',
+    onClaim: (level, type) => console.log('[claim]', level, type),
+    onBuyPremium: () => console.log('[buy premium]'),
+    drawBackground: (ctx) => drawBg(ctx),
+  });
 }
 
-// ── 启动 ─────────────────────────────────────
+// ── 7. MapTemplate ──────────────────────────
+
+function createMapScene() {
+  return createScene(app, {
+    template: 'map',
+    title: '星座图',
+    back: () => app.router.pop(),
+    setup: (mapArea) => {
+      // Draw a simple level map with nodes and connections
+      const origDraw = mapArea['draw']?.bind(mapArea);
+      mapArea['draw'] = function (ctx: CanvasRenderingContext2D) {
+        origDraw?.(ctx);
+        const levels = [
+          { x: 195, y: 600, label: '1', done: true },
+          { x: 120, y: 500, label: '2', done: true },
+          { x: 270, y: 420, label: '3', done: true },
+          { x: 160, y: 320, label: '4', done: false, current: true },
+          { x: 230, y: 220, label: '5', done: false },
+          { x: 195, y: 120, label: 'Boss', done: false },
+        ];
+
+        // Connections
+        ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+        ctx.lineWidth = 2;
+        for (let i = 0; i < levels.length - 1; i++) {
+          ctx.beginPath();
+          ctx.moveTo(levels[i].x, levels[i].y);
+          ctx.lineTo(levels[i + 1].x, levels[i + 1].y);
+          ctx.stroke();
+        }
+
+        // Nodes
+        for (const lv of levels) {
+          const r = lv.label === 'Boss' ? 24 : 18;
+          ctx.beginPath();
+          ctx.arc(lv.x, lv.y, r, 0, Math.PI * 2);
+          ctx.fillStyle = lv.done ? '#06d6a0' : (lv as any).current ? '#ffd166' : '#333';
+          ctx.fill();
+          if ((lv as any).current) {
+            ctx.strokeStyle = '#ffd166';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+          }
+          ctx.fillStyle = '#fff';
+          ctx.font = `bold ${lv.label === 'Boss' ? 11 : 14}px sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(lv.label, lv.x, lv.y);
+        }
+      };
+    },
+    drawBackground: (ctx) => drawBg(ctx),
+  });
+}
+
+// ═══════════════════════════════════════════
+// 场景切换
+// ═══════════════════════════════════════════
 
 import { GalleryScene } from './gallery';
 
-// ── 场景切换 ─────────────────────────────────
-
-let currentMode = 'demo';
-
-function switchToDemo() {
-  app.router.replace(createMenuScene());
-  currentMode = 'demo';
-}
-
-function switchToGallery() {
-  app.router.replace(new GalleryScene({ id: 'gallery' }));
-  currentMode = 'gallery';
-}
+// Direct scene launchers (for sidebar buttons)
+const sceneLaunchers: Record<string, () => void> = {
+  menu: () => app.router.replace(createMenuScene()),
+  gameplay: () => app.router.replace(createGameplayScene()),
+  result: () => app.router.replace(createResultScene(2480, 18)),
+  shop: () => app.router.replace(createShopScene()),
+  list: () => app.router.replace(createLeaderboardScene()),
+  pass: () => app.router.replace(createPassScene()),
+  map: () => app.router.replace(createMapScene()),
+  gallery: () => app.router.replace(new GalleryScene({ id: 'gallery' })),
+};
 
 (window as any).switchScene = (mode: string) => {
-  if (mode === 'demo') switchToDemo();
-  else switchToGallery();
+  const launcher = sceneLaunchers[mode];
+  if (launcher) launcher();
 
-  document.querySelectorAll('.scene-switcher button').forEach((btn, i) => {
-    const modes = ['demo', 'gallery'];
-    btn.classList.toggle('active', modes[i] === mode);
+  document.querySelectorAll('.scene-switcher button').forEach((btn) => {
+    btn.classList.toggle('active', btn.getAttribute('data-scene') === mode);
   });
 };
 

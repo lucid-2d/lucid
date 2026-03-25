@@ -44,17 +44,17 @@
     border-radius: 8px;
     padding: 10px;
     display: flex;
+    flex-wrap: wrap;
     gap: 6px;
   }
   .scene-switcher button {
-    flex: 1;
-    padding: 6px 0;
+    padding: 5px 10px;
     background: #333;
     color: #aaa;
     border: 1px solid #444;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 12px;
+    font-size: 11px;
     transition: all 0.15s;
   }
   .scene-switcher button:hover { background: #444; color: #fff; }
@@ -105,8 +105,14 @@
   </div>
   <div class="sidebar">
     <div class="scene-switcher">
-      <button class="active" onclick="switchScene('demo')">Game Demo</button>
-      <button onclick="switchScene('gallery')">Component Gallery</button>
+      <button class="active" data-scene="menu" onclick="switchScene('menu')">Menu</button>
+      <button data-scene="gameplay" onclick="switchScene('gameplay')">Gameplay</button>
+      <button data-scene="result" onclick="switchScene('result')">Result</button>
+      <button data-scene="shop" onclick="switchScene('shop')">Shop</button>
+      <button data-scene="list" onclick="switchScene('list')">Leaderboard</button>
+      <button data-scene="pass" onclick="switchScene('pass')">BattlePass</button>
+      <button data-scene="map" onclick="switchScene('map')">Map</button>
+      <button data-scene="gallery" onclick="switchScene('gallery')">Gallery</button>
     </div>
     <div class="debug-panel">
       <h3>Lucid Debug</h3>

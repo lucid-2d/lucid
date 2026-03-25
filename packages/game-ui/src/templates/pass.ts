@@ -30,6 +30,7 @@ export function buildPass(scene: TemplateScene, config: PassConfig, app: Templat
     rewards: config.rewards,
     seasonName: config.seasonName,
   });
+  panel.$on('close', () => config.back());
   if (config.onClaim) panel.$on('claimReward', (level: number, type: string) => config.onClaim!(level, type as 'free' | 'paid'));
   if (config.onBuyPremium) panel.$on('buyPremium', () => config.onBuyPremium!());
   scene.addChild(panel);
