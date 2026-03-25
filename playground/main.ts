@@ -5,7 +5,7 @@
 import { createApp, SceneNode } from '../packages/engine/src/index';
 import { UINode } from '../packages/core/src/index';
 import { Button, Label, Modal, ProgressBar, Toggle, TabBar, ScrollView } from '../packages/ui/src/index';
-import { CheckinDialog, SettingsPanel, ResultPanel, ShopPanel, type ShopItem } from '../packages/game-ui/src/index';
+import { CheckinDialog, SettingsPanel, ResultPanel, ShopPanel, createScene, type ShopItem } from '../packages/game-ui/src/index';
 import { ParticlePool } from '../packages/physics/src/index';
 
 const W = 390, H = 844;
@@ -15,6 +15,7 @@ const W = 390, H = 844;
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 const app = createApp({ platform: 'web', canvas, debug: true });
 (window as any)._app = app;
+(window as any).__createScene = createScene;
 
 // ── 共享数据 ─────────────────────────────────
 
@@ -305,6 +306,84 @@ class PlayScene extends SceneNode {
 
 import { GalleryScene } from './gallery';
 
+// ── Template Menu Demo ─────────────────────────
+
+function createTemplateMenu() {
+  let bestScore = 2480;
+  let coins = 128;
+  let totalGames = 42;
+  let bestLevel = 15;
+  let totalBlocks = 1200;
+  let bestCombo = 8;
+  let unclaimedMissions = 2;
+  let soundOn = true;
+
+  return createScene(app, {
+    template: 'menu',
+    title: '弹球狂飙',
+    subtitle: 'Ball Frenzy',
+    bestScore: () => bestScore,
+    stats: [
+      { icon: 'shield', label: '已玩', value: () => `${totalGames}` },
+      { icon: 'shield', label: '最远', value: () => `${bestLevel}` },
+      { icon: 'block', label: '消除', value: () => `${totalBlocks}` },
+      { icon: 'lightning', label: '连击', value: () => `${bestCombo}` },
+    ],
+
+    play: () => app.router.replace(new PlayScene({ id: 'play' })),
+    settings: {
+      toggles: [
+        { id: 'sound', label: '音效', value: true },
+        { id: 'music', label: '音乐', value: true },
+        { id: 'vibration', label: '振动', value: false },
+      ],
+      links: [{ id: 'privacy', label: '隐私协议' }],
+      version: 'v0.4.8',
+      onToggle: (id, val) => console.log('[toggle]', id, val),
+    },
+    privacy: { content: '我们重视您的隐私保护。本游戏不收集任何个人信息。' },
+
+    zoneA: [
+      { id: 'coins', icon: 'coin', text: () => `${coins}`, onTap: () => console.log('[coins] open shop') },
+    ],
+
+    continueGame: {
+      label: '继续游戏',
+      sublabel: '第15关 · 2480分',
+      onTap: () => console.log('[continue]'),
+    },
+
+    zoneC: [
+      { id: 'daily-challenge', text: '每日挑战 03/25', variant: 'secondary', onTap: () => console.log('[daily]') },
+      { id: 'leaderboard', onTap: () => console.log('[leaderboard]') },
+      { id: 'shop', onTap: () => console.log('[shop]') },
+    ],
+
+    toggles: [
+      { id: 'sound', icon: 'sound-on', offIcon: 'sound-off', value: soundOn, onChange: (v) => { soundOn = v; console.log('[sound]', v); } },
+      { id: 'vibration', icon: 'vibrate', value: false, onChange: (v) => console.log('[vibration]', v) },
+    ],
+
+    zoneD: [
+      { id: 'checkin' },
+      { id: 'achievements', icon: 'achievement', text: '成就', onTap: () => console.log('[achievements]') },
+      { id: 'battlepass', onTap: () => console.log('[battlepass]') },
+      { id: 'missions', icon: 'mission', text: '任务', badge: () => unclaimedMissions, onTap: () => console.log('[missions]') },
+    ],
+
+    cornerLeft: { icon: 'fire', onTap: () => console.log('[effects]') },
+    cornerRight: { icon: 'gift', text: () => '3', onTap: () => console.log('[chest]') },
+
+    checkin: { rewards: [10, 15, 20, 25, 30, 40, 80], currentDay: 3, claimed: false, onClaim: () => console.log('[checkin claim]') },
+
+    help: () => console.log('[help]'),
+    restorePurchase: () => console.log('[restore]'),
+    version: 'v1.0.0',
+
+    drawBackground: (ctx, w, h) => drawBg(ctx),
+  });
+}
+
 // ── 场景切换 ─────────────────────────────────
 
 let currentMode = 'demo';
@@ -319,13 +398,20 @@ function switchToGallery() {
   currentMode = 'gallery';
 }
 
+function switchToTemplateMenu() {
+  app.router.replace(createTemplateMenu());
+  currentMode = 'template';
+}
+
 (window as any).switchScene = (mode: string) => {
   if (mode === 'demo') switchToDemo();
+  else if (mode === 'template') switchToTemplateMenu();
   else switchToGallery();
 
   // Update button styles
   document.querySelectorAll('.scene-switcher button').forEach((btn, i) => {
-    btn.classList.toggle('active', (i === 0 && mode === 'demo') || (i === 1 && mode === 'gallery'));
+    const modes = ['demo', 'gallery', 'template'];
+    btn.classList.toggle('active', modes[i] === mode);
   });
 };
 

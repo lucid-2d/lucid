@@ -11,6 +11,7 @@ export const ACTION_DEFAULTS: Record<ActionCode, ActionDef> = {
   home:       { icon: 'home',    text: '返回主页',   variant: 'secondary', size: 'md' },
   back:       { icon: 'back',    text: '返回',       variant: 'ghost',     size: 'icon' },
   restart:    { icon: 'retry',   text: '再来一局',   variant: 'secondary', size: 'md' },
+  endless:    { icon: 'play',    text: '无尽模式',   variant: 'outline',   size: 'lg' },
 
   // Game control
   pause:      { icon: 'pause',   text: '',           variant: 'ghost',     size: 'icon' },
@@ -33,6 +34,9 @@ export const ACTION_DEFAULTS: Record<ActionCode, ActionDef> = {
   leaderboard:{ icon: 'trophy',  text: '排行',       variant: 'ghost',     size: 'icon' },
   battlepass: { icon: 'battle-pass', text: '战令',   variant: 'ghost',     size: 'icon' },
   'lucky-box':{ icon: 'gift',    text: '宝箱',       variant: 'ghost',     size: 'icon' },
+  achievements:{ icon: 'achievement', text: '成就',  variant: 'ghost',     size: 'icon' },
+  missions:   { icon: 'mission', text: '任务',       variant: 'ghost',     size: 'icon' },
+  'daily-challenge': { icon: 'clock', text: '每日挑战', variant: 'secondary', size: 'md' },
 
   // Generic
   confirm:    {                   text: '确认',       variant: 'primary',   size: 'md' },

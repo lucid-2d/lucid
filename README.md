@@ -136,7 +136,7 @@ import { Button, Label, Icon, Modal, Toggle, TabBar, ScrollView, ProgressBar, To
 
 ### @lucid-2d/game-ui
 
-**Template system** (v0.4) + 9 business components. Games use `createScene()` to declare scenes — framework handles all layout, components, and validation.
+**Template system** (v0.5) + 9 business components. Games use `createScene()` to declare scenes — framework handles all layout, components, and validation. MenuTemplate uses **Zone A/C/D layout model** for full-featured game menus.
 
 ```typescript
 import { createScene, type MenuConfig, type GameplayConfig } from '@lucid-2d/game-ui';
@@ -153,7 +153,7 @@ import { createScene, type MenuConfig, type GameplayConfig } from '@lucid-2d/gam
 
 | Template | Required | Optional | Custom Areas |
 |----------|----------|----------|-------------|
-| `menu` | play, settings, privacy | checkin, shop, leaderboard, battlepass, lucky-box, endless | drawBackground, heroContent |
+| `menu` | play, settings, privacy | zoneA, zoneC, zoneD, toggles, cornerLeft/Right, bestScore, stats, continueGame, checkin, lucky-box, help, version | drawBackground, heroContent |
 | `gameplay` | pause (→ PauseModal with resume+restart+home) , setup | hud | drawBackground |
 | `result` | restart or home | share, ad, revive, stats | drawBackground |
 | `map` | back, setup | title | drawBackground |

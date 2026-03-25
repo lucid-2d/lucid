@@ -86,7 +86,7 @@ export function buildResult(scene: TemplateScene, config: ResultConfig, app: Tem
       card.addChild(lbl);
 
       const val = new Label({
-        text: stat.value,
+        text: typeof stat.value === 'function' ? stat.value() : stat.value,
         fontSize: 22,
         fontWeight: 'bold',
         color: UIColors.text,

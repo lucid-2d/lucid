@@ -1,26 +1,112 @@
 /**
- * MenuTemplate — main menu scene.
+ * MenuTemplate — Zone A/C/D layout model.
  *
  * Required: play, settings, privacy
- * Optional: checkin, lucky-box, shop, leaderboard, battlepass, endless
+ * Optional: zoneA, zoneC, zoneD, toggles, corners, stats, bestScore, continueGame, etc.
  */
 
 import { UINode } from '@lucid-2d/core';
-import { Button, IconButton, Label, UIColors } from '@lucid-2d/ui';
+import { Button, IconButton, Label, Toggle, UIColors, Icon } from '@lucid-2d/ui';
 import { SettingsPanel } from '../settings-panel.js';
 import { PrivacyPage } from '../privacy-dialog.js';
 import { CheckinDialog } from '../checkin-dialog.js';
 import { LuckyBoxDialog } from '../lucky-box-dialog.js';
 import { ACTION_DEFAULTS, ACTION_SIZES } from './actions.js';
-import type { MenuConfig, TemplateApp } from './types.js';
+import type {
+  MenuConfig, TemplateApp, ActionCode,
+  ZoneBadge, ZoneButton, CornerItem, ToggleItem,
+} from './types.js';
 import type { TemplateScene } from './template-scene.js';
+
+// ══════════════════════════════════════════
+// Helpers
+// ══════════════════════════════════════════
+
+function resolveText(v: string | (() => string) | undefined): string {
+  if (typeof v === 'function') return v();
+  return v ?? '';
+}
+
+function resolveBadge(v: number | boolean | (() => number | boolean) | undefined): number | boolean | undefined {
+  if (typeof v === 'function') return v();
+  return v;
+}
+
+function resolveDisabled(v: boolean | (() => boolean) | undefined): boolean {
+  if (typeof v === 'function') return v();
+  return v ?? false;
+}
+
+function isActionCode(id: string): id is ActionCode {
+  return id in ACTION_DEFAULTS;
+}
+
+// ══════════════════════════════════════════
+// Build Menu
+// ══════════════════════════════════════════
 
 export function buildMenu(scene: TemplateScene, config: MenuConfig, app: TemplateApp): void {
   const w = scene.width;
   const h = scene.height;
+  const safeTop = 44;
 
-  // ── Title area (top 30%) ──
-  const titleY = Math.round(h * 0.18);
+  // Track dynamic updaters for refresh()
+  const updaters: Array<() => void> = [];
+
+  // ── Settings icon (top-right, always) ──
+  const settingsBtn = new IconButton({
+    id: 'settings',
+    icon: 'settings',
+    size: 44,
+  });
+  settingsBtn.x = w - 44 - 16;
+  settingsBtn.y = safeTop;
+  settingsBtn.$on('tap', () => openSettings(scene, config, app));
+  scene.addChild(settingsBtn);
+
+  // ── Zone A — Top Status Badges ──
+  if (config.zoneA && config.zoneA.length > 0) {
+    let ax = w - 44 - 16 - 12; // left of settings icon
+    const ay = safeTop + 6;
+
+    for (let i = config.zoneA.length - 1; i >= 0; i--) {
+      const badge = config.zoneA[i];
+      const badgeW = 80;
+      const badgeH = 28;
+      const container = new UINode({ id: badge.id, width: badgeW, height: badgeH });
+      container.interactive = true;
+      container.x = ax - badgeW;
+      container.y = ay;
+      container.$on('tap', () => badge.onTap());
+
+      // Badge text label
+      const textVal = resolveText(badge.text);
+      const label = new Label({
+        id: `${badge.id}-text`,
+        text: textVal,
+        fontSize: 12,
+        color: UIColors.text,
+        align: 'center',
+        width: badgeW,
+        height: badgeH,
+      });
+      container.addChild(label);
+
+      if (typeof badge.text === 'function') {
+        const getter = badge.text;
+        updaters.push(() => { label.text = getter(); });
+      }
+
+      scene.addChild(container);
+      ax -= badgeW + 8;
+    }
+  }
+
+  // ── Layout calculation ──
+  // Calculate vertical positions based on active zones
+  let curY = safeTop + 56;
+
+  // ── Title ──
   const title = new Label({
     id: 'title',
     text: config.title,
@@ -31,9 +117,11 @@ export function buildMenu(scene: TemplateScene, config: MenuConfig, app: Templat
     width: w,
     height: 50,
   });
-  title.y = titleY;
+  title.y = curY;
   scene.addChild(title);
+  curY += 50;
 
+  // ── Subtitle ──
   if (config.subtitle) {
     const sub = new Label({
       id: 'subtitle',
@@ -44,104 +132,344 @@ export function buildMenu(scene: TemplateScene, config: MenuConfig, app: Templat
       width: w,
       height: 24,
     });
-    sub.y = titleY + 56;
+    sub.y = curY + 4;
     scene.addChild(sub);
+    curY += 28;
+  }
+
+  // ── Best Score ──
+  if (config.bestScore !== undefined) {
+    const scoreVal = typeof config.bestScore === 'function' ? config.bestScore() : config.bestScore;
+    const scoreLabel = new Label({
+      id: 'best-score',
+      text: scoreVal > 0 ? `最高分: ${scoreVal.toLocaleString()}` : '',
+      fontSize: 16,
+      fontWeight: 'bold',
+      color: '#ffd700',
+      align: 'center',
+      width: w,
+      height: 24,
+    });
+    scoreLabel.y = curY + 8;
+    scene.addChild(scoreLabel);
+
+    if (typeof config.bestScore === 'function') {
+      const getter = config.bestScore;
+      updaters.push(() => {
+        const v = getter();
+        scoreLabel.text = v > 0 ? `最高分: ${v.toLocaleString()}` : '';
+      });
+    }
+
+    curY += 36;
+  }
+
+  // ── Stats 2×2 grid ──
+  if (config.stats && config.stats.length > 0) {
+    const cardW = 60;
+    const cardH = 54;
+    const gap = 8;
+    const cols = Math.min(config.stats.length, 4);
+    const totalW = cols * cardW + (cols - 1) * gap;
+    const startX = Math.round((w - totalW) / 2);
+    const statsY = curY + 8;
+
+    for (let i = 0; i < cols; i++) {
+      const stat = config.stats[i];
+      const card = new UINode({ id: `stat-${i}`, width: cardW, height: cardH });
+      card.x = startX + i * (cardW + gap);
+      card.y = statsY;
+
+      const valText = typeof stat.value === 'function' ? stat.value() : stat.value;
+      const valLabel = new Label({
+        id: `stat-${i}-value`,
+        text: valText,
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: UIColors.text,
+        align: 'center',
+        width: cardW,
+        height: 24,
+      });
+      valLabel.y = 4;
+      card.addChild(valLabel);
+
+      const nameLabel = new Label({
+        id: `stat-${i}-label`,
+        text: stat.label,
+        fontSize: 10,
+        color: UIColors.textSecondary,
+        align: 'center',
+        width: cardW,
+        height: 16,
+      });
+      nameLabel.y = 30;
+      card.addChild(nameLabel);
+
+      if (typeof stat.value === 'function') {
+        const getter = stat.value;
+        updaters.push(() => { valLabel.text = getter(); });
+      }
+
+      scene.addChild(card);
+    }
+
+    curY = statsY + cardH + 8;
   }
 
   // ── Hero content (optional custom area) ──
   if (config.heroContent) {
-    const heroContainer = new UINode({ id: '__hero', width: w, height: Math.round(h * 0.2) });
-    heroContainer.y = Math.round(h * 0.32);
+    // Give heroContent remaining space between stats and buttons
+    const heroH = Math.round(h * 0.15);
+    const heroContainer = new UINode({ id: '__hero', width: w, height: heroH });
+    heroContainer.y = curY;
     scene.addChild(heroContainer);
     config.heroContent(heroContainer);
+    curY += heroH;
   }
 
-  // ── Primary action (center) ──
-  const playDef = ACTION_DEFAULTS.play;
+  // ── Continue Game button ──
+  if (config.continueGame) {
+    const btnW = 220;
+    const btnH = 48;
+    const contBtn = new Button({
+      id: 'continue-game',
+      text: config.continueGame.label,
+      variant: 'primary',
+      width: btnW,
+      height: btnH,
+    });
+    contBtn.x = Math.round((w - btnW) / 2);
+    contBtn.y = curY + 8;
+    contBtn.$on('tap', () => config.continueGame!.onTap());
+    scene.addChild(contBtn);
+
+    if (config.continueGame.sublabel) {
+      const subLabel = new Label({
+        id: 'continue-sublabel',
+        text: config.continueGame.sublabel,
+        fontSize: 11,
+        color: UIColors.textSecondary,
+        align: 'center',
+        width: w,
+        height: 16,
+      });
+      subLabel.y = curY + 8 + btnH + 2;
+      scene.addChild(subLabel);
+      curY += btnH + 24;
+    } else {
+      curY += btnH + 16;
+    }
+  }
+
+  // ── Play button (always present) ──
   const playSize = ACTION_SIZES.lg;
   const playBtn = new Button({
     id: 'play',
-    text: playDef.text,
-    variant: playDef.variant,
+    text: ACTION_DEFAULTS.play.text,
+    variant: 'primary',
     width: playSize.width,
     height: playSize.height,
   });
   playBtn.x = Math.round((w - playSize.width) / 2);
-  playBtn.y = Math.round(h * 0.55);
+  // Center play in the middle area
+  const playY = Math.max(curY + 8, Math.round(h * 0.45));
+  playBtn.y = playY;
   playBtn.$on('tap', () => config.play());
   scene.addChild(playBtn);
+  curY = playY + playSize.height + 12;
 
-  // ── Endless mode (optional, below play) ──
-  if (config.endless) {
-    const endlessBtn = new Button({
-      id: 'endless',
-      text: '无尽模式',
-      variant: 'outline',
-      width: playSize.width,
-      height: playSize.height,
-    });
-    endlessBtn.x = Math.round((w - playSize.width) / 2);
-    endlessBtn.y = Math.round(h * 0.55) + playSize.height + 16;
-    endlessBtn.$on('tap', () => config.endless!());
-    scene.addChild(endlessBtn);
-  }
+  // ── Zone C — Main Buttons ──
+  if (config.zoneC && config.zoneC.length > 0) {
+    const btnW = 200;
+    const btnH = 48;
+    const gap = 12;
 
-  // ── Nav bar (icon buttons, right side or bottom area) ──
-  const navActions: Array<{ code: string; handler: () => void }> = [];
+    for (const item of config.zoneC) {
+      const def = isActionCode(item.id) ? ACTION_DEFAULTS[item.id] : undefined;
+      const text = item.text ?? def?.text ?? item.id;
+      const variant = item.variant ?? def?.variant ?? 'secondary';
+      const disabled = resolveDisabled(item.disabled);
 
-  // Settings & Privacy are built-in dialogs, not simple nav
-  // We add their trigger icons to the nav bar
-
-  if (config.checkin) {
-    navActions.push({ code: 'checkin', handler: () => openCheckin(scene, config, app) });
-  }
-  if (config.shop) {
-    navActions.push({ code: 'shop', handler: config.shop });
-  }
-  if (config.battlepass) {
-    navActions.push({ code: 'battlepass', handler: config.battlepass });
-  }
-  if (config.leaderboard) {
-    navActions.push({ code: 'leaderboard', handler: config.leaderboard });
-  }
-  if (config['lucky-box']) {
-    navActions.push({ code: 'lucky-box', handler: () => openLuckyBox(scene, config, app) });
-  }
-
-  // Layout nav icons in a row at bottom area
-  if (navActions.length > 0) {
-    const iconSize = 44;
-    const gap = 16;
-    const totalW = navActions.length * iconSize + (navActions.length - 1) * gap;
-    let nx = Math.round((w - totalW) / 2);
-    const ny = Math.round(h * 0.78);
-
-    for (const action of navActions) {
-      const def = ACTION_DEFAULTS[action.code as keyof typeof ACTION_DEFAULTS];
-      if (!def?.icon) continue;
-      const btn = new IconButton({
-        id: action.code,
-        icon: def.icon,
-        size: iconSize,
+      const btn = new Button({
+        id: item.id,
+        text,
+        variant,
+        width: btnW,
+        height: btnH,
+        disabled,
       });
-      btn.x = nx;
-      btn.y = ny;
-      btn.$on('tap', action.handler);
+      btn.x = Math.round((w - btnW) / 2);
+      btn.y = curY;
+
+      const handler = resolveZoneHandler(item, config);
+      btn.$on('tap', () => {
+        if (!resolveDisabled(item.disabled)) handler(scene, config, app);
+      });
+
+      if (typeof item.disabled === 'function') {
+        const getter = item.disabled;
+        updaters.push(() => { btn.disabled = getter(); });
+      }
+
       scene.addChild(btn);
-      nx += iconSize + gap;
+      curY += btnH + gap;
     }
   }
 
-  // ── Settings icon (top-right) ──
-  const settingsBtn = new IconButton({
-    id: 'settings',
-    icon: 'settings',
-    size: 44,
-  });
-  settingsBtn.x = w - 44 - 16;
-  settingsBtn.y = 44; // safe area offset
-  settingsBtn.$on('tap', () => openSettings(scene, config, app));
-  scene.addChild(settingsBtn);
+  // ── Toggles ──
+  if (config.toggles && config.toggles.length > 0) {
+    const toggleY = curY + 4;
+    const toggleGap = 24;
+    const toggleW = 44;
+    const totalTogglesW = config.toggles.length * toggleW + (config.toggles.length - 1) * toggleGap;
+    let tx = Math.round((w - totalTogglesW) / 2);
+
+    for (const item of config.toggles) {
+      const toggle = new Toggle({
+        id: `toggle-${item.id}`,
+        label: '',
+        value: item.value,
+        width: toggleW,
+        height: 24,
+      });
+      toggle.x = tx;
+      toggle.y = toggleY;
+      toggle.$on('change', (val: boolean) => item.onChange(val));
+      scene.addChild(toggle);
+      tx += toggleW + toggleGap;
+    }
+
+    curY = toggleY + 32;
+  }
+
+  // ── Footer links (help + restorePurchase) ──
+  // Position these above Zone D
+  const bottomAnchor = h - 24; // very bottom for version
+  const privacyY = bottomAnchor - 20; // privacy link
+  const zoneDY = privacyY - 52; // zone D row
+  const footerY = zoneDY - 28; // footer links
+
+  if (config.help || config.restorePurchase) {
+    let fx = Math.round(w / 2);
+    const items: Array<{ id: string; text: string; handler: () => void }> = [];
+    if (config.help) items.push({ id: 'help', text: '帮助', handler: config.help });
+    if (config.restorePurchase) items.push({ id: 'restore', text: '恢复购买', handler: config.restorePurchase });
+
+    const linkW = 80;
+    const linkGap = 8;
+    const totalLinkW = items.length * linkW + (items.length - 1) * linkGap;
+    fx = Math.round((w - totalLinkW) / 2);
+
+    for (const item of items) {
+      const btn = new Button({
+        id: item.id,
+        text: item.text,
+        variant: 'ghost',
+        width: linkW,
+        height: 24,
+        fontSize: 11,
+      });
+      btn.x = fx;
+      btn.y = footerY;
+      btn.$on('tap', () => item.handler());
+      scene.addChild(btn);
+      fx += linkW + linkGap;
+    }
+  }
+
+  // ── Zone D — Bottom Bar ──
+  if (config.zoneD && config.zoneD.length > 0) {
+    const count = config.zoneD.length;
+    const hasCornerL = !!config.cornerLeft;
+    const hasCornerR = !!config.cornerRight;
+    const cornerSpace = 48;
+    const availW = w - (hasCornerL ? cornerSpace : 0) - (hasCornerR ? cornerSpace : 0);
+    const slotW = Math.floor(availW / count);
+    let dx = hasCornerL ? cornerSpace : 0;
+
+    for (const item of config.zoneD) {
+      const def = isActionCode(item.id) ? ACTION_DEFAULTS[item.id] : undefined;
+      const icon = item.icon ?? def?.icon;
+      const text = item.text ?? def?.text ?? item.id;
+
+      const container = new UINode({ id: item.id, width: slotW, height: 44 });
+      container.interactive = true;
+      container.x = dx;
+      container.y = zoneDY;
+
+      // Icon
+      if (icon) {
+        const iconNode = new Icon({
+          id: `${item.id}-icon`,
+          name: icon,
+          size: 20,
+        });
+        iconNode.x = Math.round((slotW - 20) / 2);
+        iconNode.y = 2;
+        container.addChild(iconNode);
+      }
+
+      // Text
+      const label = new Label({
+        id: `${item.id}-text`,
+        text,
+        fontSize: 10,
+        color: UIColors.textSecondary,
+        align: 'center',
+        width: slotW,
+        height: 14,
+      });
+      label.y = 26;
+      container.addChild(label);
+
+      // Disabled state
+      if (resolveDisabled(item.disabled)) {
+        container.alpha = 0.5;
+      }
+
+      const handler = resolveZoneHandler(item, config);
+      container.$on('tap', () => {
+        if (!resolveDisabled(item.disabled)) handler(scene, config, app);
+      });
+
+      if (typeof item.disabled === 'function') {
+        const getter = item.disabled;
+        updaters.push(() => { container.alpha = getter() ? 0.5 : 1; });
+      }
+
+      scene.addChild(container);
+      dx += slotW;
+    }
+  }
+
+  // ── Corner Left ──
+  if (config.cornerLeft) {
+    const cl = config.cornerLeft;
+    const btn = new IconButton({
+      id: cl.id ?? 'corner-left',
+      icon: cl.icon,
+      size: 36,
+    });
+    btn.x = 12;
+    btn.y = zoneDY + 4;
+    btn.$on('tap', () => cl.onTap());
+    scene.addChild(btn);
+  }
+
+  // ── Corner Right ──
+  if (config.cornerRight) {
+    const cr = config.cornerRight;
+    const btn = new IconButton({
+      id: cr.id ?? 'corner-right',
+      icon: cr.icon,
+      size: 36,
+    });
+    btn.x = w - 36 - 12;
+    btn.y = zoneDY + 4;
+    btn.$on('tap', () => cr.onTap());
+    scene.addChild(btn);
+  }
 
   // ── Privacy link (bottom center) ──
   const privacyBtn = new Button({
@@ -153,9 +481,25 @@ export function buildMenu(scene: TemplateScene, config: MenuConfig, app: Templat
     fontSize: 12,
   });
   privacyBtn.x = Math.round((w - 120) / 2);
-  privacyBtn.y = h - 64;
+  privacyBtn.y = privacyY - 12;
   privacyBtn.$on('tap', () => openPrivacy(scene, config, app));
   scene.addChild(privacyBtn);
+
+  // ── Version ──
+  if (config.version) {
+    const verLabel = new Label({
+      id: 'version',
+      text: config.version,
+      fontSize: 10,
+      color: UIColors.textSecondary,
+      align: 'center',
+      width: w,
+      height: 14,
+    });
+    verLabel.y = bottomAnchor;
+    verLabel.alpha = 0.5;
+    scene.addChild(verLabel);
+  }
 
   // ── Background draw ──
   if (config.drawBackground) {
@@ -166,12 +510,51 @@ export function buildMenu(scene: TemplateScene, config: MenuConfig, app: Templat
       origDraw?.(ctx);
     };
   }
+
+  // ── Wire up refresh() ──
+  scene.refresh = () => {
+    for (const fn of updaters) fn();
+  };
+
+  // Auto-refresh on enter/resume
+  const origOnEnter = scene.onEnter.bind(scene);
+  scene.onEnter = () => {
+    origOnEnter();
+    scene.refresh();
+  };
+  scene.onResume = () => {
+    scene.refresh();
+  };
 }
 
-// ── Dialog openers ──
+// ══════════════════════════════════════════
+// Zone handler resolution
+// ══════════════════════════════════════════
 
-function openSettings(scene: TemplateScene, config: MenuConfig, app: TemplateApp): void {
-  // Remove any existing settings panel
+function resolveZoneHandler(
+  item: ZoneButton,
+  config: MenuConfig,
+): (scene: TemplateScene, config: MenuConfig, app: TemplateApp) => void {
+  if (item.onTap) {
+    const handler = item.onTap;
+    return () => handler();
+  }
+  // Auto-connect to dialog
+  if (item.id === 'checkin' && config.checkin) {
+    return (scene, config, app) => openCheckin(scene, config, app);
+  }
+  if (item.id === 'lucky-box' && config['lucky-box']) {
+    return (scene, config, app) => openLuckyBox(scene, config, app);
+  }
+  // This should never happen — validated at createScene time
+  return () => {};
+}
+
+// ══════════════════════════════════════════
+// Dialog openers
+// ══════════════════════════════════════════
+
+function openSettings(scene: TemplateScene, config: MenuConfig, _app: TemplateApp): void {
   const existing = scene.findById('settings-modal');
   if (existing) { scene.removeChild(existing); return; }
 

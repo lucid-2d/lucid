@@ -23,7 +23,7 @@ export interface TemplateApp {
 
 export type ActionCode =
   // Navigation
-  | 'play' | 'continue' | 'home' | 'back' | 'restart'
+  | 'play' | 'continue' | 'home' | 'back' | 'restart' | 'endless'
   // Game control
   | 'pause' | 'resume' | 'quit'
   // System
@@ -32,6 +32,7 @@ export type ActionCode =
   | 'share' | 'ad' | 'revive'
   // Business entry
   | 'shop' | 'checkin' | 'leaderboard' | 'battlepass' | 'lucky-box'
+  | 'achievements' | 'missions' | 'daily-challenge'
   // Generic
   | 'confirm' | 'cancel' | 'claim' | 'buy' | 'equip' | 'select';
 
@@ -111,7 +112,56 @@ export interface AdAction {
 export interface StatEntry {
   icon: IconName;
   label: string;
-  value: string;
+  value: string | (() => string);
+}
+
+// ══════════════════════════════════════════
+// Menu Zone types
+// ══════════════════════════════════════════
+
+/** Zone A — top status badge (coin balance, mission entry, etc.) */
+export interface ZoneBadge {
+  id: string;
+  icon?: IconName;
+  text?: string | (() => string);
+  badge?: number | boolean | (() => number | boolean);
+  onTap: () => void;
+}
+
+/** Zone C / Zone D — configurable button */
+export interface ZoneButton {
+  id: string;
+  text?: string;
+  icon?: IconName;
+  variant?: ButtonVariant;
+  badge?: number | boolean | (() => number | boolean);
+  disabled?: boolean | (() => boolean);
+  /** If omitted and id matches a dialog config key (checkin/lucky-box), auto-connects */
+  onTap?: () => void;
+}
+
+/** Corner element (bottom-left or bottom-right) */
+export interface CornerItem {
+  id?: string;
+  icon: IconName;
+  text?: string | (() => string);
+  onTap: () => void;
+}
+
+/** Toggle switch (sound, vibration, etc.) */
+export interface ToggleItem {
+  id: string;
+  icon: IconName;
+  offIcon?: IconName;
+  value: boolean;
+  onChange: (value: boolean) => void;
+}
+
+/** Continue game config */
+export interface ContinueGameConfig {
+  label: string;
+  sublabel?: string;
+  onTap: () => void;
 }
 
 // ══════════════════════════════════════════
@@ -121,27 +171,48 @@ export interface StatEntry {
 export interface MenuConfig {
   template: 'menu';
   id?: string;
-  title: string;
-  subtitle?: string;
 
-  // Required
+  // ── Required ──
   play: () => void;
   settings: SettingsConfig;
   privacy: PrivacyConfig;
 
-  // Optional dialogs
+  // ── Title Area ──
+  title: string;
+  subtitle?: string;
+  bestScore?: number | (() => number);
+  stats?: StatEntry[];
+
+  // ── Zone A — Top Status Badges ──
+  zoneA?: ZoneBadge[];
+
+  // ── Continue Game ──
+  continueGame?: ContinueGameConfig;
+
+  // ── Zone C — Main Buttons (max 3, play is always first) ──
+  zoneC?: ZoneButton[];
+
+  // ── Toggles ──
+  toggles?: ToggleItem[];
+
+  // ── Zone D — Bottom Bar (max 4, evenly distributed) ──
+  zoneD?: ZoneButton[];
+
+  // ── Corner Elements ──
+  cornerLeft?: CornerItem;
+  cornerRight?: CornerItem;
+
+  // ── Footer ──
+  help?: () => void;
+  restorePurchase?: () => void;
+  version?: string;
+
+  // ── Auto-Dialogs ──
   checkin?: CheckinConfig;
   'lucky-box'?: LuckyBoxConfig;
 
-  // Optional scene navigation
-  shop?: () => void;
-  leaderboard?: () => void;
-  battlepass?: () => void;
-  endless?: () => void;
-
-  // Custom rendering
+  // ── Custom ──
   drawBackground?: (ctx: CanvasRenderingContext2D, w: number, h: number) => void;
-  /** Custom content between title and play button */
   heroContent?: (parent: UINode) => void;
 }
 

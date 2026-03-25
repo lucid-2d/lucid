@@ -31,6 +31,32 @@ function validateMenu(c: MenuConfig): void {
   if (!c.privacy || !c.privacy.content) {
     throw new Error('[lucid] MenuTemplate requires "privacy" with content');
   }
+  // Zone limits
+  if (c.zoneC && c.zoneC.length > 3) {
+    throw new Error('[lucid] MenuTemplate zoneC supports max 3 buttons (play is separate)');
+  }
+  if (c.zoneD && c.zoneD.length > 4) {
+    throw new Error('[lucid] MenuTemplate zoneD supports max 4 items');
+  }
+  if (c.stats && c.stats.length > 4) {
+    throw new Error('[lucid] MenuTemplate stats supports max 4 entries');
+  }
+  // Auto-connect validation: zone buttons without onTap must match a dialog config
+  const dialogKeys = new Set<string>();
+  if (c.checkin) dialogKeys.add('checkin');
+  if (c['lucky-box']) dialogKeys.add('lucky-box');
+
+  for (const zone of [c.zoneC, c.zoneD]) {
+    if (!zone) continue;
+    for (const item of zone) {
+      if (!item.onTap && !dialogKeys.has(item.id)) {
+        throw new Error(
+          `[lucid] MenuTemplate: ZoneButton "${item.id}" has no onTap and no matching dialog config. ` +
+          `Provide onTap or declare "${item.id}" config.`
+        );
+      }
+    }
+  }
 }
 
 function validateGameplay(c: GameplayConfig): void {

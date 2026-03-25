@@ -26,6 +26,9 @@ export class TemplateScene extends UINode {
   onResume(): void {}
   preload(): void | Promise<void> {}
 
+  /** Refresh all dynamic values (bestScore, badges, stats, etc.). Called on onEnter/onResume. */
+  refresh(): void {}
+
   get $text(): string {
     return `[${this.templateType}] ${this.id}`;
   }

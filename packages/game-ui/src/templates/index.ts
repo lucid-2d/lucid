@@ -12,4 +12,5 @@ export type {
   ShopConfig, ListConfig, PassConfig,
   SettingsConfig, PrivacyConfig, CheckinConfig, LuckyBoxConfig,
   PauseConfig, HudSlots, AdAction, StatEntry,
+  ZoneBadge, ZoneButton, CornerItem, ToggleItem, ContinueGameConfig,
 } from './types.js';
