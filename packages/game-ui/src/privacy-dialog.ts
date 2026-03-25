@@ -9,6 +9,8 @@ export interface PrivacyDialogProps {
   title?: string;
   content?: string;
   privacyUrl?: string;
+  screenWidth?: number;
+  screenHeight?: number;
 }
 
 export class PrivacyDialog extends Modal {
@@ -18,17 +20,19 @@ export class PrivacyDialog extends Modal {
       title: props.title ?? '隐私保护指引',
       id: 'privacy',
       width: pw, height: 200,
-      screenWidth: 390, screenHeight: 844,
+      screenWidth: props.screenWidth ?? 390,
+      screenHeight: props.screenHeight ?? 844,
       showCloseButton: false,
     });
 
-    const descW = 260;
+    const descW = pw - 40;
     const desc = new Label({
-      text: props.content ?? '我们重视您的隐私保护。在使用\n本游戏前，请阅读并同意隐私\n保护指引。',
+      text: props.content ?? '我们重视您的隐私保护。在使用本游戏前，请阅读并同意隐私保护指引。',
       fontSize: 13,
       color: UIColors.textMuted,
       align: 'center',
-      width: descW, height: 80,
+      wrap: true,
+      width: descW, height: 120,
     });
     desc.x = (pw - descW) / 2; desc.y = 10;
     this.content.addChild(desc);
@@ -40,9 +44,9 @@ export class PrivacyDialog extends Modal {
       id: 'view-privacy',
       text: '查看隐私协议',
       variant: 'outline',
-      width: btnW, height: 38,
+      width: btnW, height: 44,
     });
-    viewBtn.x = btnX; viewBtn.y = 100;
+    viewBtn.x = btnX; viewBtn.y = 130;
     viewBtn.$on('tap', () => this.$emit('viewPolicy'));
     this.content.addChild(viewBtn);
 
@@ -50,9 +54,9 @@ export class PrivacyDialog extends Modal {
       id: 'agree-btn',
       text: '同意并继续',
       variant: 'primary',
-      width: btnW, height: 42,
+      width: btnW, height: 48,
     });
-    agreeBtn.x = btnX; agreeBtn.y = 155;
+    agreeBtn.x = btnX; agreeBtn.y = 190;
     agreeBtn.$on('tap', () => {
       this.$emit('agree');
       this.close();

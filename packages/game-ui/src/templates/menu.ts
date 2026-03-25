@@ -179,6 +179,8 @@ function openSettings(scene: TemplateScene, config: MenuConfig, app: TemplateApp
     toggles: config.settings.toggles,
     links: config.settings.links,
     version: config.settings.version,
+    screenWidth: scene.width,
+    screenHeight: scene.height,
   });
   panel.id = 'settings-modal';
   panel.$on('toggle', (id: string, val: boolean) => config.settings.onToggle(id, val));
@@ -193,7 +195,11 @@ function openPrivacy(scene: TemplateScene, config: MenuConfig, _app: TemplateApp
   const existing = scene.findById('privacy-modal');
   if (existing) { scene.removeChild(existing); return; }
 
-  const dialog = new PrivacyDialog({ content: config.privacy.content });
+  const dialog = new PrivacyDialog({
+    content: config.privacy.content,
+    screenWidth: scene.width,
+    screenHeight: scene.height,
+  });
   dialog.id = 'privacy-modal';
   dialog.$on('agree', () => scene.removeChild(dialog));
   dialog.$on('close', () => scene.removeChild(dialog));

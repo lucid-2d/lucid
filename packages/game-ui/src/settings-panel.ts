@@ -5,6 +5,8 @@ export interface SettingsPanelProps {
   toggles: Array<{ id: string; label: string; value: boolean }>;
   links?: Array<{ id: string; label: string }>;
   version?: string;
+  screenWidth?: number;
+  screenHeight?: number;
 }
 
 /**
@@ -31,7 +33,7 @@ export class SettingsPanel extends Modal {
 
   constructor(props: SettingsPanelProps) {
     const pw = 280;
-    super({ title: '设置', id: 'settings', width: pw, height: 200, screenWidth: 390, screenHeight: 844 });
+    super({ title: '设置', id: 'settings', width: pw, height: 200, screenWidth: props.screenWidth ?? 390, screenHeight: props.screenHeight ?? 844 });
     this._version = props.version;
 
     const toggleW = 220;

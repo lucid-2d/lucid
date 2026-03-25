@@ -170,6 +170,8 @@ function createPauseModal(
         toggles: config.pause.settings!.toggles,
         links: config.pause.settings!.links,
         version: config.pause.settings!.version,
+        screenWidth: scene.width,
+        screenHeight: scene.height,
       });
       panel.id = 'settings-modal';
       panel.$on('toggle', (id: string, val: boolean) => config.pause.settings!.onToggle(id, val));
