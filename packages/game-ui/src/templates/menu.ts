@@ -79,7 +79,8 @@ export function buildMenu(scene: TemplateScene, config: MenuConfig, app: Templat
       container.interactive = true;
       container.x = ax;
       container.y = ay;
-      container.$on('tap', () => badge.onTap());
+      container.$on('touchstart', () => {});
+      container.$on('touchend', () => badge.onTap());
 
       let contentX = 4;
 
@@ -480,8 +481,10 @@ export function buildMenu(scene: TemplateScene, config: MenuConfig, app: Templat
         container.alpha = 0.5;
       }
 
+      // UINode doesn't emit 'tap' — bridge touchend → tap
       const handler = resolveZoneHandler(item, config);
-      container.$on('tap', () => {
+      container.$on('touchstart', () => {});
+      container.$on('touchend', () => {
         if (!resolveDisabled(item.disabled)) handler(scene, config, app);
       });
 

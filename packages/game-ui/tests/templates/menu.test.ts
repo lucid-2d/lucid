@@ -150,7 +150,7 @@ describe('MenuTemplate', () => {
     scene.onEnter();
     const badge = scene.findById('coins');
     expect(badge).toBeDefined();
-    badge!.$emit('tap');
+    badge!.$emit('touchend');
     expect(tapped).toBe(true);
   });
 
@@ -244,7 +244,7 @@ describe('MenuTemplate', () => {
     scene.onEnter();
     const ach = scene.findById('achievements');
     expect(ach).toBeDefined();
-    ach!.$emit('tap');
+    ach!.$emit('touchend');
     expect(achievementOpened).toBe(true);
     expect(scene.findById('battlepass')).toBeDefined();
   });
@@ -319,7 +319,7 @@ describe('MenuTemplate', () => {
 
     const checkinBtn = scene.findById('checkin');
     expect(checkinBtn).toBeDefined();
-    checkinBtn!.$emit('tap');
+    checkinBtn!.$emit('touchend');
     expect(scene.findById('checkin-modal')).toBeDefined();
   });
 
@@ -335,7 +335,7 @@ describe('MenuTemplate', () => {
 
     const btn = scene.findById('lucky-box');
     expect(btn).toBeDefined();
-    btn!.$emit('tap');
+    btn!.$emit('touchend');
     expect(scene.findById('lucky-box-modal')).toBeDefined();
   });
 

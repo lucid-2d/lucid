@@ -27,6 +27,7 @@ export function buildList(scene: TemplateScene, config: ListConfig, app: Templat
     tabs: config.tabs,
     myEntry: config.myEntry,
   });
+  panel.$on('close', () => config.back());
   scene.addChild(panel);
 
   // ── Background ──

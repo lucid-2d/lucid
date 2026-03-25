@@ -29,12 +29,14 @@ export function buildShop(scene: TemplateScene, config: ShopConfig, app: Templat
       items: config.items,
     });
     panel.y = 0;
+    panel.$on('close', () => config.back());
     if (config.onPurchase) panel.$on('purchase', (item: any) => config.onPurchase!(item));
     if (config.onEquip) panel.$on('equip', (item: any) => config.onEquip!(item));
     scene.addChild(panel);
   } else if (config.variant === 'coin' && config.coinItems) {
     const panel = new CoinShopPanel({ coins: config.coins ?? 0, items: config.coinItems });
     panel.y = 0;
+    panel.$on('close', () => config.back());
     if (config.onCoinPurchase) panel.$on('purchase', (item: any) => config.onCoinPurchase!(item));
     scene.addChild(panel);
   }
