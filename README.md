@@ -136,23 +136,44 @@ import { Button, Label, Icon, Modal, Toggle, TabBar, ScrollView, ProgressBar, To
 
 ### @lucid-2d/game-ui
 
-9 business components for common game screens.
+**Template system** (v0.4) + 9 business components. Games use `createScene()` to declare scenes — framework handles all layout, components, and validation.
 
 ```typescript
-import { CheckinDialog, ShopPanel, SettingsPanel, ResultPanel, LeaderboardPanel, BattlePassPanel, LuckyBoxDialog, CoinShopPanel, PrivacyDialog } from '@lucid-2d/game-ui';
+import { createScene, type MenuConfig, type GameplayConfig } from '@lucid-2d/game-ui';
 ```
 
-| Component | Purpose | Key Props |
-|-----------|---------|-----------|
-| `CheckinDialog` | Daily check-in modal | `rewards: number[], currentDay, claimed`. Events: `claim(day, reward)`, `close`. |
-| `ShopPanel` | Full-screen shop with tabs | `tabs: TabItem[], items: ShopItem[]`. Events: `purchase(item)`, `equip(item)`, `select(item)`, `close`. |
-| `SettingsPanel` | Settings modal with toggles | `toggles: {id, label, value}[], links?, version?`. Events: `toggle(id, value)`, `link(id)`, `close`. |
-| `ResultPanel` | Game result display | `stats: {icon: IconName, label, value}[], title, score`. |
-| `LeaderboardPanel` | Ranked player list | `entries: {rank, name, score, isMe?}[]`. Top 3 get medal icons. |
-| `BattlePassPanel` | Season pass rewards | `levels: BattlePassReward[], currentLevel, isPremium`. |
-| `LuckyBoxDialog` | Random reward modal | `reward: {icon, name, amount}`. Events: `close`. |
-| `CoinShopPanel` | IAP coin packages | `items: CoinShopItem[], balance`. Events: `purchase(item)`, `close`. |
-| `PrivacyDialog` | Privacy policy modal | `content: string`. Events: `close`. |
+| Export | Type | Description |
+|--------|------|-------------|
+| `createScene(app, config)` | function | **The single entry point for scene creation.** Takes a template config, validates required actions, returns a `TemplateScene`. Templates: `menu`, `gameplay`, `result`, `map`, `shop`, `list`, `pass`. |
+| `TemplateScene` | class | SceneNode with `__template` marker. Created by `createScene()`, not by games directly. |
+| `isTemplateScene(node)` | function | Check if a node is a template scene. |
+| `ACTION_DEFAULTS` | const | Default icon/text/variant/size for each `ActionCode`. |
+
+**7 scene templates:**
+
+| Template | Required | Optional | Custom Areas |
+|----------|----------|----------|-------------|
+| `menu` | play, settings, privacy | checkin, shop, leaderboard, battlepass, lucky-box, endless | drawBackground, heroContent |
+| `gameplay` | pause (→ PauseModal with resume+restart+home) , setup | hud | drawBackground |
+| `result` | restart or home | share, ad, revive, stats | drawBackground |
+| `map` | back, setup | title | drawBackground |
+| `shop` | back | tabs, items (skin) / coinItems (coin) | drawBackground |
+| `list` | back | tabs, entries | drawBackground |
+| `pass` | back | rewards, onClaim, onBuyPremium | drawBackground |
+
+**9 business components** (used internally by templates, also available for direct use):
+
+| Component | Purpose |
+|-----------|---------|
+| `CheckinDialog` | Daily check-in modal |
+| `ShopPanel` | Shop with tabs + item grid |
+| `SettingsPanel` | Settings toggles + links |
+| `ResultPanel` | Score + stats display |
+| `LeaderboardPanel` | Ranked player list |
+| `BattlePassPanel` | Season pass rewards |
+| `LuckyBoxDialog` | Random reward modal |
+| `CoinShopPanel` | IAP coin packages |
+| `PrivacyDialog` | Privacy policy modal |
 
 ### @lucid-2d/systems
 

@@ -11,3 +11,16 @@ export { BattlePassPanel, type BattlePassPanelProps, type BattlePassReward } fro
 export { LuckyBoxDialog, type LuckyBoxDialogProps } from './lucky-box-dialog.js';
 export { CoinShopPanel, type CoinShopPanelProps, type CoinShopItem } from './coin-shop-panel.js';
 export { PrivacyDialog, type PrivacyDialogProps } from './privacy-dialog.js';
+
+// Template system
+export {
+  createScene,
+  TemplateScene, isTemplateScene,
+  ACTION_DEFAULTS, ACTION_SIZES, getActionDef,
+  type TemplateConfig, type TemplateName, type TemplateApp,
+  type ActionCode, type ActionDef,
+  type MenuConfig, type GameplayConfig, type ResultConfig, type MapConfig,
+  type ShopConfig, type ListConfig, type PassConfig,
+  type SettingsConfig, type PrivacyConfig, type CheckinConfig, type LuckyBoxConfig,
+  type PauseConfig, type HudSlots, type AdAction, type StatEntry,
+} from './templates/index.js';
