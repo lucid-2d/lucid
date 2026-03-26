@@ -4,6 +4,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { createApp } from '../src/app';
 import { UINode } from '@lucid-2d/core';
+import { createMockCanvas } from './helpers/mock-canvas';
 
 describe('touch coordinate conversion', () => {
   it('touchend passes correct localX/localY to nested node', () => {
@@ -31,20 +32,3 @@ describe('touch coordinate conversion', () => {
   });
 });
 
-function createMockCanvas(w = 390, h = 844): HTMLCanvasElement {
-  const canvas = document.createElement('canvas');
-  canvas.width = w;
-  canvas.height = h;
-  canvas.getBoundingClientRect = () => ({
-    x: 0, y: 0, width: w, height: h,
-    top: 0, left: 0, right: w, bottom: h, toJSON: () => {},
-  });
-  const mockCtx = {
-    save: vi.fn(), restore: vi.fn(), translate: vi.fn(),
-    scale: vi.fn(), clearRect: vi.fn(), setTransform: vi.fn(),
-    fillRect: vi.fn(), fillText: vi.fn(),
-    globalAlpha: 1, fillStyle: '', font: '', textAlign: '', textBaseline: '',
-  };
-  (canvas as any).getContext = () => mockCtx;
-  return canvas;
-}

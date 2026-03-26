@@ -5,6 +5,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { createApp, type App } from '../src/app';
 import { UINode } from '@lucid-2d/core';
 import { SceneNode } from '../src/scene';
+import { createMockCanvas } from './helpers/mock-canvas';
 
 describe('createApp', () => {
   it('creates app with web platform by default in test env', () => {
@@ -223,24 +224,3 @@ describe('createApp', () => {
   });
 });
 
-// ── helpers ───────────────────────────────────
-
-function createMockCanvas(w = 390, h = 844): HTMLCanvasElement {
-  const canvas = document.createElement('canvas');
-  canvas.width = w;
-  canvas.height = h;
-  canvas.getBoundingClientRect = () => ({
-    x: 0, y: 0, width: w, height: h,
-    top: 0, left: 0, right: w, bottom: h,
-    toJSON: () => {},
-  });
-  const mockCtx = {
-    save: vi.fn(), restore: vi.fn(), translate: vi.fn(),
-    scale: vi.fn(), clearRect: vi.fn(), setTransform: vi.fn(),
-    fillRect: vi.fn(), fillText: vi.fn(),
-    globalAlpha: 1,
-    fillStyle: '', font: '', textAlign: '', textBaseline: '',
-  };
-  (canvas as any).getContext = () => mockCtx;
-  return canvas;
-}

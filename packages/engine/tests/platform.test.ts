@@ -4,6 +4,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { detectPlatform, type PlatformAdapter } from '../src/platform/detect';
 import { WebAdapter } from '../src/platform/web';
+import { createMockCanvas } from './helpers/mock-canvas';
 
 describe('detectPlatform', () => {
   const originalGlobalThis = { ...globalThis };
@@ -67,23 +68,3 @@ describe('WebAdapter', () => {
   });
 });
 
-// ── helpers ───────────────────────────────────
-
-function createMockCanvas(w = 390, h = 844): HTMLCanvasElement {
-  const canvas = document.createElement('canvas');
-  canvas.width = w;
-  canvas.height = h;
-  canvas.getBoundingClientRect = () => ({
-    x: 0, y: 0, width: w, height: h,
-    top: 0, left: 0, right: w, bottom: h,
-    toJSON: () => {},
-  });
-  // jsdom doesn't support canvas context — mock it
-  const mockCtx = {
-    save: vi.fn(), restore: vi.fn(), translate: vi.fn(),
-    scale: vi.fn(), clearRect: vi.fn(), setTransform: vi.fn(),
-    globalAlpha: 1,
-  };
-  (canvas as any).getContext = () => mockCtx;
-  return canvas;
-}

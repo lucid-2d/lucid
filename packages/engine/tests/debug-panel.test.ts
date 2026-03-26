@@ -3,6 +3,7 @@ import { createApp } from '../src/app';
 import { SceneNode } from '../src/scene';
 import { UINode } from '@lucid-2d/core';
 import { tap, touch } from '../src/test-utils';
+import { createMockCanvas } from './helpers/mock-canvas';
 
 /** Simple interactive button for tests (no @lucid-2d/ui dependency) */
 function createButton(id: string, x: number, y: number, w: number, h: number) {
@@ -15,33 +16,6 @@ function createButton(id: string, x: number, y: number, w: number, h: number) {
   return btn;
 }
 
-function createMockCanvas(w = 390, h = 844): HTMLCanvasElement {
-  const noop = () => {};
-  const gradient = { addColorStop: noop };
-  const canvas = document.createElement('canvas');
-  canvas.width = w;
-  canvas.height = h;
-  canvas.getBoundingClientRect = () => ({
-    x: 0, y: 0, width: w, height: h,
-    top: 0, left: 0, right: w, bottom: h,
-    toJSON: () => {},
-  });
-  const mockCtx = {
-    save: noop, restore: noop, translate: noop, scale: noop, rotate: noop,
-    clearRect: noop, setTransform: noop, fillRect: noop, fillText: noop,
-    strokeRect: noop, beginPath: noop, roundRect: noop, fill: noop, stroke: noop,
-    arc: noop, moveTo: noop, lineTo: noop, closePath: noop,
-    createLinearGradient() { return gradient; },
-    createRadialGradient() { return gradient; },
-    measureText: () => ({ width: 0 }),
-    globalAlpha: 1, fillStyle: '', strokeStyle: '',
-    font: '', textAlign: '', textBaseline: '',
-    lineWidth: 1, setLineDash: noop, getLineDash: () => [],
-    shadowBlur: 0, shadowColor: '',
-  };
-  (canvas as any).getContext = () => mockCtx;
-  return canvas;
-}
 
 // ── 基础功能 ──
 

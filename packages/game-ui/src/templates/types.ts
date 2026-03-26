@@ -2,7 +2,7 @@
  * Template system types — declarative scene configuration.
  */
 
-import type { UINode } from '@lucid-2d/core';
+import type { UINode, SceneNode } from '@lucid-2d/core';
 import type { IconName, ButtonVariant, TabItem } from '@lucid-2d/ui';
 import type { ShopItem } from '../shop-panel.js';
 import type { CoinShopItem } from '../coin-shop-panel.js';
@@ -12,7 +12,7 @@ import type { BattlePassReward } from '../battle-pass-panel.js';
 /** Minimal app interface — avoids depending on @lucid-2d/engine */
 export interface TemplateApp {
   screen: { width: number; height: number };
-  router: { push(scene: any): void; replace(scene: any): void; pop(): void; current?: any };
+  router: { push(scene: SceneNode): void; replace(scene: SceneNode): void; pop(): void; current?: SceneNode };
   root: UINode;
   tick(dt: number): void;
 }
