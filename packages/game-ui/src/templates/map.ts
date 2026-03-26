@@ -13,7 +13,7 @@ export function buildMap(scene: TemplateScene, config: MapConfig, app: TemplateA
   const h = scene.height;
 
   // ── Header ──
-  const safeTop = app.screen.safeTop ?? 44;
+  const safeTop = app.screen.safeTop || 44;
   const backBtn = new IconButton({ id: 'back', icon: 'back', size: 44 });
   backBtn.x = 16;
   backBtn.y = safeTop;

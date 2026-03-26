@@ -244,7 +244,7 @@ class HeadlessAdapter implements PlatformAdapter {
   }
 
   getScreenInfo(): ScreenInfo {
-    return { width: this.w, height: this.h, dpr: 2, safeTop: 0, safeBottom: this.h };
+    return { width: this.w, height: this.h, dpr: 2, safeTop: 0, safeBottom: 0 };
   }
 
   getCanvas() { return this.canvas; }

@@ -48,7 +48,7 @@ function isActionCode(id: string): id is ActionCode {
 export function buildMenu(scene: TemplateScene, config: MenuConfig, app: TemplateApp): void {
   const w = scene.width;
   const h = scene.height;
-  const safeTop = app.screen.safeTop ?? 44;
+  const safeTop = app.screen.safeTop || 44;
   const safeBottom = app.screen.safeBottom ?? 0;
 
   // Track dynamic updaters for refresh()

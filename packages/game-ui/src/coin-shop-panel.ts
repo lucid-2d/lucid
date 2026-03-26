@@ -86,8 +86,8 @@ export class CoinShopPanel extends UINode {
     closeBtn.$on('tap', () => this.$emit('close'));
     this.addChild(closeBtn);
 
-    const title = new Label({ text: '金币商店', fontSize: 18, fontWeight: 'bold', color: UIColors.text, align: 'center', width: 390, height: 30 });
-    title.y = 16;
+    const title = new Label({ text: '金币商店', fontSize: 18, fontWeight: 'bold', color: UIColors.text, align: 'center', width: 390, height: 44 });
+    title.y = 8;
     this.addChild(title);
 
     // Coin balance with icon

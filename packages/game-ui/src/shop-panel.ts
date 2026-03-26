@@ -116,12 +116,12 @@ export class ShopPanel extends UINode {
     closeBtn.$on('tap', () => this.$emit('close'));
     this.addChild(closeBtn);
 
-    const title = new Label({ text: '商店', fontSize: 18, fontWeight: 'bold', color: UIColors.text, align: 'center', width: 390, height: 30 });
-    title.y = 16;
+    const title = new Label({ text: '商店', fontSize: 18, fontWeight: 'bold', color: UIColors.text, align: 'center', width: 390, height: 44 });
+    title.y = 8;
     this.addChild(title);
 
-    this._tabBar = new TabBar({ id: 'tab-bar', tabs: props.tabs, activeKey: this._activeTab, width: 390, height: 40 });
-    this._tabBar.y = 56;
+    this._tabBar = new TabBar({ id: 'tab-bar', tabs: props.tabs, activeKey: this._activeTab, width: 390, height: 44 });
+    this._tabBar.y = 52;
     this._tabBar.$on('change', (key: string) => {
       this._activeTab = key;
       this._selectedItem = null;

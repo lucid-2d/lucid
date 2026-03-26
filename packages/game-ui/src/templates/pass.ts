@@ -15,7 +15,7 @@ export function buildPass(scene: TemplateScene, config: PassConfig, app: Templat
   const h = scene.height;
 
   // ── Back button ──
-  const safeTop = app.screen.safeTop ?? 44;
+  const safeTop = app.screen.safeTop || 44;
   const backBtn = new IconButton({ id: 'back', icon: 'back', size: 44 });
   backBtn.x = 16;
   backBtn.y = safeTop;

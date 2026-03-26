@@ -16,7 +16,7 @@ import type { TemplateScene } from './template-scene.js';
 export function buildGameplay(scene: TemplateScene, config: GameplayConfig, app: TemplateApp): void {
   const w = scene.width;
   const h = scene.height;
-  const safeTop = app.screen.safeTop ?? 44;
+  const safeTop = app.screen.safeTop || 44;
 
   // ── Game area (full screen container for game logic) ──
   const gameArea = new UINode({ id: '__game-area', width: w, height: h });
