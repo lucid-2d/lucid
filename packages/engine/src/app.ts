@@ -143,6 +143,50 @@ export interface App {
   simulateTouch(x: number, y: number): UINode | null;
 
   /**
+   * Simulate a swipe gesture from one point to another.
+   * Generates touchstart → touchmove × steps → touchend, ticking between moves.
+   *
+   * ```typescript
+   * app.simulateSwipe(200, 700, 100, 700);        // left swipe, default 300ms
+   * app.simulateSwipe(200, 700, 100, 700, 200);   // left swipe, 200ms
+   * ```
+   */
+  simulateSwipe(fromX: number, fromY: number, toX: number, toY: number, durationMs?: number): void;
+
+  /**
+   * Wait until the current scene matches the given id.
+   * Ticks the game loop internally, yielding between frames.
+   *
+   * ```typescript
+   * tap(app, 'play-btn');
+   * await app.waitForScene('game');
+   * ```
+   */
+  waitForScene(sceneId: string, opts?: { timeout?: number }): Promise<void>;
+
+  /**
+   * Wait until a node matching the selector appears in the tree.
+   * Supports id (#play), class name (Button), or descendant queries.
+   *
+   * ```typescript
+   * await app.waitForNode('#score');
+   * ```
+   */
+  waitForNode(selector: string, opts?: { timeout?: number }): Promise<UINode>;
+
+  /**
+   * Wait until a custom condition returns true.
+   * Ticks the game loop internally.
+   *
+   * ```typescript
+   * await app.waitForCondition(() =>
+   *   parseInt(app.root.$query('#score')?.$text ?? '0') > 100
+   * );
+   * ```
+   */
+  waitForCondition(fn: () => boolean, opts?: { timeout?: number }): Promise<void>;
+
+  /**
    * Apply a named preset on the current scene.
    * Scenes declare presets via `$presets()`.
    *
@@ -478,6 +522,85 @@ export function createApp(options: AppOptions = {}): App {
       hit.$emit('touchstart', event);
       hit.$emit('touchend', event);
       return hit;
+    },
+
+    simulateSwipe(fromX: number, fromY: number, toX: number, toY: number, durationMs = 300): void {
+      const steps = Math.max(1, Math.round(durationMs / 16));
+      const dtPerStep = durationMs / steps;
+
+      // touchstart at origin
+      const startHit = root.hitTest(fromX, fromY);
+      if (startHit) {
+        const local = startHit.worldToLocal(fromX, fromY);
+        startHit.$emit('touchstart', { x: fromX, y: fromY, localX: local.x, localY: local.y, worldX: fromX, worldY: fromY });
+      }
+
+      // touchmove interpolated steps + tick between each
+      for (let i = 1; i <= steps; i++) {
+        const t = i / steps;
+        const mx = fromX + (toX - fromX) * t;
+        const my = fromY + (toY - fromY) * t;
+        const moveHit = root.hitTest(mx, my);
+        if (moveHit) {
+          const local = moveHit.worldToLocal(mx, my);
+          moveHit.$emit('touchmove', { x: mx, y: my, localX: local.x, localY: local.y, worldX: mx, worldY: my });
+        }
+        tick(dtPerStep);
+      }
+
+      // touchend at destination
+      const endHit = root.hitTest(toX, toY);
+      if (endHit) {
+        const local = endHit.worldToLocal(toX, toY);
+        endHit.$emit('touchend', { x: toX, y: toY, localX: local.x, localY: local.y, worldX: toX, worldY: toY });
+      }
+    },
+
+    async waitForScene(sceneId: string, opts?: { timeout?: number }): Promise<void> {
+      const timeout = opts?.timeout ?? 5000;
+      let elapsed = 0;
+      const dt = 16;
+      while (router.current?.id !== sceneId) {
+        if (elapsed >= timeout) {
+          throw new Error(`[lucid] waitForScene('${sceneId}') timed out after ${timeout}ms (current: ${router.current?.id ?? 'none'})`);
+        }
+        tick(dt);
+        elapsed += dt;
+        await new Promise(r => setTimeout(r, 0));
+      }
+    },
+
+    async waitForNode(selector: string, opts?: { timeout?: number }): Promise<UINode> {
+      const timeout = opts?.timeout ?? 5000;
+      let elapsed = 0;
+      const dt = 16;
+      while (true) {
+        // #id → findById (fast), otherwise $query
+        const found = selector.startsWith('#')
+          ? root.findById(selector.slice(1))
+          : root.$query(selector)[0] ?? null;
+        if (found) return found;
+        if (elapsed >= timeout) {
+          throw new Error(`[lucid] waitForNode('${selector}') timed out after ${timeout}ms`);
+        }
+        tick(dt);
+        elapsed += dt;
+        await new Promise(r => setTimeout(r, 0));
+      }
+    },
+
+    async waitForCondition(fn: () => boolean, opts?: { timeout?: number }): Promise<void> {
+      const timeout = opts?.timeout ?? 5000;
+      let elapsed = 0;
+      const dt = 16;
+      while (!fn()) {
+        if (elapsed >= timeout) {
+          throw new Error(`[lucid] waitForCondition timed out after ${timeout}ms`);
+        }
+        tick(dt);
+        elapsed += dt;
+        await new Promise(r => setTimeout(r, 0));
+      }
     },
 
     applyPreset(name: string): boolean {
