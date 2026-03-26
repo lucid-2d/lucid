@@ -150,7 +150,7 @@ describe('MenuTemplate', () => {
     scene.onEnter();
     const badge = scene.findById('coins');
     expect(badge).toBeDefined();
-    badge!.$emit('touchend');
+    badge!.$emit('tap');
     expect(tapped).toBe(true);
   });
 
@@ -244,7 +244,7 @@ describe('MenuTemplate', () => {
     scene.onEnter();
     const ach = scene.findById('achievements');
     expect(ach).toBeDefined();
-    ach!.$emit('touchend');
+    ach!.$emit('tap');
     expect(achievementOpened).toBe(true);
     expect(scene.findById('battlepass')).toBeDefined();
   });
@@ -319,7 +319,7 @@ describe('MenuTemplate', () => {
 
     const checkinBtn = scene.findById('checkin');
     expect(checkinBtn).toBeDefined();
-    checkinBtn!.$emit('touchend');
+    checkinBtn!.$emit('tap');
     expect(scene.findById('checkin-modal')).toBeDefined();
   });
 
@@ -335,7 +335,7 @@ describe('MenuTemplate', () => {
 
     const btn = scene.findById('lucky-box');
     expect(btn).toBeDefined();
-    btn!.$emit('touchend');
+    btn!.$emit('tap');
     expect(scene.findById('lucky-box-modal')).toBeDefined();
   });
 
@@ -380,11 +380,11 @@ describe('MenuTemplate', () => {
       ],
     }));
     scene.onEnter();
-    expect(scene.findById('coins-text')!.$text).toBe('100');
+    expect(scene.findById('coins')!.$text).toContain('100');
 
     coins = 250;
     scene.refresh();
-    expect(scene.findById('coins-text')!.$text).toBe('250');
+    expect(scene.findById('coins')!.$text).toContain('250');
   });
 
   // ── Disabled state ──
@@ -405,7 +405,7 @@ describe('MenuTemplate', () => {
     expect(tapped).toBe(false); // should NOT fire when disabled
   });
 
-  it('disabled Zone D item has reduced opacity', () => {
+  it('disabled Zone D item is disabled', () => {
     const app = makeApp();
     const scene = createScene(app, makeMenuConfig({
       zoneD: [
@@ -413,9 +413,9 @@ describe('MenuTemplate', () => {
       ],
     }));
     scene.onEnter();
-    const item = scene.findById('achievements');
+    const item = scene.findById('achievements') as any;
     expect(item).toBeDefined();
-    expect(item!.alpha).toBe(0.5);
+    expect(item.disabled).toBe(true);
   });
 
   it('dynamic disabled updates on refresh', () => {
@@ -427,11 +427,11 @@ describe('MenuTemplate', () => {
       ],
     }));
     scene.onEnter();
-    expect(scene.findById('achievements')!.alpha).toBe(1);
+    expect((scene.findById('achievements') as any).disabled).toBe(false);
 
     isDisabled = true;
     scene.refresh();
-    expect(scene.findById('achievements')!.alpha).toBe(0.5);
+    expect((scene.findById('achievements') as any).disabled).toBe(true);
   });
 
   // ── Validation errors ──

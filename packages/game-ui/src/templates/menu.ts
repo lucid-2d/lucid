@@ -70,53 +70,27 @@ export function buildMenu(scene: TemplateScene, config: MenuConfig, app: Templat
     const ay = safeTop + 6;
 
     for (const badge of config.zoneA) {
-      const iconW = badge.icon ? 18 : 0;
       const textVal = resolveText(badge.text);
-      const textW = textVal.length * 10 + 8;
-      const badgeW = iconW + textW + 8;
-      const badgeH = 28;
-      const container = new UINode({ id: badge.id, width: badgeW, height: badgeH });
-      container.interactive = true;
-      container.x = ax;
-      container.y = ay;
-      container.$on('touchstart', () => {});
-      container.$on('touchend', () => badge.onTap());
-
-      let contentX = 4;
-
-      // Badge icon
-      if (badge.icon) {
-        const iconNode = new Icon({
-          id: `${badge.id}-icon`,
-          name: badge.icon,
-          size: 14,
-        });
-        iconNode.x = contentX;
-        iconNode.y = Math.round((badgeH - 14) / 2);
-        container.addChild(iconNode);
-        contentX += 18;
-      }
-
-      // Badge text label
-      const label = new Label({
-        id: `${badge.id}-text`,
-        text: textVal,
+      const badgeText = badge.icon ? `  ${textVal}` : textVal;
+      const badgeBtn = new Button({
+        id: badge.id,
+        text: badgeText,
+        variant: 'ghost',
+        width: 80,
+        height: 32,
         fontSize: 12,
-        color: UIColors.text,
-        align: 'left',
-        width: textW,
-        height: badgeH,
       });
-      label.x = contentX;
-      container.addChild(label);
+      badgeBtn.x = ax;
+      badgeBtn.y = ay;
+      badgeBtn.$on('tap', () => badge.onTap());
+      scene.addChild(badgeBtn);
 
       if (typeof badge.text === 'function') {
         const getter = badge.text;
-        updaters.push(() => { label.text = getter(); });
+        updaters.push(() => { badgeBtn.text = badge.icon ? `  ${getter()}` : getter(); });
       }
 
-      scene.addChild(container);
-      ax += badgeW + 8;
+      ax += 88;
     }
   }
 
@@ -356,8 +330,8 @@ export function buildMenu(scene: TemplateScene, config: MenuConfig, app: Templat
     const toggleGap = 36;
     const iconSz = 16;
     const iconToggleGap = 8;
-    const toggleSw = 40;
-    const toggleSh = 22;
+    const toggleSw = 44;
+    const toggleSh = 44;
     const itemW = iconSz + iconToggleGap + toggleSw;
     const totalTogglesW = config.toggles.length * itemW + (config.toggles.length - 1) * toggleGap;
     let tx = Math.round((w - totalTogglesW) / 2);
@@ -398,10 +372,10 @@ export function buildMenu(scene: TemplateScene, config: MenuConfig, app: Templat
 
   // ── Footer links (help + restorePurchase) ──
   // Position these above Zone D
-  const bottomAnchor = h - 24; // very bottom for version
-  const privacyY = bottomAnchor - 20; // privacy link
-  const zoneDY = privacyY - 52; // zone D row
-  const footerY = zoneDY - 28; // footer links
+  const bottomAnchor = h - 16; // very bottom for version
+  const privacyY = bottomAnchor - 18; // privacy link (above version)
+  const zoneDY = privacyY - 56; // zone D row (above privacy)
+  const footerY = zoneDY - 32; // footer links (above zone D)
 
   if (config.help || config.restorePurchase) {
     let fx = Math.round(w / 2);
@@ -446,54 +420,30 @@ export function buildMenu(scene: TemplateScene, config: MenuConfig, app: Templat
       const icon = item.icon ?? def?.icon;
       const text = item.text ?? def?.text ?? item.id;
 
-      const container = new UINode({ id: item.id, width: slotW, height: 44 });
-      container.interactive = true;
-      container.x = dx;
-      container.y = zoneDY;
-
-      // Icon
-      if (icon) {
-        const iconNode = new Icon({
-          id: `${item.id}-icon`,
-          name: icon,
-          size: 20,
-        });
-        iconNode.x = Math.round((slotW - 20) / 2);
-        iconNode.y = 2;
-        container.addChild(iconNode);
-      }
-
-      // Text
-      const label = new Label({
-        id: `${item.id}-text`,
+      const disabled = resolveDisabled(item.disabled);
+      const btn = new Button({
+        id: item.id,
         text,
-        fontSize: 10,
-        color: UIColors.textSecondary,
-        align: 'center',
+        variant: 'ghost',
         width: slotW,
-        height: 14,
+        height: 44,
+        fontSize: 10,
+        disabled,
       });
-      label.y = 26;
-      container.addChild(label);
+      btn.x = dx;
+      btn.y = zoneDY;
 
-      // Disabled state
-      if (resolveDisabled(item.disabled)) {
-        container.alpha = 0.5;
-      }
-
-      // UINode doesn't emit 'tap' — bridge touchend → tap
       const handler = resolveZoneHandler(item, config);
-      container.$on('touchstart', () => {});
-      container.$on('touchend', () => {
+      btn.$on('tap', () => {
         if (!resolveDisabled(item.disabled)) handler(scene, config, app);
       });
 
       if (typeof item.disabled === 'function') {
         const getter = item.disabled;
-        updaters.push(() => { container.alpha = getter() ? 0.5 : 1; });
+        updaters.push(() => { btn.disabled = getter(); });
       }
 
-      scene.addChild(container);
+      scene.addChild(btn);
       dx += slotW;
     }
   }
@@ -526,21 +476,9 @@ export function buildMenu(scene: TemplateScene, config: MenuConfig, app: Templat
     scene.addChild(btn);
   }
 
-  // ── Privacy link (bottom center) ──
-  const privacyBtn = new Button({
-    id: 'privacy',
-    text: '隐私协议',
-    variant: 'ghost',
-    width: 120,
-    height: 44,
-    fontSize: 12,
-  });
-  privacyBtn.x = Math.round((w - 120) / 2);
-  privacyBtn.y = privacyY - 12;
-  privacyBtn.$on('tap', () => openPrivacy(scene, config, app));
-  scene.addChild(privacyBtn);
-
-  // ── Version ──
+  // ── Privacy + Version (stacked at bottom, no overlap) ──
+  // Version at very bottom
+  let bottomY = h - 8;
   if (config.version) {
     const verLabel = new Label({
       id: 'version',
@@ -551,10 +489,28 @@ export function buildMenu(scene: TemplateScene, config: MenuConfig, app: Templat
       width: w,
       height: 14,
     });
-    verLabel.y = bottomAnchor;
+    bottomY -= 14;
+    verLabel.y = bottomY;
     verLabel.alpha = 0.5;
     scene.addChild(verLabel);
+    bottomY -= 2;
   }
+
+  // Privacy above version
+  const privacyH = 28;
+  bottomY -= privacyH;
+  const privacyBtn = new Button({
+    id: 'privacy',
+    text: '隐私协议',
+    variant: 'ghost',
+    width: 120,
+    height: privacyH,
+    fontSize: 11,
+  });
+  privacyBtn.x = Math.round((w - 120) / 2);
+  privacyBtn.y = bottomY;
+  privacyBtn.$on('tap', () => openPrivacy(scene, config, app));
+  scene.addChild(privacyBtn);
 
   // ── Background draw ──
   if (config.drawBackground) {
