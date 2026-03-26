@@ -8,7 +8,7 @@ import { UINode } from '@lucid-2d/core';
 import { SceneNode, type App } from '@lucid-2d/engine';
 import { Label, ProgressBar, UIColors } from '@lucid-2d/ui';
 import { QUESTIONS, type Question } from '../questions.js';
-import { ResultScene } from './result.js';
+import { createResultScene } from './result.js';
 
 const W = 390, H = 844;
 const TOTAL_QUESTIONS = 5;
@@ -155,7 +155,7 @@ export class QuizScene extends SceneNode {
   private nextQuestion() {
     this.current++;
     if (this.current >= this.questions.length) {
-      this.app.router.replace(new ResultScene(this.app, this.score, this.current));
+      this.app.router.replace(createResultScene(this.app, this.score, this.current));
     } else {
       this.showQuestion();
     }

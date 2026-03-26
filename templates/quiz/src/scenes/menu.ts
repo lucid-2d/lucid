@@ -1,34 +1,36 @@
 /**
- * Quiz Menu Scene
+ * Quiz Menu Scene — using createScene() template
  */
-import { SceneNode, type App } from '@lucid-2d/engine';
-import { Button, Label, UIColors } from '@lucid-2d/ui';
+import type { App } from '@lucid-2d/engine';
+import { createScene } from '@lucid-2d/game-ui';
+import { UIColors } from '@lucid-2d/ui';
 import { QuizScene } from './quiz.js';
 
-const W = 390, H = 844;
+export function createMenuScene(app: App) {
+  return createScene(app, {
+    template: 'menu',
+    title: 'Quiz Game',
+    subtitle: 'Test your knowledge',
 
-export class MenuScene extends SceneNode {
-  constructor(private app: App) {
-    super({
-      id: 'menu', width: W, height: H,
-      layout: 'column', alignItems: 'center', justifyContent: 'center', gap: 16,
-    });
-  }
+    play: () => app.router.replace(new QuizScene(app)),
 
-  onEnter() {
-    this.addChild(new Label({ text: 'Quiz Game', fontSize: 40, fontWeight: 'bold', color: UIColors.primary, align: 'center', width: 300, height: 50 }));
-    this.addChild(new Label({ text: 'Test your knowledge', fontSize: 16, color: UIColors.textMuted, align: 'center', width: 300, height: 24 }));
+    settings: {
+      toggles: [
+        { id: 'sound', label: 'Sound', value: true },
+      ],
+      onToggle: (id, value) => console.log(`[settings] ${id} = ${value}`),
+    },
 
-    const playBtn = new Button({ id: 'play', text: 'Start Quiz', variant: 'primary', width: 200, height: 54 });
-    playBtn.$on('tap', () => this.app.router.replace(new QuizScene(this.app)));
-    this.addChild(playBtn);
-  }
+    privacy: {
+      content: 'This game does not collect personal data.',
+    },
 
-  protected draw(ctx: CanvasRenderingContext2D) {
-    const grad = ctx.createLinearGradient(0, 0, 0, H);
-    grad.addColorStop(0, UIColors.bgTop);
-    grad.addColorStop(1, UIColors.bgBottom);
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, W, H);
-  }
+    drawBackground: (ctx, w, h) => {
+      const grad = ctx.createLinearGradient(0, 0, 0, h);
+      grad.addColorStop(0, UIColors.bgTop);
+      grad.addColorStop(1, UIColors.bgBottom);
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, w, h);
+    },
+  });
 }

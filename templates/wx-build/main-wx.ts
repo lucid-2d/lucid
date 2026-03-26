@@ -1,20 +1,16 @@
 /**
  * WeChat Mini Game entry point.
  *
- * Differences from Web entry (main.ts):
- * - WxAdapter instead of WebAdapter (auto-detected via platform: 'wx')
- * - assetRoot: 'img/' for relative paths (WX loads from package root)
- * - No document.getElementById — WX creates canvas automatically
+ * boot() auto-detects WX platform — no manual adapter setup needed.
+ * assetRoot: 'img/' for relative paths (WX loads from package root).
  */
-import { createApp } from '@lucid-2d/engine';
-// import { MenuScene } from './scenes/menu.js';
+import { boot } from '@lucid-2d/engine';
+// import { createMenuScene } from './scenes/menu.js';
 
-const app = createApp({
-  platform: 'wx',
+boot({
   assetRoot: 'img/',   // WX assets are relative to package root
   debug: false,        // disable in production
-  // fixedTimestep: 1/60,
+  async onReady(app) {
+    // await app.router.push(createMenuScene(app));
+  },
 });
-
-// app.router.push(new MenuScene(app));
-app.start();
