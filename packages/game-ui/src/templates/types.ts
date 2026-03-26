@@ -11,7 +11,7 @@ import type { BattlePassReward } from '../battle-pass-panel.js';
 
 /** Minimal app interface — avoids depending on @lucid-2d/engine */
 export interface TemplateApp {
-  screen: { width: number; height: number };
+  screen: { width: number; height: number; safeTop?: number; safeBottom?: number };
   router: { push(scene: SceneNode): void; replace(scene: SceneNode): void; pop(): void; current?: SceneNode };
   root: UINode;
   tick(dt: number): void;

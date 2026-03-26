@@ -48,7 +48,8 @@ function isActionCode(id: string): id is ActionCode {
 export function buildMenu(scene: TemplateScene, config: MenuConfig, app: TemplateApp): void {
   const w = scene.width;
   const h = scene.height;
-  const safeTop = 44;
+  const safeTop = app.screen.safeTop ?? 44;
+  const safeBottom = app.screen.safeBottom ?? 0;
 
   // Track dynamic updaters for refresh()
   const updaters: Array<() => void> = [];
@@ -372,7 +373,7 @@ export function buildMenu(scene: TemplateScene, config: MenuConfig, app: Templat
 
   // ── Footer links (help + restorePurchase) ──
   // Position these above Zone D
-  const bottomAnchor = h - 16; // very bottom for version
+  const bottomAnchor = h - safeBottom - 8; // very bottom for version (respects safe area)
   const privacyY = bottomAnchor - 18; // privacy link (above version)
   const zoneDY = privacyY - 56; // zone D row (above privacy)
   const footerY = zoneDY - 32; // footer links (above zone D)

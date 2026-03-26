@@ -13,9 +13,10 @@ export function buildMap(scene: TemplateScene, config: MapConfig, app: TemplateA
   const h = scene.height;
 
   // ── Header ──
+  const safeTop = app.screen.safeTop ?? 44;
   const backBtn = new IconButton({ id: 'back', icon: 'back', size: 44 });
   backBtn.x = 16;
-  backBtn.y = 44;
+  backBtn.y = safeTop;
   backBtn.$on('tap', () => config.back());
   scene.addChild(backBtn);
 
@@ -30,13 +31,14 @@ export function buildMap(scene: TemplateScene, config: MapConfig, app: TemplateA
       width: w,
       height: 30,
     });
-    title.y = 50;
+    title.y = safeTop + 6;
     scene.addChild(title);
   }
 
   // ── Map area (custom content) ──
-  const mapArea = new UINode({ id: 'map-area', width: w, height: h - 100 });
-  mapArea.y = 100;
+  const headerH = safeTop + 50;
+  const mapArea = new UINode({ id: 'map-area', width: w, height: h - headerH });
+  mapArea.y = headerH;
   scene.addChild(mapArea);
   config.setup(mapArea, app);
 

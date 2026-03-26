@@ -16,6 +16,7 @@ import type { TemplateScene } from './template-scene.js';
 export function buildGameplay(scene: TemplateScene, config: GameplayConfig, app: TemplateApp): void {
   const w = scene.width;
   const h = scene.height;
+  const safeTop = app.screen.safeTop ?? 44;
 
   // ── Game area (full screen container for game logic) ──
   const gameArea = new UINode({ id: '__game-area', width: w, height: h });
@@ -34,7 +35,7 @@ export function buildGameplay(scene: TemplateScene, config: GameplayConfig, app:
       gap: 24,
     });
     hudContainer.x = 0;
-    hudContainer.y = 48; // below safe area
+    hudContainer.y = safeTop + 4;
 
     for (const [key, getter] of Object.entries(config.hud)) {
       const lbl = new Label({
@@ -65,7 +66,7 @@ export function buildGameplay(scene: TemplateScene, config: GameplayConfig, app:
     size: 44,
   });
   pauseBtn.x = 16;
-  pauseBtn.y = 44;
+  pauseBtn.y = safeTop;
   scene.addChild(pauseBtn);
 
   // ── PauseModal (created at build time, hidden until pause tapped) ──
