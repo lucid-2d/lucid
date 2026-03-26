@@ -40,23 +40,23 @@ export const UIColors = {
   // 文字
   get text() { return getTheme().colors.text.primary; },
   get textSecondary() { return getTheme().colors.text.secondary; },
-  get textLight() { return 'rgba(255,255,255,0.8)'; },
-  get textMuted() { return 'rgba(255,255,255,0.5)'; },
-  get textHint() { return 'rgba(255,255,255,0.3)'; },
+  get textLight() { return getTheme().colors.text.light; },
+  get textMuted() { return getTheme().colors.text.muted; },
+  get textHint() { return getTheme().colors.text.hint; },
 
   // 面板 / 弹窗
   get panelFill() { return getTheme().colors.panel.fill; },
   get panelBorder() { return getTheme().colors.panel.border; },
-  get overlayBg() { return 'rgba(0,0,0,0.65)'; },
+  get overlayBg() { return getTheme().colors.overlay; },
 
   // 全屏背景渐变
   get bgTop() { return getTheme().colors.background.top; },
   get bgBottom() { return getTheme().colors.background.bottom; },
 
   // 卡片 / 表面
-  get cardBg() { return 'rgba(255,255,255,0.06)'; },
-  get trackBg() { return 'rgba(255,255,255,0.1)'; },
-  get divider() { return 'rgba(255,255,255,0.06)'; },
+  get cardBg() { return getTheme().colors.card.bg; },
+  get trackBg() { return getTheme().colors.card.border; },
+  get divider() { return getTheme().colors.divider; },
 
   // 状态
   get success() { return getTheme().colors.status.success; },
@@ -64,26 +64,35 @@ export const UIColors = {
   get warning() { return getTheme().colors.status.warning; },
 
   // 按钮渐变
-  get goldStart() { return '#f59e0b'; },
-  get goldEnd() { return '#d97706'; },
-  get dangerStart() { return '#e94560'; },
-  get dangerEnd() { return '#d32f4f'; },
+  get goldStart() { return getTheme().colors.gold.start; },
+  get goldEnd() { return getTheme().colors.gold.end; },
+  get dangerStart() { return getTheme().colors.danger.start; },
+  get dangerEnd() { return getTheme().colors.danger.end; },
+
+  // 按钮文字
+  get buttonText() { return getTheme().colors.button.text; },
+  get buttonOutlineText() { return getTheme().colors.button.outlineText; },
+  get buttonGhostText() { return getTheme().colors.button.ghostText; },
+
+  // Toggle
+  get toggleOn() { return getTheme().colors.toggle.on; },
+  get toggleOff() { return getTheme().colors.toggle.off; },
 };
 
-// ── 布局常量 ──────────────────────────────────
+// ── 布局（从 theme.spacing + theme.radii 读取） ──
 
 export const UILayout = {
-  contentPadX: 16,
+  get contentPadX() { return getTheme().spacing.contentPadX; },
   panelMaxWidth: (screenW: number) => Math.min(screenW - 40, 340),
-  buttonGapV: 12,
+  get buttonGapV() { return getTheme().spacing.buttonGap; },
   buttonGapH: 10,
   buttonPadH: 16,
   buttonPadV: 12,
-  minTouchSize: 44,
-  panelRadius: 12,
+  get minTouchSize() { return getTheme().spacing.minTouchSize; },
+  get panelRadius() { return getTheme().radii.panel; },
   panelBorderWidth: 1,
   closeButtonSize: 28,
-  closeButtonMargin: 16,
+  get closeButtonMargin() { return getTheme().spacing.panelPadding; },
   headerHeight: 44,
   footerHeight: 56,
 };

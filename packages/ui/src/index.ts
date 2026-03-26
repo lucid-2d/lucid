@@ -3,7 +3,7 @@
  */
 
 // 主题 + Design Tokens
-export { getTheme, setTheme, type Theme } from './theme.js';
+export { getTheme, setTheme, resetTheme, type Theme, type ThemeColors, type ThemeTypography, type ThemeSpacing, type ThemeRadii } from './theme.js';
 export {
   UIColors, UILayout, ToastConfig, ModalSizes,
   ButtonSizes, buttonWidth, GridConfig, GridColumns, ListItemHeights,
