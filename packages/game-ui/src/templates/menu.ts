@@ -421,26 +421,26 @@ export function buildMenu(scene: TemplateScene, config: MenuConfig, app: Templat
       const text = item.text ?? def?.text ?? item.id;
 
       const disabled = resolveDisabled(item.disabled);
-      const btn = new Button({
+      const handler = resolveZoneHandler(item, config);
+
+      // IconButton with optional label — single component, passes audit
+      const btn = new IconButton({
         id: item.id,
-        text,
-        variant: 'ghost',
+        icon: icon ?? 'star',
+        label: text,
+        size: 32,
         width: slotW,
-        height: 44,
-        fontSize: 10,
-        disabled,
       });
       btn.x = dx;
       btn.y = zoneDY;
-
-      const handler = resolveZoneHandler(item, config);
+      if (disabled) btn.alpha = 0.5;
       btn.$on('tap', () => {
         if (!resolveDisabled(item.disabled)) handler(scene, config, app);
       });
 
       if (typeof item.disabled === 'function') {
         const getter = item.disabled;
-        updaters.push(() => { btn.disabled = getter(); });
+        updaters.push(() => { btn.alpha = getter() ? 0.5 : 1; });
       }
 
       scene.addChild(btn);

@@ -13,6 +13,10 @@ export interface IconButtonProps extends UINodeOptions {
   color?: string;
   bgColor?: string;
   badge?: number;
+  /** Optional text label below the icon — turns into a vertical "icon + text" button */
+  label?: string;
+  labelSize?: number;
+  labelColor?: string;
 }
 
 export class IconButton extends UINode {
@@ -21,16 +25,25 @@ export class IconButton extends UINode {
   color: string;
   bgColor: string;
   badge?: number;
+  label?: string;
+  labelSize: number;
+  labelColor: string;
   pressed = false;
 
   constructor(props: IconButtonProps) {
     const sz = props.size ?? 40;
-    super({ ...props, width: props.width ?? sz, height: props.height ?? sz });
+    // With label: expand height to fit icon + text
+    const hasLabel = !!props.label;
+    const labelH = hasLabel ? (props.labelSize ?? 10) + 6 : 0;
+    super({ ...props, width: props.width ?? sz, height: props.height ?? (sz + labelH) });
     this.icon = props.icon;
     this.iconSize = props.iconSize ?? sz * 0.45;
     this.color = props.color ?? UIColors.textLight;
     this.bgColor = props.bgColor ?? UIColors.trackBg;
     this.badge = props.badge;
+    this.label = props.label;
+    this.labelSize = props.labelSize ?? 10;
+    this.labelColor = props.labelColor ?? UIColors.textSecondary;
     this.interactive = true;
 
     this.$on('touchstart', () => { this.pressed = true; });
@@ -41,34 +54,38 @@ export class IconButton extends UINode {
   }
 
   get $text() {
-    return this.badge ? `${this.icon}(${this.badge})` : this.icon;
+    const base = this.label ?? this.icon;
+    return this.badge ? `${base}(${this.badge})` : base;
   }
 
   protected draw(ctx: CanvasRenderingContext2D): void {
-    const sz = this.width;
-    const cx = sz / 2, cy = sz / 2;
+    const w = this.width;
+    const iconAreaH = this.label ? this.height - this.labelSize - 6 : this.height;
+    const cx = w / 2;
+    const iconCy = iconAreaH / 2;
 
     ctx.save();
     if (this.pressed) {
-      ctx.translate(cx, cy);
+      ctx.translate(cx, iconCy);
       ctx.scale(0.9, 0.9);
-      ctx.translate(-cx, -cy);
+      ctx.translate(-cx, -iconCy);
     }
 
-    // Background circle
+    // Background circle (centered in icon area)
+    const r = Math.min(w, iconAreaH) / 2;
     ctx.beginPath();
-    ctx.arc(cx, cy, sz / 2, 0, Math.PI * 2);
+    ctx.arc(cx, iconCy, r, 0, Math.PI * 2);
     ctx.fillStyle = this.pressed ? UIColors.textHint : this.bgColor;
     ctx.fill();
 
     // Icon
-    drawIcon(ctx, this.icon, cx, cy, this.iconSize, this.color);
+    drawIcon(ctx, this.icon, cx, iconCy, this.iconSize, this.color);
 
     // Badge
     if (this.badge !== undefined && this.badge > 0) {
       const badgeR = 8;
-      const bx = sz - badgeR + 2;
-      const by = badgeR - 2;
+      const bx = cx + r - badgeR + 4;
+      const by = iconCy - r + badgeR - 4;
       ctx.beginPath();
       ctx.arc(bx, by, badgeR, 0, Math.PI * 2);
       ctx.fillStyle = UIColors.primary;
@@ -81,5 +98,14 @@ export class IconButton extends UINode {
     }
 
     ctx.restore();
+
+    // Label text below icon
+    if (this.label) {
+      ctx.fillStyle = this.labelColor;
+      ctx.font = `${this.labelSize}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      ctx.fillText(this.label, cx, iconAreaH + 2);
+    }
   }
 }

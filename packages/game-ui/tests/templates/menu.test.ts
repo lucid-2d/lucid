@@ -405,7 +405,7 @@ describe('MenuTemplate', () => {
     expect(tapped).toBe(false); // should NOT fire when disabled
   });
 
-  it('disabled Zone D item is disabled', () => {
+  it('disabled Zone D item has reduced opacity', () => {
     const app = makeApp();
     const scene = createScene(app, makeMenuConfig({
       zoneD: [
@@ -413,9 +413,9 @@ describe('MenuTemplate', () => {
       ],
     }));
     scene.onEnter();
-    const item = scene.findById('achievements') as any;
+    const item = scene.findById('achievements');
     expect(item).toBeDefined();
-    expect(item.disabled).toBe(true);
+    expect(item!.alpha).toBe(0.5);
   });
 
   it('dynamic disabled updates on refresh', () => {
@@ -427,11 +427,11 @@ describe('MenuTemplate', () => {
       ],
     }));
     scene.onEnter();
-    expect((scene.findById('achievements') as any).disabled).toBe(false);
+    expect(scene.findById('achievements')!.alpha).toBe(1);
 
     isDisabled = true;
     scene.refresh();
-    expect((scene.findById('achievements') as any).disabled).toBe(true);
+    expect(scene.findById('achievements')!.alpha).toBe(0.5);
   });
 
   // ── Validation errors ──
