@@ -395,13 +395,13 @@ export function buildMenu(scene: TemplateScene, config: MenuConfig, app: Templat
   }
 
   // ── Privacy (above version) ──
-  bottomY -= 30;
+  bottomY -= 44;
   const privacyBtn = new Button({
     id: 'privacy',
     text: '隐私协议',
     variant: 'ghost',
     width: 120,
-    height: 30,
+    height: 44,
     fontSize: 11,
   });
   privacyBtn.x = Math.round((w - 120) / 2);
