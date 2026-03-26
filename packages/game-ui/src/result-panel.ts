@@ -77,8 +77,8 @@ export class ResultPanel extends UINode {
     this._isNewBest = props.isNewBest;
 
     // Close button
-    const closeBtn = new Button({ id: 'close-btn', text: '×', variant: 'ghost', width: 40, height: 40 });
-    closeBtn.x = 4; closeBtn.y = 12;
+    const closeBtn = new Button({ id: 'close-btn', text: '×', variant: 'ghost', width: 44, height: 44 });
+    closeBtn.x = 4; closeBtn.y = 8;
     closeBtn.$on('tap', () => this.$emit('action', 'close'));
     this.addChild(closeBtn);
 

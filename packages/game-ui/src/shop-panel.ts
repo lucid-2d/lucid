@@ -111,8 +111,8 @@ export class ShopPanel extends UINode {
     this._items = props.items;
     this._activeTab = props.tabs[0]?.key ?? '';
 
-    const closeBtn = new Button({ id: 'close-btn', text: '← 返回', variant: 'ghost', width: 80, height: 36 });
-    closeBtn.x = 4; closeBtn.y = 12;
+    const closeBtn = new Button({ id: 'close-btn', text: '← 返回', variant: 'ghost', width: 80, height: 44 });
+    closeBtn.x = 4; closeBtn.y = 8;
     closeBtn.$on('tap', () => this.$emit('close'));
     this.addChild(closeBtn);
 

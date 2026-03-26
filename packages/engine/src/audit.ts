@@ -275,10 +275,13 @@ rule('no-overlap', 'error', (app, screen) => {
       !shouldSkipNode(c) && isVisible(c) && !isModalType(c) && getEffectiveAlpha(c) >= 0.1
       && c.width > 0 && c.height > 0
     );
+    const screenArea = screen.width * screen.height;
     for (let i = 0; i < visible.length; i++) {
       for (let j = i + 1; j < visible.length; j++) {
         const a = getWorldBounds(visible[i]);
         const b = getWorldBounds(visible[j]);
+        // Skip full-screen panel siblings (back button + full-screen ShopPanel is intentional)
+        if (a.w * a.h >= screenArea * 0.9 || b.w * b.h >= screenArea * 0.9) continue;
         if (rectsOverlap(a, b)) {
           issues.push(buildIssue('no-overlap', 'error', visible[i],
             `Overlaps with ${visible[j].id || visible[j].$type} (${Math.round(a.x)},${Math.round(a.y)} ${a.w}x${a.h} vs ${Math.round(b.x)},${Math.round(b.y)} ${b.w}x${b.h})`));

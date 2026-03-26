@@ -75,11 +75,22 @@ const CJK_FONT_CANDIDATES: Array<{ path: string; family: string }> = [
 
 const LUCID_CJK_FAMILY = 'LucidCJK';
 
+function _getFs(): typeof import('fs') {
+  try {
+    return require('fs');
+  } catch {
+    // ESM context — createRequire fallback
+    const { createRequire } = require('module');
+    const r = createRequire(typeof __filename !== 'undefined' ? __filename : process.cwd() + '/__test.js');
+    return r('fs');
+  }
+}
+
 function registerSystemCJKFonts(napiCanvas: any): void {
   if (_cjkFontsRegistered) return;
   _cjkFontsRegistered = true;
 
-  const fs = require('fs');
+  const fs = _getFs();
   const GlobalFonts = napiCanvas.GlobalFonts;
   if (!GlobalFonts?.registerFromPath) return;
 
@@ -413,7 +424,7 @@ export function createTestApp(opts?: TestAppOptions): TestApp {
   };
 
   testApp.saveImage = (path: string) => {
-    const fs = require('fs');
+    const fs = _getFs();
     fs.writeFileSync(path, testApp.toImage());
   };
 
