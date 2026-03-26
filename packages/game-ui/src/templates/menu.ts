@@ -371,43 +371,50 @@ export function buildMenu(scene: TemplateScene, config: MenuConfig, app: Templat
     curY = toggleY + 32;
   }
 
-  // ── Footer links (help + restorePurchase) ──
-  // Position these above Zone D
-  const bottomAnchor = h - safeBottom - 8; // very bottom for version (respects safe area)
-  const privacyY = bottomAnchor - 18; // privacy link (above version)
-  const zoneDY = privacyY - 56; // zone D row (above privacy)
-  const footerY = zoneDY - 32; // footer links (above zone D)
+  // ══ Bottom section — stacked from bottom upward ══
+  // All bottom elements use a single `bottomY` cursor to avoid overlap.
 
-  if (config.help || config.restorePurchase) {
-    let fx = Math.round(w / 2);
-    const items: Array<{ id: string; text: string; handler: () => void }> = [];
-    if (config.help) items.push({ id: 'help', text: '帮助', handler: config.help });
-    if (config.restorePurchase) items.push({ id: 'restore', text: '恢复购买', handler: config.restorePurchase });
+  let bottomY = h - safeBottom - 4;
 
-    const linkW = 80;
-    const linkGap = 8;
-    const totalLinkW = items.length * linkW + (items.length - 1) * linkGap;
-    fx = Math.round((w - totalLinkW) / 2);
-
-    for (const item of items) {
-      const btn = new Button({
-        id: item.id,
-        text: item.text,
-        variant: 'ghost',
-        width: linkW,
-        height: 24,
-        fontSize: 11,
-      });
-      btn.x = fx;
-      btn.y = footerY;
-      btn.$on('tap', () => item.handler());
-      scene.addChild(btn);
-      fx += linkW + linkGap;
-    }
+  // ── Version (very bottom) ──
+  if (config.version) {
+    bottomY -= 14;
+    const verLabel = new Label({
+      id: 'version',
+      text: config.version,
+      fontSize: 10,
+      color: UIColors.textSecondary,
+      align: 'center',
+      width: w,
+      height: 14,
+    });
+    verLabel.y = bottomY;
+    verLabel.alpha = 0.5;
+    scene.addChild(verLabel);
+    bottomY -= 2;
   }
 
-  // ── Zone D — Bottom Bar ──
+  // ── Privacy (above version) ──
+  bottomY -= 30;
+  const privacyBtn = new Button({
+    id: 'privacy',
+    text: '隐私协议',
+    variant: 'ghost',
+    width: 120,
+    height: 30,
+    fontSize: 11,
+  });
+  privacyBtn.x = Math.round((w - 120) / 2);
+  privacyBtn.y = bottomY;
+  privacyBtn.$on('tap', () => openPrivacy(scene, config, app));
+  scene.addChild(privacyBtn);
+  bottomY -= 4;
+
+  // ── Zone D — Bottom Bar (above privacy) ──
+  const zoneDH = 48;
   if (config.zoneD && config.zoneD.length > 0) {
+    bottomY -= zoneDH;
+    const zoneDY = bottomY;
     const count = config.zoneD.length;
     const hasCornerL = !!config.cornerLeft;
     const hasCornerR = !!config.cornerRight;
@@ -424,7 +431,6 @@ export function buildMenu(scene: TemplateScene, config: MenuConfig, app: Templat
       const disabled = resolveDisabled(item.disabled);
       const handler = resolveZoneHandler(item, config);
 
-      // IconButton with optional label — single component, passes audit
       const btn = new IconButton({
         id: item.id,
         icon: icon ?? 'star',
@@ -447,71 +453,56 @@ export function buildMenu(scene: TemplateScene, config: MenuConfig, app: Templat
       scene.addChild(btn);
       dx += slotW;
     }
+
+    // Corners (same row as Zone D)
+    if (config.cornerLeft) {
+      const cl = config.cornerLeft;
+      const cbtn = new IconButton({ id: cl.id ?? 'corner-left', icon: cl.icon, size: 36 });
+      cbtn.x = 12;
+      cbtn.y = zoneDY + 4;
+      cbtn.$on('tap', () => cl.onTap());
+      scene.addChild(cbtn);
+    }
+    if (config.cornerRight) {
+      const cr = config.cornerRight;
+      const cbtn = new IconButton({ id: cr.id ?? 'corner-right', icon: cr.icon, size: 36 });
+      cbtn.x = w - 36 - 12;
+      cbtn.y = zoneDY + 4;
+      cbtn.$on('tap', () => cr.onTap());
+      scene.addChild(cbtn);
+    }
+
+    bottomY -= 4;
   }
 
-  // ── Corner Left ──
-  if (config.cornerLeft) {
-    const cl = config.cornerLeft;
-    const btn = new IconButton({
-      id: cl.id ?? 'corner-left',
-      icon: cl.icon,
-      size: 36,
-    });
-    btn.x = 12;
-    btn.y = zoneDY + 4;
-    btn.$on('tap', () => cl.onTap());
-    scene.addChild(btn);
-  }
+  // ── Footer links — help + restorePurchase (above Zone D) ──
+  if (config.help || config.restorePurchase) {
+    const items: Array<{ id: string; text: string; handler: () => void }> = [];
+    if (config.help) items.push({ id: 'help', text: '帮助', handler: config.help });
+    if (config.restorePurchase) items.push({ id: 'restore', text: '恢复购买', handler: config.restorePurchase });
 
-  // ── Corner Right ──
-  if (config.cornerRight) {
-    const cr = config.cornerRight;
-    const btn = new IconButton({
-      id: cr.id ?? 'corner-right',
-      icon: cr.icon,
-      size: 36,
-    });
-    btn.x = w - 36 - 12;
-    btn.y = zoneDY + 4;
-    btn.$on('tap', () => cr.onTap());
-    scene.addChild(btn);
-  }
+    const linkW = 80;
+    const linkGap = 8;
+    const totalLinkW = items.length * linkW + (items.length - 1) * linkGap;
+    let fx = Math.round((w - totalLinkW) / 2);
+    bottomY -= 24;
 
-  // ── Privacy + Version (stacked at bottom, no overlap) ──
-  // Version at very bottom
-  let bottomY = h - 8;
-  if (config.version) {
-    const verLabel = new Label({
-      id: 'version',
-      text: config.version,
-      fontSize: 10,
-      color: UIColors.textSecondary,
-      align: 'center',
-      width: w,
-      height: 14,
-    });
-    bottomY -= 14;
-    verLabel.y = bottomY;
-    verLabel.alpha = 0.5;
-    scene.addChild(verLabel);
-    bottomY -= 2;
+    for (const item of items) {
+      const btn = new Button({
+        id: item.id,
+        text: item.text,
+        variant: 'ghost',
+        width: linkW,
+        height: 24,
+        fontSize: 11,
+      });
+      btn.x = fx;
+      btn.y = bottomY;
+      btn.$on('tap', () => item.handler());
+      scene.addChild(btn);
+      fx += linkW + linkGap;
+    }
   }
-
-  // Privacy above version
-  const privacyH = 44;
-  bottomY -= privacyH;
-  const privacyBtn = new Button({
-    id: 'privacy',
-    text: '隐私协议',
-    variant: 'ghost',
-    width: 120,
-    height: privacyH,
-    fontSize: 11,
-  });
-  privacyBtn.x = Math.round((w - 120) / 2);
-  privacyBtn.y = bottomY;
-  privacyBtn.$on('tap', () => openPrivacy(scene, config, app));
-  scene.addChild(privacyBtn);
 
   // ── Background draw ──
   if (config.drawBackground) {

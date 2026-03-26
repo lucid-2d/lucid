@@ -256,6 +256,7 @@ describe('MenuTemplate', () => {
     let leftTapped = false;
     let rightTapped = false;
     const scene = createScene(app, makeMenuConfig({
+      zoneD: [{ id: 'checkin', text: 'X', onTap: () => {} }],
       cornerLeft: { icon: 'fire', onTap: () => { leftTapped = true; } },
       cornerRight: { icon: 'gift', onTap: () => { rightTapped = true; } },
     }));
