@@ -7,7 +7,7 @@
 import { createApp, SceneNode } from '../packages/engine/src/index';
 import { UINode } from '../packages/core/src/index';
 import { Label, Button, ScrollView } from '../packages/ui/src/index';
-import { createScene, type ShopItem, type BattlePassReward } from '../packages/game-ui/src/index';
+import { createScene, showTutorial, type ShopItem, type BattlePassReward } from '../packages/game-ui/src/index';
 import { ParticlePool } from '../packages/physics/src/index';
 
 const W = 390, H = 844;
@@ -62,7 +62,7 @@ function createMenuScene() {
   let soundOn = true;
   let vibrationOn = false;
 
-  return createScene(app, {
+  const scene = createScene(app, {
     template: 'menu',
     title: 'Lucid',
     subtitle: 'AI-first Canvas 2D Game Framework',
@@ -102,9 +102,21 @@ function createMenuScene() {
 
     checkin: { rewards: [10, 15, 20, 25, 30, 40, 80], currentDay: 3, claimed: false, onClaim: () => console.log('[checkin claim]') },
 
-    version: 'v0.5.0',
+    help: () => {
+      showTutorial(scene, {
+        steps: [
+          { targetId: 'play', text: '点击开始游戏，进入弹球玩法' },
+          { targetId: 'shop', text: '在商店购买皮肤和特效' },
+          { targetId: 'settings', text: '设置音效、音乐和振动' },
+        ],
+      });
+    },
+
+    version: 'v0.5.1',
     drawBackground: (ctx) => drawBg(ctx),
   });
+
+  return scene;
 }
 
 // ── 2. GameplayTemplate ─────────────────────

@@ -13,6 +13,7 @@ export { CoinShopPanel, type CoinShopPanelProps, type CoinShopItem } from './coi
 export { PrivacyPage, PrivacyDialog, type PrivacyDialogProps } from './privacy-dialog.js';
 export { ConfirmDialog, type ConfirmDialogProps, type ConfirmAction } from './confirm-dialog.js';
 export { PauseModal, type PauseModalProps, type PauseSettingsConfig } from './pause-modal.js';
+export { TutorialOverlay, showTutorial, type TutorialStep, type TutorialOverlayProps } from './tutorial-overlay.js';
 
 // Template system
 export {
