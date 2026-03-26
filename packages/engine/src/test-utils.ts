@@ -12,35 +12,27 @@ import { createApp, type App, type AppOptions } from './app.js';
 import type { InteractionRecord } from '@lucid-2d/core';
 import { detectPlatform, type PlatformAdapter, type ScreenInfo } from './platform/detect.js';
 import { registerHeadlessCanvas } from './canvas-utils.js';
+import { createRequire as _nodeCreateRequire } from 'module';
+
+// Universal require that works in both CJS and ESM (test-utils is Node.js-only)
+const _cjsRequire: NodeRequire = typeof require !== 'undefined'
+  ? require
+  : _nodeCreateRequire(process.cwd() + '/__lucid.cjs');
 
 // Cache @napi-rs/canvas module — native binary load is expensive (~5-8s cold),
 // caching ensures it's only paid once per worker process.
 let _napiCanvas: any = null;
 function getNapiCanvas(): any {
   if (!_napiCanvas) {
-    // Build a CJS require function that works in both CJS and ESM contexts
-    let _require: NodeRequire;
-    try {
-      _require = require;
-    } catch {
-      // ESM context (vitest ESM mode, tsx --loader, etc.) — require is not defined
-      const { createRequire } = require('module') ?? {};
-      if (createRequire) {
-        _require = createRequire(typeof __filename !== 'undefined' ? __filename : process.cwd() + '/__test.js');
-      } else {
-        throw new Error('[lucid] @napi-rs/canvas is required for headless rendering.\nInstall it: pnpm add -D @napi-rs/canvas');
-      }
-    }
-
     // Try normal require first
     try {
-      _napiCanvas = _require('@napi-rs/canvas');
+      _napiCanvas = _cjsRequire('@napi-rs/canvas');
     } catch {
       // Fallback: resolve from the game project's cwd (for tsx/ts-node scripts
       // where tsconfig paths point to Lucid source but @napi-rs/canvas is in the game's node_modules)
       try {
-        const resolved = _require.resolve('@napi-rs/canvas', { paths: [process.cwd()] });
-        _napiCanvas = _require(resolved);
+        const resolved = _cjsRequire.resolve('@napi-rs/canvas', { paths: [process.cwd()] });
+        _napiCanvas = _cjsRequire(resolved);
       } catch {
         throw new Error(
           '[lucid] @napi-rs/canvas is required for headless rendering.\n' +
@@ -75,22 +67,11 @@ const CJK_FONT_CANDIDATES: Array<{ path: string; family: string }> = [
 
 const LUCID_CJK_FAMILY = 'LucidCJK';
 
-function _getFs(): typeof import('fs') {
-  try {
-    return require('fs');
-  } catch {
-    // ESM context — createRequire fallback
-    const { createRequire } = require('module');
-    const r = createRequire(typeof __filename !== 'undefined' ? __filename : process.cwd() + '/__test.js');
-    return r('fs');
-  }
-}
-
 function registerSystemCJKFonts(napiCanvas: any): void {
   if (_cjkFontsRegistered) return;
   _cjkFontsRegistered = true;
 
-  const fs = _getFs();
+  const fs = _cjsRequire('fs');
   const GlobalFonts = napiCanvas.GlobalFonts;
   if (!GlobalFonts?.registerFromPath) return;
 
@@ -424,7 +405,7 @@ export function createTestApp(opts?: TestAppOptions): TestApp {
   };
 
   testApp.saveImage = (path: string) => {
-    const fs = _getFs();
+    const fs = _cjsRequire('fs');
     fs.writeFileSync(path, testApp.toImage());
   };
 
