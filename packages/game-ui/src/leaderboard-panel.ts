@@ -79,8 +79,8 @@ export class LeaderboardPanel extends UINode {
     closeBtn.$on('tap', () => this.$emit('close'));
     this.addChild(closeBtn);
 
-    const title = new Label({ text: '排行榜', fontSize: 18, fontWeight: 'bold', color: UIColors.text, align: 'center', width: 390, height: 44 });
-    title.y = 8;
+    const title = new Label({ text: '排行榜', fontSize: 18, fontWeight: 'bold', color: UIColors.text, align: 'center', width: 220, height: 44 });
+    title.x = 85; title.y = 8;
     this.addChild(title);
 
     if (props.tabs) {
