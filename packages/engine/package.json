@@ -1,6 +1,6 @@
 {
   "name": "@lucid-2d/engine",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "Lucid game engine — app lifecycle, scene routing, platform adapters (Web/Wx/Tt)",
   "type": "module",
   "main": "dist/index.js",
