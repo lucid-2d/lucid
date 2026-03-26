@@ -58,7 +58,7 @@ export class WebAdapter implements PlatformAdapter {
       height: this.logicH,
       dpr: this.dpr,
       safeTop: safe.top,
-      safeBottom: this.logicH - safe.bottom,
+      safeBottom: safe.bottom,
     };
   }
 

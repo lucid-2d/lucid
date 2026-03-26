@@ -78,7 +78,7 @@ export function buildMenu(scene: TemplateScene, config: MenuConfig, app: Templat
         text: badgeText,
         variant: 'ghost',
         width: 80,
-        height: 32,
+        height: 44,
         fontSize: 12,
       });
       badgeBtn.x = ax;
@@ -498,7 +498,7 @@ export function buildMenu(scene: TemplateScene, config: MenuConfig, app: Templat
   }
 
   // Privacy above version
-  const privacyH = 28;
+  const privacyH = 44;
   bottomY -= privacyH;
   const privacyBtn = new Button({
     id: 'privacy',
