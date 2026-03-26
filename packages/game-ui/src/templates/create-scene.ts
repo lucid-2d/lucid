@@ -81,6 +81,14 @@ function validateResult(c: ResultConfig): void {
   if (typeof c.score !== 'number') {
     throw new Error('[lucid] ResultTemplate requires "score" (number)');
   }
+  if (c.countdown != null && !c.revive) {
+    console.warn('[lucid] ResultTemplate: "countdown" has no effect without "revive"');
+  }
+  if (c.rankChange) {
+    if (typeof c.rankChange.from !== 'number' || typeof c.rankChange.to !== 'number') {
+      throw new Error('[lucid] ResultTemplate rankChange requires "from" and "to" (numbers)');
+    }
+  }
 }
 
 function validateMap(c: MapConfig): void {

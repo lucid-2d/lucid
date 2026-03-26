@@ -25,8 +25,9 @@ export const ACTION_DEFAULTS: Record<ActionCode, ActionDef> = {
 
   // Monetization
   share:      { icon: 'share',   text: '分享',       variant: 'outline',   size: 'md' },
-  ad:         { icon: 'ad-video',text: '看广告',     variant: 'gold',      size: 'md' },
-  revive:     { icon: 'heart',   text: '复活',       variant: 'gold',      size: 'md' },
+  ad:              { icon: 'ad-video',text: '看广告',     variant: 'gold',      size: 'md' },
+  revive:          { icon: 'heart',   text: '复活',       variant: 'gold',      size: 'md' },
+  'double-reward': { icon: 'ad-video',text: '双倍奖励',   variant: 'gold',      size: 'md' },
 
   // Business entry
   shop:       { icon: 'coin',    text: '商店',       variant: 'ghost',     size: 'icon' },

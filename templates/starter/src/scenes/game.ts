@@ -7,7 +7,7 @@
 import { UINode } from '@lucid-2d/core';
 import { SceneNode, type App } from '@lucid-2d/engine';
 import { Label, Button, UIColors } from '@lucid-2d/ui';
-import { ResultScene } from './result.js';
+import { createResultScene } from './result.js';
 
 const W = 390, H = 844;
 
@@ -81,7 +81,7 @@ export class GameScene extends SceneNode {
     this.timeLabel.text = `${Math.max(0, Math.ceil(this.timeLeft))}s`;
 
     if (this.timeLeft <= 0) {
-      this.app.router.replace(new ResultScene(this.app, this.score));
+      this.app.router.replace(createResultScene(this.app, this.score));
     }
   }
 

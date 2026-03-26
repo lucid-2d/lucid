@@ -144,4 +144,196 @@ describe('ResultTemplate', () => {
     expect(scene.findById('home')).toBeDefined();
     expect(scene.findById('restart')).toBeNull();
   });
+
+  // ── v0.6.0 additions ──
+
+  describe('rankChange', () => {
+    it('shows rank improvement with up arrow', () => {
+      const app = makeApp();
+      const scene = createScene(app, makeResultConfig({
+        rankChange: { from: 8, to: 3 },
+      }));
+      scene.onEnter();
+
+      const label = scene.findById('rank-change');
+      expect(label).toBeDefined();
+      expect(label!.$text).toBe('排名 #8 → #3 ↑');
+    });
+
+    it('shows rank decline with down arrow', () => {
+      const app = makeApp();
+      const scene = createScene(app, makeResultConfig({
+        rankChange: { from: 3, to: 7 },
+      }));
+      scene.onEnter();
+
+      const label = scene.findById('rank-change');
+      expect(label).toBeDefined();
+      expect(label!.$text).toBe('排名 #3 → #7 ↓');
+    });
+
+    it('shows no arrow when rank unchanged', () => {
+      const app = makeApp();
+      const scene = createScene(app, makeResultConfig({
+        rankChange: { from: 5, to: 5 },
+      }));
+      scene.onEnter();
+
+      const label = scene.findById('rank-change');
+      expect(label!.$text).toBe('排名 #5 → #5 ');
+    });
+
+    it('not shown when not provided', () => {
+      const app = makeApp();
+      const scene = createScene(app, makeResultConfig());
+      scene.onEnter();
+
+      expect(scene.findById('rank-change')).toBeNull();
+    });
+  });
+
+  describe('doubleReward', () => {
+    it('creates double-reward button', () => {
+      const app = makeApp();
+      let tapped = false;
+      const scene = createScene(app, makeResultConfig({
+        doubleReward: { onTap: () => { tapped = true; } },
+      }));
+      scene.onEnter();
+
+      const btn = scene.findById('double-reward');
+      expect(btn).toBeDefined();
+      expect(btn!.$text).toBe('双倍奖励');
+      btn!.$emit('tap');
+      expect(tapped).toBe(true);
+    });
+
+    it('uses custom text', () => {
+      const app = makeApp();
+      const scene = createScene(app, makeResultConfig({
+        doubleReward: { text: '看广告双倍金币', onTap: () => {} },
+      }));
+      scene.onEnter();
+
+      const btn = scene.findById('double-reward');
+      expect(btn!.$text).toBe('看广告双倍金币');
+    });
+  });
+
+  describe('countdown', () => {
+    it('shows countdown on revive button', () => {
+      const app = makeApp();
+      const scene = createScene(app, makeResultConfig({
+        revive: { onTap: () => {} },
+        countdown: 5,
+      }));
+      scene.onEnter();
+
+      const btn = scene.findById('revive');
+      expect(btn!.$text).toBe('复活 (5s)');
+    });
+
+    it('updates countdown text each second', () => {
+      const app = makeApp();
+      const scene = createScene(app, makeResultConfig({
+        revive: { onTap: () => {} },
+        countdown: 3,
+      }));
+      scene.onEnter();
+
+      // Simulate 1 second (dt in seconds, matching engine behavior)
+      scene.$update(1);
+      const btn = scene.findById('revive');
+      expect(btn!.$text).toBe('复活 (2s)');
+
+      // Simulate another second
+      scene.$update(1);
+      expect(btn!.$text).toBe('复活 (1s)');
+    });
+
+    it('hides revive button when countdown expires', () => {
+      const app = makeApp();
+      const scene = createScene(app, makeResultConfig({
+        revive: { onTap: () => {} },
+        countdown: 2,
+      }));
+      scene.onEnter();
+
+      const btn = scene.findById('revive');
+      expect(btn!.visible).toBe(true);
+
+      // Simulate 2 seconds
+      scene.$update(2);
+      expect(btn!.visible).toBe(false);
+    });
+
+    it('emits countdown-expired event', () => {
+      const app = makeApp();
+      let expired = false;
+      const scene = createScene(app, makeResultConfig({
+        revive: { onTap: () => {} },
+        countdown: 1,
+      }));
+      scene.onEnter();
+      scene.$on('countdown-expired', () => { expired = true; });
+
+      scene.$update(1);
+      expect(expired).toBe(true);
+    });
+
+    it('is ignored without revive', () => {
+      const app = makeApp();
+      const scene = createScene(app, makeResultConfig({
+        countdown: 5,
+      }));
+      scene.onEnter();
+
+      // Should not crash, revive button not created
+      expect(scene.findById('revive')).toBeNull();
+    });
+
+    it('works with custom revive text', () => {
+      const app = makeApp();
+      const scene = createScene(app, makeResultConfig({
+        revive: { text: '看广告继续', onTap: () => {} },
+        countdown: 5,
+      }));
+      scene.onEnter();
+
+      const btn = scene.findById('revive');
+      expect(btn!.$text).toBe('看广告继续 (5s)');
+    });
+  });
+
+  describe('combined features', () => {
+    it('renders all v0.6.0 features together', () => {
+      const app = makeApp();
+      const scene = createScene(app, makeResultConfig({
+        isNewBest: true,
+        rankChange: { from: 10, to: 5 },
+        revive: { onTap: () => {} },
+        countdown: 5,
+        doubleReward: { onTap: () => {} },
+        ad: { onTap: () => {} },
+        share: () => {},
+        stats: [
+          { icon: 'coin', label: '金币', value: '+500' },
+          { icon: 'star', label: '经验', value: '+120' },
+        ],
+      }));
+      scene.onEnter();
+
+      // All elements present
+      expect(scene.findById('new-best')).toBeDefined();
+      expect(scene.findById('rank-change')).toBeDefined();
+      expect(scene.findById('revive')).toBeDefined();
+      expect(scene.findById('double-reward')).toBeDefined();
+      expect(scene.findById('ad')).toBeDefined();
+      expect(scene.findById('restart')).toBeDefined();
+      expect(scene.findById('home')).toBeDefined();
+      expect(scene.findById('share')).toBeDefined();
+      expect(scene.findById('stat-0')).toBeDefined();
+      expect(scene.findById('stat-1')).toBeDefined();
+    });
+  });
 });

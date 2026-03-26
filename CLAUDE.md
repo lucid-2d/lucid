@@ -14,7 +14,7 @@ packages/
   core/      — UINode, Entity, events, animation, Timer, SeededRNG, Sprite, AnimatedSprite, NineSlice, Camera, I18n, text utils
   engine/    — createApp/boot (timeScale/fixedTimestep/debugPanel/renderOneFrame/simulateTouch/applyPreset/settle/assetRoot), SceneRouter (transitions+custom+hitTest隔离+async preload), SceneNode (preload/$presets), platform adapters, headless rendering (CJK/Image/assetRoot polyfill), loadImage (assetRoot), audio (register), keyboard, asset loader, DebugPanel, test utils, auditUX/auditAll (26-rule UX audit + batch + strict mode)
   ui/        — 11 base components (Button, Label, Modal, Toggle, TabBar, ScrollView, ProgressBar(colorStops/label), ...)
-  game-ui/   — createScene() 模板系统（7 场景模板 + 5 弹窗模板, MenuTemplate Zone A/C/D 布局）+ 9 业务组件
+  game-ui/   — createScene() 模板系统（7 场景模板 + 5 弹窗模板, MenuTemplate Zone A/C/D 布局, ResultTemplate 倒计时/双倍奖励/排名变化）+ 12 业务组件
   physics/   — Vec2, collision (lineCircleDetailed/raycast), ParticlePool/Emitter/Presets, BezierPath, screen shake
   systems/   — 10 operation systems (Storage, Checkin, Skin, Achievement, Mission, ...)
 playground/  — Visual component gallery (vite dev server)
@@ -25,7 +25,7 @@ templates/   — Game templates (starter, quiz, wx-build)
 
 ```bash
 pnpm install                    # install dependencies
-pnpm -r test                    # run all 776+ tests
+pnpm -r test                    # run all 1021 tests
 pnpm -r build                   # build all packages
 npx vite --config playground/vite.config.ts --port 3456  # run playground
 ```

@@ -240,11 +240,15 @@ function createResultScene(score: number, blocksCleared: number) {
     title: blocksCleared >= 25 ? '全部消除！' : '游戏结束',
     score,
     isNewBest: score > 300,
+    rankChange: { from: 8, to: 3 },
     stats: [
       { icon: 'block', label: '消除方块', value: String(blocksCleared) },
       { icon: 'star', label: '得分', value: String(score) },
     ],
 
+    revive: { text: '看广告复活', onTap: () => console.log('[revive]') },
+    countdown: 5,
+    doubleReward: { text: '看广告双倍金币', onTap: () => console.log('[double-reward]') },
     restart: () => app.router.replace(createGameplayScene()),
     home: () => app.router.replace(createMenuScene()),
     share: () => console.log('[share]'),

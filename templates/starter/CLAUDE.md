@@ -18,15 +18,36 @@ pnpm test             # 运行测试
 
 ```typescript
 import { boot } from '@lucid-2d/engine';
+import { createMenuScene } from './scenes/menu.js';
 
 boot({
   debug: import.meta.env.DEV,
   assetRoot: 'img/',
   async onReady(app) {
-    await app.router.push(new MenuScene(app));
+    await app.router.push(createMenuScene(app));
   },
 });
 ```
+
+### 场景模板 (createScene)
+
+菜单、结算等标准页面使用 `createScene()` 声明式创建：
+
+```typescript
+import { createScene } from '@lucid-2d/game-ui';
+
+function createResultScene(app: App, score: number) {
+  return createScene(app, {
+    template: 'result',
+    title: 'Game Over',
+    score,
+    restart: () => app.router.replace(new GameScene(app)),
+    home: () => app.router.replace(createMenuScene(app)),
+  });
+}
+```
+
+可用模板：`menu`、`gameplay`、`result`、`shop`、`list`、`pass`、`map`
 
 ### 场景 (SceneNode)
 

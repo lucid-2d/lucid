@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { UINode } from '@lucid-2d/core';
 import { createScene } from '../../src/templates/create-scene';
 import { isTemplateScene } from '../../src/templates/template-scene';
@@ -138,6 +138,27 @@ describe('createScene validation', () => {
         home: () => {},
       });
       expect(scene.templateType).toBe('result');
+    });
+
+    it('warns when countdown without revive', () => {
+      const app = makeApp();
+      const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      createScene(app, {
+        template: 'result', title: 'X', score: 100,
+        restart: () => {},
+        countdown: 5,
+      });
+      expect(spy).toHaveBeenCalledWith(expect.stringContaining('countdown'));
+      spy.mockRestore();
+    });
+
+    it('validates rankChange types', () => {
+      const app = makeApp();
+      expect(() => createScene(app, {
+        template: 'result', title: 'X', score: 100,
+        restart: () => {},
+        rankChange: { from: 'a', to: 'b' },
+      } as any)).toThrow('rankChange');
     });
   });
 

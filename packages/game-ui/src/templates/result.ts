@@ -2,10 +2,10 @@
  * ResultTemplate — game over / victory scene.
  *
  * Required: restart or home (at least one)
- * Optional: share, ad, revive, stats
+ * Optional: share, ad, revive, stats, countdown, doubleReward, rankChange
  */
 
-import { UINode } from '@lucid-2d/core';
+import { UINode, CountdownTimer } from '@lucid-2d/core';
 import { Button, Label, UIColors } from '@lucid-2d/ui';
 import { ACTION_DEFAULTS } from './actions.js';
 import type { ResultConfig, TemplateApp } from './types.js';
@@ -44,6 +44,8 @@ export function buildResult(scene: TemplateScene, config: ResultConfig, app: Tem
   scene.addChild(scoreLabel);
 
   // ── New best indicator ──
+  let indicatorBottomY = Math.round(h * 0.2) + 72;
+
   if (config.isNewBest) {
     const bestLabel = new Label({
       id: 'new-best',
@@ -55,8 +57,31 @@ export function buildResult(scene: TemplateScene, config: ResultConfig, app: Tem
       width: w,
       height: 24,
     });
-    bestLabel.y = Math.round(h * 0.2) + 72;
+    bestLabel.y = indicatorBottomY;
     scene.addChild(bestLabel);
+    indicatorBottomY += 28;
+  }
+
+  // ── Rank change ──
+  if (config.rankChange) {
+    const { from, to } = config.rankChange;
+    const improved = to < from;
+    const arrow = improved ? '↑' : (to > from ? '↓' : '');
+    const color = improved ? '#4caf50' : (to > from ? UIColors.primary : UIColors.textSecondary);
+    const text = `排名 #${from} → #${to} ${arrow}`;
+
+    const rankLabel = new Label({
+      id: 'rank-change',
+      text,
+      fontSize: 14,
+      fontWeight: 'bold',
+      color,
+      align: 'center',
+      width: w,
+      height: 22,
+    });
+    rankLabel.y = indicatorBottomY;
+    scene.addChild(rankLabel);
   }
 
   // ── Stats (2-column grid) ──
@@ -107,11 +132,13 @@ export function buildResult(scene: TemplateScene, config: ResultConfig, app: Tem
   let by = Math.round(h * 0.68);
   const bGap = 14;
 
-  // Revive (gold, prominent)
+  // Revive (gold, prominent) — with optional countdown
+  let reviveBtn: Button | undefined;
   if (config.revive) {
-    const reviveBtn = new Button({
+    const reviveText = config.revive.text ?? ACTION_DEFAULTS.revive.text;
+    reviveBtn = new Button({
       id: 'revive',
-      text: config.revive.text ?? ACTION_DEFAULTS.revive.text,
+      text: config.countdown != null ? `${reviveText} (${config.countdown}s)` : reviveText,
       variant: 'gold',
       width: bw,
       height: 48,
@@ -119,6 +146,21 @@ export function buildResult(scene: TemplateScene, config: ResultConfig, app: Tem
     reviveBtn.x = bx; reviveBtn.y = by;
     reviveBtn.$on('tap', () => config.revive!.onTap());
     scene.addChild(reviveBtn);
+    by += 48 + bGap;
+  }
+
+  // Double reward (gold)
+  if (config.doubleReward) {
+    const drBtn = new Button({
+      id: 'double-reward',
+      text: config.doubleReward.text ?? ACTION_DEFAULTS['double-reward'].text,
+      variant: 'gold',
+      width: bw,
+      height: 48,
+    });
+    drBtn.x = bx; drBtn.y = by;
+    drBtn.$on('tap', () => config.doubleReward!.onTap());
+    scene.addChild(drBtn);
     by += 48 + bGap;
   }
 
@@ -179,6 +221,30 @@ export function buildResult(scene: TemplateScene, config: ResultConfig, app: Tem
     shareBtn.x = bx; shareBtn.y = by;
     shareBtn.$on('tap', () => config.share!());
     scene.addChild(shareBtn);
+  }
+
+  // ── Countdown timer (revive button) ──
+  // Note: engine $update(dt) passes dt in seconds (dtMs / 1000)
+  if (config.countdown != null && config.countdown > 0 && reviveBtn) {
+    const baseText = config.revive!.text ?? ACTION_DEFAULTS.revive.text;
+    const timer = new CountdownTimer(config.countdown); // seconds
+    let lastSec = config.countdown;
+
+    const origUpdate = scene.$update.bind(scene);
+    scene.$update = function (dt: number) {
+      origUpdate(dt);
+      if (timer.finished) return;
+      timer.update(dt);
+      const secs = Math.ceil(timer.remaining);
+      if (secs !== lastSec) {
+        lastSec = secs;
+        reviveBtn!.text = secs > 0 ? `${baseText} (${secs}s)` : baseText;
+      }
+      if (timer.finished) {
+        reviveBtn!.visible = false;
+        scene.$emit('countdown-expired');
+      }
+    };
   }
 
   // ── Background draw ──

@@ -136,7 +136,7 @@ import { Button, Label, Icon, Modal, Toggle, TabBar, ScrollView, ProgressBar, To
 
 ### @lucid-2d/game-ui
 
-**Template system** (v0.5) + 9 business components. Games use `createScene()` to declare scenes — framework handles all layout, components, and validation. MenuTemplate uses **Zone A/C/D layout model** for full-featured game menus.
+**Template system** (v0.5–v0.6) + 12 business components. Games use `createScene()` to declare scenes — framework handles all layout, components, and validation. MenuTemplate uses **Zone A/C/D layout model** for full-featured game menus. ResultTemplate supports countdown, double reward, and rank change (v0.6).
 
 ```typescript
 import { createScene, type MenuConfig, type GameplayConfig } from '@lucid-2d/game-ui';
@@ -155,13 +155,13 @@ import { createScene, type MenuConfig, type GameplayConfig } from '@lucid-2d/gam
 |----------|----------|----------|-------------|
 | `menu` | play, settings, privacy | zoneA, zoneC, zoneD, toggles, cornerLeft/Right, bestScore, stats, continueGame, checkin, lucky-box, help, version | drawBackground, heroContent |
 | `gameplay` | pause (→ PauseModal with resume+restart+home) , setup | hud | drawBackground |
-| `result` | restart or home | share, ad, revive, stats | drawBackground |
+| `result` | restart or home | share, ad, revive, stats, countdown, doubleReward, rankChange, isNewBest | drawBackground |
 | `map` | back, setup | title | drawBackground |
 | `shop` | back | tabs, items (skin) / coinItems (coin) | drawBackground |
 | `list` | back | tabs, entries | drawBackground |
 | `pass` | back | rewards, onClaim, onBuyPremium | drawBackground |
 
-**9 business components** (used internally by templates, also available for direct use):
+**12 business components** (used internally by templates, also available for direct use):
 
 | Component | Purpose |
 |-----------|---------|
@@ -174,6 +174,9 @@ import { createScene, type MenuConfig, type GameplayConfig } from '@lucid-2d/gam
 | `LuckyBoxDialog` | Random reward modal |
 | `CoinShopPanel` | IAP coin packages |
 | `PrivacyDialog` | Privacy policy modal |
+| `ConfirmDialog` | Confirm/cancel action modal |
+| `PauseModal` | Pause menu with resume/restart/home/settings |
+| `TutorialOverlay` | Step-by-step tutorial with target highlighting |
 
 ### @lucid-2d/systems
 

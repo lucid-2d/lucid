@@ -29,7 +29,7 @@ export type ActionCode =
   // System
   | 'settings' | 'privacy' | 'dismiss'
   // Monetization
-  | 'share' | 'ad' | 'revive'
+  | 'share' | 'ad' | 'revive' | 'double-reward'
   // Business entry
   | 'shop' | 'checkin' | 'leaderboard' | 'battlepass' | 'lucky-box'
   | 'achievements' | 'missions' | 'daily-challenge'
@@ -229,6 +229,12 @@ export interface GameplayConfig {
   drawBackground?: (ctx: CanvasRenderingContext2D, w: number, h: number) => void;
 }
 
+/** Rank change display (e.g. "排名 5→3 ↑") */
+export interface RankChange {
+  from: number;
+  to: number;
+}
+
 export interface ResultConfig {
   template: 'result';
   id?: string;
@@ -243,6 +249,14 @@ export interface ResultConfig {
   share?: () => void;
   ad?: AdAction;
   revive?: AdAction;
+
+  // v0.6.0 additions
+  /** Revive countdown in seconds. When 0, revive button disappears. Requires revive. */
+  countdown?: number;
+  /** "Watch ad for double reward" — second ad trigger point */
+  doubleReward?: AdAction;
+  /** Rank change display below score */
+  rankChange?: RankChange;
 
   drawBackground?: (ctx: CanvasRenderingContext2D, w: number, h: number) => void;
 }
