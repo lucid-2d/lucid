@@ -11,6 +11,6 @@ export type {
   MenuConfig, GameplayConfig, ResultConfig, MapConfig,
   ShopConfig, ListConfig, PassConfig,
   SettingsConfig, PrivacyConfig, CheckinConfig, LuckyBoxConfig,
-  PauseConfig, HudSlots, AdAction, StatEntry, RankChange,
+  PauseConfig, HudSlots, HudSlotValue, HudSlotStyle, AdAction, StatEntry, RankChange,
   ZoneBadge, ZoneButton, CornerItem, ToggleItem, ContinueGameConfig,
 } from './types.js';

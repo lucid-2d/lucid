@@ -37,15 +37,19 @@ export function buildGameplay(scene: TemplateScene, config: GameplayConfig, app:
     hudContainer.x = 0;
     hudContainer.y = safeTop + 4;
 
-    for (const [key, getter] of Object.entries(config.hud)) {
+    for (const [key, slot] of Object.entries(config.hud)) {
+      const isObj = typeof slot === 'object' && slot !== null;
+      const getter = isObj ? slot.value : slot;
+      const style = isObj ? slot.style : undefined;
+
       const lbl = new Label({
         id: `hud-${key}`,
         text: String(getter()),
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: UIColors.text,
+        fontSize: style?.fontSize ?? 16,
+        fontWeight: (style?.fontWeight ?? 'bold') as any,
+        color: style?.color ?? UIColors.text,
         align: 'center',
-        width: 100,
+        width: style?.width ?? 100,
         height: 30,
       });
       const origUpdate = lbl['$update']?.bind(lbl);

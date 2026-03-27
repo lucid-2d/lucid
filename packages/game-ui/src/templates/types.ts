@@ -81,8 +81,19 @@ export interface LuckyBoxConfig {
 // HUD config
 // ══════════════════════════════════════════
 
+/** Style overrides for a HUD slot */
+export interface HudSlotStyle {
+  fontSize?: number;
+  fontWeight?: string;
+  color?: string;
+  width?: number;
+}
+
+/** HUD slot: simple getter or object with value + style */
+export type HudSlotValue = (() => string | number) | { value: () => string | number; style?: HudSlotStyle };
+
 export interface HudSlots {
-  [key: string]: () => string | number;
+  [key: string]: HudSlotValue;
 }
 
 // ══════════════════════════════════════════

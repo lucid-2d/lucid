@@ -134,6 +134,39 @@ describe('GameplayTemplate', () => {
     expect(levelHud!.$text).toBe('第3关');
   });
 
+  it('HUD slot with style overrides', () => {
+    const app = makeApp();
+    const scene = createScene(app, makeGameplayConfig({
+      hud: {
+        score: { value: () => 999, style: { fontSize: 24, color: '#fff', fontWeight: '900' } },
+        level: { value: () => 'Lv.5', style: { fontSize: 13, color: 'rgba(255,255,255,0.6)', width: 60 } },
+      },
+    }));
+    scene.onEnter();
+
+    const scoreHud = scene.findById('hud-score');
+    expect(scoreHud).toBeDefined();
+    expect(scoreHud!.$text).toBe('999');
+
+    const levelHud = scene.findById('hud-level');
+    expect(levelHud).toBeDefined();
+    expect(levelHud!.$text).toBe('Lv.5');
+  });
+
+  it('HUD mixes simple getters and styled slots', () => {
+    const app = makeApp();
+    const scene = createScene(app, makeGameplayConfig({
+      hud: {
+        score: () => 42,
+        speed: { value: () => '2x', style: { color: '#ffd166' } },
+      },
+    }));
+    scene.onEnter();
+
+    expect(scene.findById('hud-score')!.$text).toBe('42');
+    expect(scene.findById('hud-speed')!.$text).toBe('2x');
+  });
+
   it('pause settings opens settings panel', () => {
     const app = makeApp();
     const scene = createScene(app, makeGameplayConfig({

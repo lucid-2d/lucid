@@ -25,5 +25,5 @@ export {
   type MenuConfig, type GameplayConfig, type ResultConfig, type MapConfig,
   type ShopConfig, type ListConfig, type PassConfig,
   type SettingsConfig, type PrivacyConfig, type CheckinConfig, type LuckyBoxConfig,
-  type PauseConfig, type HudSlots, type AdAction, type StatEntry, type RankChange,
+  type PauseConfig, type HudSlots, type HudSlotValue, type HudSlotStyle, type AdAction, type StatEntry, type RankChange,
 } from './templates/index.js';
