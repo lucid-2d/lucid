@@ -337,7 +337,7 @@ export function createTestApp(opts?: TestAppOptions): TestApp {
     // Must be AFTER HeadlessAdapter (which sets the base Image polyfill)
     const assetRoot = opts?.assetRoot;
     if (assetRoot) {
-      const nodePath = require('path');
+      const nodePath = _cjsRequire('path');
       const NapiImage = napiCanvas.Image;
       (globalThis as any).Image = function HeadlessImage(w?: number, h?: number) {
         const img = w != null ? new NapiImage(w, h) : new NapiImage();
