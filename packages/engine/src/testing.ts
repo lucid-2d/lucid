@@ -6,5 +6,5 @@
  * ```
  */
 
-export { createTestApp, tap, touch, assertTree, generateTestCode, imageDiff, assertImageChanged, type TestApp, type TestAppOptions, type FontConfig, type ImageDiffResult } from './test-utils.js';
+export { createTestApp, tap, touch, assertTree, generateTestCode, imageDiff, assertImageChanged, snapshotTest, type TestApp, type TestAppOptions, type FontConfig, type ImageDiffResult, type SnapshotTestOptions, type SnapshotTestResult, type SnapshotSceneResult, type SnapshotSceneConfig } from './test-utils.js';
 export { auditUX, auditAll, defineRule, type AuditOptions, type AuditResult, type AuditIssue, type AuditRule, type LayoutData, type AuditSceneEntry, type AuditAllResult } from './audit.js';

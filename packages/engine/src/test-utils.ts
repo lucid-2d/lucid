@@ -12,6 +12,7 @@ import { createApp, type App, type AppOptions } from './app.js';
 import type { InteractionRecord } from '@lucid-2d/core';
 import { detectPlatform, type PlatformAdapter, type ScreenInfo } from './platform/detect.js';
 import { registerHeadlessCanvas } from './canvas-utils.js';
+import { auditUX as _auditUX } from './audit.js';
 import { createRequire as _nodeCreateRequire } from 'module';
 
 // Universal require that works in both CJS and ESM (test-utils is Node.js-only)
@@ -667,4 +668,197 @@ export async function assertImageChanged(
       `assertImageChanged failed: images differ too much (${(result.diffPercent * 100).toFixed(2)}% diff, expected < ${(maxDiff * 100).toFixed(2)}%)`
     );
   }
+}
+
+// ══════════════════════════════════════════
+// snapshotTest — regression guard
+// ══════════════════════════════════════════
+
+export interface SnapshotSceneConfig {
+  /** Scene ID (matches router.current.id) */
+  id: string;
+  /** Setup the scene to snapshot state (e.g. simulate gameplay for 3 seconds) */
+  setup?: (app: TestApp) => void | Promise<void>;
+}
+
+export interface SnapshotTestOptions {
+  /** Scenes to snapshot */
+  scenes: Array<string | SnapshotSceneConfig>;
+  /** Directory to store baseline snapshots (default: .lucid-snapshots/) */
+  snapshotDir?: string;
+  /** Update baselines instead of comparing (first run or --update flag) */
+  update?: boolean;
+  /** Image diff threshold — percentage below which is considered identical (default: 0.005 = 0.5%) */
+  imageThreshold?: number;
+}
+
+export interface SnapshotSceneResult {
+  id: string;
+  inspect: { pass: boolean; diff?: string };
+  image: { pass: boolean; diffPercent?: number };
+  audit: { pass: boolean; errors: number; warnings: number };
+}
+
+export interface SnapshotTestResult {
+  pass: boolean;
+  updated: boolean;
+  scenes: SnapshotSceneResult[];
+  summary: string;
+}
+
+/**
+ * Snapshot regression test — automatically guards UI and gameplay against regressions.
+ *
+ * First run (or `update: true`): saves baseline snapshots ($inspect + screenshot + auditUX).
+ * Subsequent runs: compares against baseline, reports differences.
+ *
+ * ```typescript
+ * import { createTestApp, snapshotTest } from '@lucid-2d/engine/testing';
+ *
+ * const app = createTestApp({ render: true });
+ * // ... push initial scene ...
+ *
+ * const result = await snapshotTest(app, {
+ *   scenes: [
+ *     'menu',
+ *     'result',
+ *     { id: 'game', setup: (app) => { app.tick(3000); } },
+ *   ],
+ * });
+ *
+ * if (!result.pass) {
+ *   console.log(result.summary);  // shows what changed
+ *   // Re-run with update: true to accept new baselines
+ * }
+ * ```
+ */
+export async function snapshotTest(app: TestApp, opts: SnapshotTestOptions): Promise<SnapshotTestResult> {
+  const fs = _cjsRequire('fs') as typeof import('fs');
+  const path = _cjsRequire('path') as typeof import('path');
+
+  const snapshotDir = opts.snapshotDir ?? '.lucid-snapshots';
+  const threshold = opts.imageThreshold ?? 0.005;
+  const update = opts.update ?? false;
+
+  // Ensure snapshot dir exists
+  if (!fs.existsSync(snapshotDir)) {
+    fs.mkdirSync(snapshotDir, { recursive: true });
+  }
+
+  const sceneResults: SnapshotSceneResult[] = [];
+  const summaryLines: string[] = [];
+  let didUpdate = false;
+
+  for (const sceneEntry of opts.scenes) {
+    const config = typeof sceneEntry === 'string' ? { id: sceneEntry } : sceneEntry;
+    const sceneId = config.id;
+
+    // Navigate to scene — find it by matching router.current.id after ticking
+    // The caller should have pushed scenes; we just check current
+    if (app.router.current?.id !== sceneId) {
+      // Try to find scene by waiting (maybe it needs a tick to settle)
+      let found = false;
+      for (let i = 0; i < 10; i++) {
+        app.tick(16);
+        if (app.router.current?.id === sceneId) { found = true; break; }
+      }
+      if (!found) {
+        sceneResults.push({
+          id: sceneId,
+          inspect: { pass: false, diff: `Scene '${sceneId}' not reachable (current: ${app.router.current?.id ?? 'none'})` },
+          image: { pass: false },
+          audit: { pass: false, errors: 1, warnings: 0 },
+        });
+        summaryLines.push(`  ❌ ${sceneId}: not reachable`);
+        continue;
+      }
+    }
+
+    // Run setup if provided
+    if (config.setup) {
+      await config.setup(app);
+    }
+
+    // Tick once to ensure rendering is up to date
+    app.tick(16);
+
+    // Capture current state
+    const inspectText = app.root.$inspect();
+    const imageBuffer = app.toImage();
+    const auditResult = _auditUX(app);
+
+    const inspectPath = path.join(snapshotDir, `${sceneId}.inspect.txt`);
+    const imagePath = path.join(snapshotDir, `${sceneId}.png`);
+    const auditPath = path.join(snapshotDir, `${sceneId}.audit.json`);
+
+    if (update || !fs.existsSync(inspectPath)) {
+      // Save baselines
+      didUpdate = true;
+      fs.writeFileSync(inspectPath, inspectText);
+      fs.writeFileSync(imagePath, imageBuffer);
+      fs.writeFileSync(auditPath, JSON.stringify(auditResult, null, 2));
+
+      sceneResults.push({
+        id: sceneId,
+        inspect: { pass: true },
+        image: { pass: true },
+        audit: { pass: auditResult.pass, errors: auditResult.issues.filter((i: any) => i.severity === 'error').length, warnings: auditResult.issues.filter((i: any) => i.severity === 'warning').length },
+      });
+      summaryLines.push(`  📸 ${sceneId}: baseline ${update ? 'updated' : 'created'}`);
+    } else {
+      // Compare against baselines
+      const baseInspect = fs.readFileSync(inspectPath, 'utf-8');
+      const baseImage = fs.readFileSync(imagePath) as unknown as Buffer;
+
+      // Inspect diff
+      const inspectChanged = inspectText !== baseInspect;
+      let inspectDiff: string | undefined;
+      if (inspectChanged) {
+        // Simple line-by-line diff
+        const oldLines = baseInspect.split('\n');
+        const newLines = inspectText.split('\n');
+        const diffs: string[] = [];
+        const maxLen = Math.max(oldLines.length, newLines.length);
+        for (let i = 0; i < maxLen; i++) {
+          if (oldLines[i] !== newLines[i]) {
+            if (oldLines[i]) diffs.push(`  - ${oldLines[i]}`);
+            if (newLines[i]) diffs.push(`  + ${newLines[i]}`);
+          }
+        }
+        inspectDiff = diffs.slice(0, 20).join('\n'); // cap at 20 lines
+      }
+
+      // Image diff
+      const imgDiff = await imageDiff(baseImage, imageBuffer);
+      const imagePass = imgDiff.diffPercent <= threshold;
+
+      // Audit comparison
+      const auditErrors = auditResult.issues.filter((i: any) => i.severity === 'error').length;
+      const auditWarnings = auditResult.issues.filter((i: any) => i.severity === 'warning').length;
+
+      const result: SnapshotSceneResult = {
+        id: sceneId,
+        inspect: { pass: !inspectChanged, diff: inspectDiff },
+        image: { pass: imagePass, diffPercent: imgDiff.diffPercent },
+        audit: { pass: auditResult.pass, errors: auditErrors, warnings: auditWarnings },
+      };
+      sceneResults.push(result);
+
+      // Summary line
+      const parts: string[] = [];
+      parts.push(inspectChanged ? `⚠️ inspect 有变化` : `✅ inspect`);
+      parts.push(imagePass ? `✅ 截图` : `❌ 截图差异 ${(imgDiff.diffPercent * 100).toFixed(1)}%`);
+      parts.push(auditResult.pass ? `✅ audit` : `❌ audit ${auditErrors}e/${auditWarnings}w`);
+      summaryLines.push(`  ${sceneId}: ${parts.join(' | ')}`);
+    }
+  }
+
+  const allPass = sceneResults.every(r => r.inspect.pass && r.image.pass && r.audit.pass);
+
+  return {
+    pass: allPass,
+    updated: didUpdate,
+    scenes: sceneResults,
+    summary: summaryLines.join('\n'),
+  };
 }
