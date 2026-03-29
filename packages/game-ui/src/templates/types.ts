@@ -224,6 +224,8 @@ export interface MenuConfig {
 
   // ── Custom ──
   drawBackground?: (ctx: CanvasRenderingContext2D, w: number, h: number) => void;
+  /** Draw after all children (glow effects, overlays, vignette, etc.) */
+  drawForeground?: (ctx: CanvasRenderingContext2D, w: number, h: number) => void;
   heroContent?: (parent: UINode) => void;
 }
 
@@ -238,6 +240,8 @@ export interface GameplayConfig {
   // Optional
   hud?: HudSlots;
   drawBackground?: (ctx: CanvasRenderingContext2D, w: number, h: number) => void;
+  /** Draw after all children (glow effects, overlays, vignette, etc.) */
+  drawForeground?: (ctx: CanvasRenderingContext2D, w: number, h: number) => void;
 }
 
 /** Rank change display (e.g. "排名 5→3 ↑") */
@@ -270,6 +274,8 @@ export interface ResultConfig {
   rankChange?: RankChange;
 
   drawBackground?: (ctx: CanvasRenderingContext2D, w: number, h: number) => void;
+  /** Draw after all children (glow effects, overlays, vignette, etc.) */
+  drawForeground?: (ctx: CanvasRenderingContext2D, w: number, h: number) => void;
 }
 
 export interface MapConfig {
@@ -282,6 +288,8 @@ export interface MapConfig {
   setup: (mapArea: UINode, app: TemplateApp) => void;
 
   drawBackground?: (ctx: CanvasRenderingContext2D, w: number, h: number) => void;
+  /** Draw after all children (glow effects, overlays, vignette, etc.) */
+  drawForeground?: (ctx: CanvasRenderingContext2D, w: number, h: number) => void;
 }
 
 export interface ShopConfig {
@@ -304,6 +312,8 @@ export interface ShopConfig {
   onCoinPurchase?: (item: CoinShopItem) => void;
 
   drawBackground?: (ctx: CanvasRenderingContext2D, w: number, h: number) => void;
+  /** Draw after all children (glow effects, overlays, vignette, etc.) */
+  drawForeground?: (ctx: CanvasRenderingContext2D, w: number, h: number) => void;
 }
 
 export interface ListConfig {
@@ -319,6 +329,8 @@ export interface ListConfig {
   myEntry?: LeaderboardEntry;
 
   drawBackground?: (ctx: CanvasRenderingContext2D, w: number, h: number) => void;
+  /** Draw after all children (glow effects, overlays, vignette, etc.) */
+  drawForeground?: (ctx: CanvasRenderingContext2D, w: number, h: number) => void;
 }
 
 export interface PassConfig {
@@ -338,6 +350,8 @@ export interface PassConfig {
   onBuyPremium?: () => void;
 
   drawBackground?: (ctx: CanvasRenderingContext2D, w: number, h: number) => void;
+  /** Draw after all children (glow effects, overlays, vignette, etc.) */
+  drawForeground?: (ctx: CanvasRenderingContext2D, w: number, h: number) => void;
 }
 
 // ══════════════════════════════════════════

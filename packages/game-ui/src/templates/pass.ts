@@ -45,4 +45,17 @@ export function buildPass(scene: TemplateScene, config: PassConfig, app: Templat
       origDraw?.(ctx);
     };
   }
+
+  // ── Foreground draw (after children) ──
+  if (config.drawForeground) {
+    const fg = config.drawForeground;
+    const origRender = scene.$render.bind(scene);
+    scene.$render = function (ctx: CanvasRenderingContext2D) {
+      origRender(ctx);
+      ctx.save();
+      ctx.translate(scene.x, scene.y);
+      fg(ctx, w, h);
+      ctx.restore();
+    };
+  }
 }
