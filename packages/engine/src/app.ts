@@ -516,7 +516,12 @@ export function createApp(options: AppOptions = {}): App {
 
     simulateTouch(x: number, y: number): UINode | null {
       const hit = root.hitTest(x, y);
-      if (!hit) return null;
+      if (!hit) {
+        if (debugMode) {
+          console.warn(`⚠ simulateTouch(${x}, ${y}): no interactive node found. Did you set interactive: true?`);
+        }
+        return null;
+      }
       const local = hit.worldToLocal(x, y);
       const event = { x, y, localX: local.x, localY: local.y, worldX: x, worldY: y };
       hit.$emit('touchstart', event);

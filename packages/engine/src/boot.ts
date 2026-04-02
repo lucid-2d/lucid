@@ -28,6 +28,11 @@ export interface BootOptions extends Omit<AppOptions, 'platform' | 'canvas' | 'a
   /** Auto-create fullscreen canvas if none found (web only, default: true). */
   autoCanvas?: boolean;
   /**
+   * Skip template validation — allow raw SceneNode subclasses without createScene().
+   * Useful for prototyping. Default: false (template validation enforced).
+   */
+  skipTemplateValidation?: boolean;
+  /**
    * Called after app is created and started. Push your initial scene here.
    * If async, boot() awaits it before resolving.
    */
@@ -85,8 +90,8 @@ export async function boot(options: BootOptions = {}): Promise<App> {
     ...rest,
   });
 
-  // Enforce template-only scenes in production
-  app.router._skipTemplateValidation = false;
+  // Enforce template-only scenes in production (unless explicitly opted out)
+  app.router._skipTemplateValidation = options.skipTemplateValidation ?? false;
 
   // Expose for AI agent / Playwright debugging
   if (platform === 'web' && typeof window !== 'undefined') {
