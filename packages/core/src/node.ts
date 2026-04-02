@@ -679,6 +679,51 @@ export class UINode extends EventEmitter {
     }
     return chain.reverse().join(' > ');
   }
+
+  /**
+   * 结构化上下文信息，供 AI Agent 精确理解节点状态。
+   *
+   * ```typescript
+   * const node = app.hitTest(x, y);
+   * const ctx = node.$context();
+   * // → { id: 'play', type: 'Button', text: '开始游戏', position: {x:95,y:650}, ... }
+   * ```
+   */
+  $context(): NodeContext {
+    const siblings = this.$parent
+      ? this.$parent.$children.filter((c: UINode) => c !== this).map((c: UINode) => c.id || c.$type)
+      : [];
+
+    return {
+      id: this.id,
+      type: this.$type,
+      text: this.$text,
+      position: { x: this.x, y: this.y },
+      size: { width: this.width, height: this.height },
+      interactive: this.interactive,
+      visible: this.visible,
+      disabled: this.$disabled ?? false,
+      parent: this.$parent ? (this.$parent.id || this.$parent.$type) : null,
+      siblings,
+      path: this.$path(),
+      inspectInfo: this.$inspectInfo() || undefined,
+    };
+  }
+}
+
+export interface NodeContext {
+  id: string;
+  type: string;
+  text?: string;
+  position: { x: number; y: number };
+  size: { width: number; height: number };
+  interactive: boolean;
+  visible: boolean;
+  disabled: boolean;
+  parent: string | null;
+  siblings: string[];
+  path: string;
+  inspectInfo?: string;
 }
 
 // ── selector matching ──
