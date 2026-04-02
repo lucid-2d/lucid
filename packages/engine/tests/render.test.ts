@@ -2,12 +2,30 @@
  * Headless rendering tests — verify createTestApp({ render: true })
  * produces real PNG output via @napi-rs/canvas.
  */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { createTestApp, tap } from '../src/test-utils';
 import { SceneNode } from '../src/scene';
 import { UINode } from '@lucid-2d/core';
 import fs from 'fs';
 import path from 'path';
+import { createCanvas } from '@napi-rs/canvas';
+
+// Create a small test PNG for assetRoot tests
+const TEST_ASSET_DIR = '/tmp/lucid-test-assets/sprites';
+const TEST_ASSET_PATH = path.join(TEST_ASSET_DIR, 'test.png');
+
+beforeAll(() => {
+  fs.mkdirSync(TEST_ASSET_DIR, { recursive: true });
+  const c = createCanvas(4, 4);
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = 'red';
+  ctx.fillRect(0, 0, 4, 4);
+  fs.writeFileSync(TEST_ASSET_PATH, c.toBuffer('image/png'));
+});
+
+afterAll(() => {
+  fs.rmSync('/tmp/lucid-test-assets', { recursive: true, force: true });
+});
 
 // Simple scene with colored background and positioned elements
 class ColorScene extends SceneNode {

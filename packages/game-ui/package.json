@@ -22,8 +22,8 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@lucid-2d/core": "^0.5.1",
-    "@lucid-2d/ui": "^0.5.1"
+    "@lucid-2d/core": "workspace:*",
+    "@lucid-2d/ui": "workspace:*"
   },
   "devDependencies": {
     "vitest": "^3.1.0"
