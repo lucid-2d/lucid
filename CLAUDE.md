@@ -310,6 +310,24 @@ gh issue list --repo lucid-2d/lucid --state open
 4. 如果是 question → 回复解答，必要时补充文档
 5. 修复后回复 issue 说明版本号，然后关闭
 
+### 部分完成的 issue
+
+当 issue 只能部分完成时（如大 feature 只做了 P1），**必须在 issue 留评论**：
+
+```markdown
+## 已完成
+- ✅ P1.1: xxx（PR #N, merged）
+- ✅ P1.2: xxx
+
+## 评估后放弃
+- ❌ Pxx: xxx — 原因
+
+## 剩余
+- 🔲 P0: xxx — 需单独规划
+```
+
+保持 issue open，下次 `处理 Lucid issue` 时可以继续推进。
+
 ### PR 审核流程
 
 ```bash
