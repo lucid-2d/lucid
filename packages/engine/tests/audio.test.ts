@@ -50,6 +50,26 @@ describe('AudioManager', () => {
     audio.playSfx('hit');
     audio.stopAllSfx(); // should not throw
   });
+
+  it('playSfx accepts options object with playbackRate', () => {
+    const audio = createMockAudio();
+    audio.load('click', 'assets/click.mp3');
+    // Should not throw with options object
+    audio.playSfx('click', { volume: 0.8, playbackRate: 1.5 });
+  });
+
+  it('playSfx backward-compatible with number volume', () => {
+    const audio = createMockAudio();
+    audio.load('click', 'assets/click.mp3');
+    // Old API: playSfx(name, volume)
+    audio.playSfx('click', 0.5);
+  });
+
+  it('playSfx accepts options with only playbackRate', () => {
+    const audio = createMockAudio();
+    audio.load('click', 'assets/click.mp3');
+    audio.playSfx('click', { playbackRate: 1.2 });
+  });
 });
 
 describe('BGM', () => {

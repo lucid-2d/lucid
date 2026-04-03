@@ -11,7 +11,7 @@ export { TtAdapter } from './platform/tt.js';
 export { loadImage, setAssetRoot, getAssetRoot, type ImageLike } from './image-loader.js';
 export { createOffscreenCanvas } from './canvas-utils.js';
 // Test utilities moved to '@lucid-2d/engine/testing' to avoid bundling @napi-rs/canvas in production
-export { AudioManager, createAudio, createMockAudio, type AudioManagerOptions, type AudioAdapter, type AudioHandle } from './audio.js';
+export { AudioManager, createAudio, createMockAudio, type AudioManagerOptions, type AudioAdapter, type AudioHandle, type SfxOptions } from './audio.js';
 export { Keyboard } from './keyboard.js';
 export { AssetLoader, type AssetEntry } from './asset-loader.js';
 export { batchSimulate, type SimulationConfig, type SimulationResult, type BatchResult } from './simulate.js';

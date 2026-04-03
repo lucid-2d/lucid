@@ -23,8 +23,15 @@ export interface AudioHandle {
   resume(): void;
   volume: number;
   loop: boolean;
+  /** Playback speed / pitch (default: 1.0, range: 0.5 ~ 2.0) */
+  playbackRate: number;
   readonly playing: boolean;
   destroy(): void;
+}
+
+export interface SfxOptions {
+  volume?: number;
+  playbackRate?: number;
 }
 
 export interface AudioAdapter {
@@ -69,6 +76,9 @@ class WebAudioHandle implements AudioHandle {
 
   get loop() { return this._el.loop; }
   set loop(v: boolean) { this._el.loop = v; }
+
+  get playbackRate() { return this._el.playbackRate; }
+  set playbackRate(v: number) { this._el.playbackRate = v; }
 
   get playing() { return this._playing && !this._el.paused; }
 
@@ -126,6 +136,9 @@ class MiniGameAudioHandle implements AudioHandle {
   get loop() { return this._ctx.loop; }
   set loop(v: boolean) { this._ctx.loop = v; }
 
+  get playbackRate() { return this._ctx.playbackRate ?? 1; }
+  set playbackRate(v: number) { this._ctx.playbackRate = v; }
+
   get playing() { return this._playing; }
 
   destroy() {
@@ -162,6 +175,7 @@ class MockAudioHandle implements AudioHandle {
   private _playing = false;
   volume = 1;
   loop = false;
+  playbackRate = 1;
   readonly src: string;
 
   constructor(src: string) { this.src = src; }
@@ -242,11 +256,15 @@ export class AudioManager {
 
   // ── SFX ──
 
-  /** Play a sound effect (can overlap) */
-  playSfx(name: string, volume?: number): void {
+  /** Play a sound effect (can overlap). Accepts volume number or options object. */
+  playSfx(name: string, opts?: number | SfxOptions): void {
     const base = this._sounds.get(name);
     if (!base) return;
     if (this._muted) return;
+
+    const { volume, playbackRate } = typeof opts === 'number'
+      ? { volume: opts, playbackRate: 1 }
+      : { volume: opts?.volume ?? 1, playbackRate: opts?.playbackRate ?? 1 };
 
     // Clean up finished SFX
     this._activeSfx = this._activeSfx.filter(h => h.playing);
@@ -259,7 +277,8 @@ export class AudioManager {
     }
 
     const handle = this._adapter.clone(base);
-    handle.volume = (volume ?? 1) * this._sfxVolume;
+    handle.volume = volume * this._sfxVolume;
+    handle.playbackRate = playbackRate;
     handle.loop = false;
     handle.play();
     this._activeSfx.push(handle);
